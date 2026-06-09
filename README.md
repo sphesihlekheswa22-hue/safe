@@ -156,15 +156,23 @@ demo data. App available at **http://localhost:5000**.
 | `JWT_SECRET_KEY` | Long random string (or let Render generate) |
 | `SEED_ADMIN_PASSWORD` | Production admin password |
 
-4. Render runs `python scripts/setup_db.py` on each deploy (creates tables + seeds demo data), then starts **gunicorn** on `$PORT`.
+4. Render runs `python scripts/setup_db.py` as a **pre-deploy** step (creates tables + seeds demo data), then starts **gunicorn** on `$PORT`.
 
-**Start command** (if not using `render.yaml`):
+**If you created the service manually in the Render dashboard**, set these exactly:
+
+| Setting | Value |
+|---------|--------|
+| **Build command** | `pip install -r requirements.txt` |
+| **Pre-deploy command** | `python scripts/setup_db.py` |
+| **Start command** | `bash scripts/render_start.sh` |
+
+Or paste the start command directly:
 
 ```bash
-python scripts/setup_db.py && gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app
+gunicorn --worker-class gthread --workers 1 --threads 4 --bind 0.0.0.0:$PORT --timeout 120 --graceful-timeout 30 wsgi:app
 ```
 
-**Build command:** `pip install -r requirements.txt`
+Do **not** use `--workers 2` on the free plan — it causes memory pressure and worker kills.
 
 ---
 

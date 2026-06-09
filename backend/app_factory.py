@@ -53,6 +53,12 @@ def create_app(config_class=Config):
 
     auth_middleware.register(app)
 
+    @app.teardown_appcontext
+    def _cleanup_db_session(exc):
+        if exc is not None:
+            db.session.rollback()
+        db.session.remove()
+
     _register_jwt_handlers(jwt)
     _register_pages(app)
     _register_cli(app)

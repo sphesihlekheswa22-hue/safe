@@ -12,6 +12,7 @@ import time
 
 from flask import Blueprint, Response, jsonify, stream_with_context
 
+from extensions import db
 from models.alert import Alert
 
 bp = Blueprint("realtime", __name__)
@@ -23,8 +24,12 @@ _SSE_INTERVAL_SEC = int(os.environ.get("REALTIME_SSE_INTERVAL_SEC", "10"))
 
 
 def _latest_alerts_payload():
-    alerts = Alert.query.order_by(Alert.created_at.desc()).limit(5).all()
-    return [a.to_dict() for a in alerts]
+    try:
+        alerts = Alert.query.order_by(Alert.created_at.desc()).limit(5).all()
+        return [a.to_dict() for a in alerts]
+    except Exception:
+        db.session.rollback()
+        return []
 
 
 @bp.get("/alerts")
@@ -44,8 +49,12 @@ def stream():
     @stream_with_context
     def generate():
         for _ in range(_SSE_TICKS):
-            data = json.dumps({"alerts": _latest_alerts_payload()})
-            yield f"data: {data}\n\n"
+            try:
+                data = json.dumps({"alerts": _latest_alerts_payload()})
+                yield f"data: {data}\n\n"
+            finally:
+                # Release the DB connection between long-lived SSE ticks.
+                db.session.remove()
             # Heartbeat every second so gunicorn does not treat the worker as hung.
             for _ in range(_SSE_INTERVAL_SEC):
                 yield ": keepalive\n\n"

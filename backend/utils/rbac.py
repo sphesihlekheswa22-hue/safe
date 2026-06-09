@@ -42,6 +42,7 @@ def current_user():
     Imported lazily to avoid a circular import (models import nothing from here,
     but this keeps the dependency direction clean).
     """
+    from extensions import db
     from models.user import User
 
     identity = get_jwt_identity()
@@ -51,7 +52,11 @@ def current_user():
         user_id = int(identity)
     except (TypeError, ValueError):
         return None
-    return User.query.get(user_id)
+    try:
+        return db.session.get(User, user_id)
+    except Exception:
+        db.session.rollback()
+        return None
 
 
 def require_roles(*allowed_roles):

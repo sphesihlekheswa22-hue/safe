@@ -2,6 +2,7 @@
 from flask import g, request
 from flask_jwt_extended import verify_jwt_in_request
 
+from extensions import db
 from utils.rbac import current_user
 
 
@@ -15,6 +16,7 @@ def load_user_into_g():
             verify_jwt_in_request(optional=True)
             g.current_user = current_user()
         except Exception:
+            db.session.rollback()
             g.current_user = None
 
 

@@ -6,7 +6,8 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python scripts/setup_db.py && gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app
+    preDeployCommand: python scripts/setup_db.py
+    startCommand: bash scripts/render_start.sh
     healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
