@@ -161,7 +161,7 @@ demo data. App available at **http://localhost:5000**.
 **Start command** (if not using `render.yaml`):
 
 ```bash
-python scripts/setup_db.py && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 wsgi:app
+python scripts/setup_db.py && gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app
 ```
 
 **Build command:** `pip install -r requirements.txt`

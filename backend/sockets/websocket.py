@@ -7,18 +7,30 @@ database. The frontend (static/js/websocket.js) consumes this and degrades to
 plain polling if SSE is unavailable.
 """
 import json
+import os
 import time
 
-from flask import Blueprint, Response, stream_with_context
+from flask import Blueprint, Response, jsonify, stream_with_context
 
 from models.alert import Alert
 
 bp = Blueprint("realtime", __name__)
 
+# Gunicorn sync workers kill silent connections; keepalives + short sessions avoid
+# WORKER TIMEOUT on Render. EventSource auto-reconnects when a session ends.
+_SSE_TICKS = int(os.environ.get("REALTIME_SSE_TICKS", "12"))  # ~2 min per session
+_SSE_INTERVAL_SEC = int(os.environ.get("REALTIME_SSE_INTERVAL_SEC", "10"))
+
 
 def _latest_alerts_payload():
     alerts = Alert.query.order_by(Alert.created_at.desc()).limit(5).all()
     return [a.to_dict() for a in alerts]
+
+
+@bp.get("/alerts")
+def alerts_snapshot():
+    """JSON snapshot for polling fallback when SSE is unavailable."""
+    return jsonify(alerts=_latest_alerts_payload())
 
 
 @bp.get("/stream")
@@ -31,13 +43,23 @@ def stream():
 
     @stream_with_context
     def generate():
-        # A bounded number of ticks keeps dev servers from hanging forever.
-        for _ in range(360):  # ~1 hour at 10s intervals
+        for _ in range(_SSE_TICKS):
             data = json.dumps({"alerts": _latest_alerts_payload()})
             yield f"data: {data}\n\n"
-            time.sleep(10)
+            # Heartbeat every second so gunicorn does not treat the worker as hung.
+            for _ in range(_SSE_INTERVAL_SEC):
+                yield ": keepalive\n\n"
+                time.sleep(1)
 
-    return Response(generate(), mimetype="text/event-stream")
+    return Response(
+        generate(),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 def register(app):
