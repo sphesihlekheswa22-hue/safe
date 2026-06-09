@@ -102,7 +102,7 @@
       <h3 class="font-display font-bold text-surface-800 group-hover:text-primary-700 transition-colors">{{ title }}</h3>
       {% if subtitle %}<p class="text-xs text-surface-500 mt-0.5">{{ subtitle }}</p>{% endif %}
     </div>
-    {% if action %}<div class="flex items-center gap-2">{{ action }}</div>{% endif %}
+    {% if action %}<div class="flex items-center gap-2">{{ action|safe }}</div>{% endif %}
   </div>
   <div class="p-6">{{ caller() }}</div>
 </div>
