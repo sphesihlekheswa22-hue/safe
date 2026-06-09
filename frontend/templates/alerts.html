@@ -51,6 +51,7 @@
 
   async function load() {
     const { alerts } = await SR.get("/api/alerts");
+    document.dispatchEvent(new CustomEvent("sr:alerts-updated", { detail: alerts }));
     const el = document.getElementById("alerts-list");
     if (!alerts.length) { el.innerHTML = '<div class="text-center py-8"><div class="w-16 h-16 mx-auto mb-3 rounded-full bg-surface-100 flex items-center justify-center text-2xl">📭</div><p class="text-surface-400 text-sm">No alerts at this time.</p></div>'; return; }
     el.innerHTML = alerts.map((a) => `

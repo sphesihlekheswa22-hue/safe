@@ -168,29 +168,7 @@
       </div>
     `).join('');
 
-    // Update alert badges
-    const navBadge = document.getElementById('nav-alert-badge');
-    const sidebarBadge = document.getElementById('alerts-badge');
-    const sidebarIndicator = document.getElementById('alerts-indicator');
-    const criticalCount = alerts.filter(a => a.severity === 'CRITICAL' || a.severity === 'HIGH').length;
-    
-    if (navBadge) {
-      if (criticalCount > 0) {
-        navBadge.textContent = Math.min(criticalCount, 9);
-        navBadge.classList.remove('hidden');
-      } else {
-        navBadge.classList.add('hidden');
-      }
-    }
-    
-    if (sidebarBadge) {
-      sidebarBadge.textContent = alerts.length;
-      sidebarBadge.classList.toggle('hidden', alerts.length === 0);
-    }
-    
-    if (sidebarIndicator) {
-      sidebarIndicator.classList.toggle('hidden', criticalCount === 0);
-    }
+    document.dispatchEvent(new CustomEvent('sr:alerts-updated', { detail: alerts }));
   }
 
   // Render Events

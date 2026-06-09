@@ -188,21 +188,25 @@ def run_seed(refresh_events=True):
     if Alert.query.count() == 0:
         refresh_sa_alerts()
 
-    # --- Sample saved routes ---------------------------------------------
-    if Route.query.count() == 0:
-        for start, end in [("Durban Station", "UKZN"), ("Umlazi", "Durban CBD")]:
-            result = route_optimizer.generate_route(start, end)
-            db.session.add(Route(
-                start_location=result["start_location"],
-                end_location=result["end_location"],
-                start_lat=result.get("start_lat"),
-                start_lng=result.get("start_lng"),
-                end_lat=result.get("end_lat"),
-                end_lng=result.get("end_lng"),
-                risk_score=result["risk_score"],
-                geojson=result["geojson"],
-            ))
-        db.session.commit()
+    # --- Sample saved routes (optional; external OSRM can be slow on deploy) ---
+    if Route.query.count() == 0 and os.environ.get("SEED_SKIP_ROUTES", "").lower() not in ("1", "true"):
+        try:
+            for start, end in [("Durban Station", "UKZN"), ("Umlazi", "Durban CBD")]:
+                result = route_optimizer.generate_route(start, end)
+                db.session.add(Route(
+                    start_location=result["start_location"],
+                    end_location=result["end_location"],
+                    start_lat=result.get("start_lat"),
+                    start_lng=result.get("start_lng"),
+                    end_lat=result.get("end_lat"),
+                    end_lng=result.get("end_lng"),
+                    risk_score=result["risk_score"],
+                    geojson=result["geojson"],
+                ))
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            print(f"  Skipped demo routes (non-fatal): {exc}")
 
     print("Seed complete.")
     print(f"  Admin login:   {admin_email} / {admin_pw}")

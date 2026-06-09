@@ -7,13 +7,15 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     preDeployCommand: python scripts/setup_db.py
-    startCommand: bash scripts/render_start.sh
-    healthCheckPath: /
+    startCommand: gunicorn --worker-class gthread --workers 1 --threads 4 --bind 0.0.0.0:$PORT --timeout 120 --graceful-timeout 30 wsgi:app
+    healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.0"
       - key: FLASK_ENV
         value: production
+      - key: SEED_SKIP_ROUTES
+        value: "true"
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET_KEY

@@ -132,6 +132,136 @@
     });
   }
 
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+    }[c]));
+  }
+
+  function severityPill(sev) {
+    const styles = {
+      CRITICAL: 'bg-gradient-to-r from-rose-600 to-red-700 text-white',
+      HIGH: 'bg-gradient-to-r from-orange-500 to-red-500 text-white',
+      MEDIUM: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white',
+      LOW: 'bg-surface-100 text-surface-600',
+    };
+    return `<span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${styles[sev] || styles.LOW}">${escHtml(sev)}</span>`;
+  }
+
+  function updateAlertBadges(alerts) {
+    const navBadge = document.getElementById('nav-alert-badge');
+    const sidebarBadge = document.getElementById('alerts-badge');
+    const countPill = document.getElementById('nav-alert-count');
+    const urgent = alerts.filter((a) => a.severity === 'CRITICAL' || a.severity === 'HIGH').length;
+    const total = alerts.length;
+
+    if (navBadge) {
+      navBadge.classList.remove('bg-rose-500', 'bg-amber-500');
+      if (urgent > 0) {
+        navBadge.textContent = urgent > 9 ? '9+' : String(urgent);
+        navBadge.classList.add('bg-rose-500');
+        navBadge.classList.remove('hidden');
+      } else if (total > 0) {
+        navBadge.textContent = total > 9 ? '9+' : String(total);
+        navBadge.classList.add('bg-amber-500');
+        navBadge.classList.remove('hidden');
+      } else {
+        navBadge.classList.add('hidden', 'bg-rose-500');
+      }
+    }
+
+    if (sidebarBadge) {
+      sidebarBadge.textContent = total;
+      sidebarBadge.classList.toggle('hidden', total === 0);
+    }
+
+    if (countPill) {
+      countPill.textContent = `${total} active`;
+      countPill.classList.toggle('hidden', total === 0);
+    }
+  }
+
+  function renderAlertPanel(alerts) {
+    const list = document.getElementById('nav-alert-list');
+    if (!list) return;
+
+    if (!alerts.length) {
+      list.innerHTML = `
+        <div class="text-center py-8">
+          <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-emerald-50 flex items-center justify-center text-xl">🎉</div>
+          <p class="text-xs text-surface-500">No active alerts right now</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = alerts.slice(0, 8).map((alert) => {
+      const border = alert.severity === 'CRITICAL' ? 'border-l-rose-500'
+        : alert.severity === 'HIGH' ? 'border-l-orange-500'
+        : alert.severity === 'MEDIUM' ? 'border-l-amber-400'
+        : 'border-l-emerald-400';
+      const when = alert.created_at
+        ? new Date(alert.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '';
+      return `
+        <div class="rounded-xl border border-surface-100 bg-white p-3 border-l-4 ${border} hover:shadow-sm transition-shadow">
+          <p class="text-sm text-surface-700 font-medium leading-snug line-clamp-3">${escHtml(alert.message)}</p>
+          <div class="flex items-center justify-between gap-2 mt-2">
+            ${severityPill(alert.severity)}
+            <span class="text-[10px] text-surface-400 whitespace-nowrap">${escHtml(when)}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  let navAlertsCache = [];
+
+  async function loadNavAlerts() {
+    try {
+      const { alerts } = await SR.get('/api/alerts');
+      navAlertsCache = alerts || [];
+      updateAlertBadges(navAlertsCache);
+      renderAlertPanel(navAlertsCache);
+      return navAlertsCache;
+    } catch (e) {
+      const list = document.getElementById('nav-alert-list');
+      if (list) {
+        list.innerHTML = '<p class="text-xs text-rose-500 text-center py-6">Could not load alerts</p>';
+      }
+      return [];
+    }
+  }
+
+  function wireAlertBell() {
+    const btn = document.getElementById('nav-alert-btn');
+    const panel = document.getElementById('nav-alert-panel');
+    const wrap = document.getElementById('nav-alert-wrap');
+    if (!btn || !panel) return;
+
+    let open = false;
+
+    function setOpen(next) {
+      open = next;
+      panel.classList.toggle('hidden', !open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.classList.toggle('bg-surface-200', open);
+      btn.classList.toggle('text-primary-600', open);
+      if (open) loadNavAlerts();
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(!open);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (open && wrap && !wrap.contains(e.target)) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && open) setOpen(false);
+    });
+  }
+
   // Wire mobile menu
   function wireMobileMenu() {
     const btn = document.getElementById('mobile-menu');
@@ -167,6 +297,7 @@
 
     wireLogout();
     wireMobileMenu();
+    wireAlertBell();
     markActiveNav();
 
     // Use cached user for instant paint
@@ -187,11 +318,23 @@
       // Dispatch event for page-specific handlers
       document.dispatchEvent(new CustomEvent('sr:user-ready', { detail: user }));
 
+      loadNavAlerts();
+      setInterval(loadNavAlerts, 60000);
+
     } catch (e) {
       // 401 handled in api.js
       console.error('Failed to load user:', e);
     }
   }
+
+  document.addEventListener('sr:alerts-updated', (ev) => {
+    navAlertsCache = ev.detail || [];
+    updateAlertBadges(navAlertsCache);
+    const panel = document.getElementById('nav-alert-panel');
+    if (panel && !panel.classList.contains('hidden')) {
+      renderAlertPanel(navAlertsCache);
+    }
+  });
 
   // Run on DOM ready
   if (document.readyState === 'loading') {

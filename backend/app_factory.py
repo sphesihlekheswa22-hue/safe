@@ -53,41 +53,37 @@ def create_app(config_class=Config):
 
     auth_middleware.register(app)
 
-    @app.teardown_appcontext
-    def _cleanup_db_session(exc):
-        if exc is not None:
-            db.session.rollback()
-        db.session.remove()
-
     _register_jwt_handlers(jwt)
     _register_pages(app)
     _register_cli(app)
     _register_error_handlers(app)
 
-    with app.app_context():
-        try:
-            from sqlalchemy import inspect
+    # Skip heavy DB sync at gunicorn boot in production; preDeploy handles schema/seed.
+    if os.environ.get("FLASK_ENV") != "production":
+        with app.app_context():
+            try:
+                from sqlalchemy import inspect
 
-            from models.event import Event
-            from models.risk import RiskArea
-            from services.geo_service import ensure_geo_columns, sync_area_coords, sync_event_coords
+                from models.event import Event
+                from models.risk import RiskArea
+                from services.geo_service import ensure_geo_columns, sync_area_coords, sync_event_coords
 
-            tables = set(inspect(db.engine).get_table_names())
-            if "risk_areas" in tables or "events" in tables:
-                ensure_geo_columns()
-            dirty = False
-            if "risk_areas" in tables:
-                for area in RiskArea.query.filter(RiskArea.latitude.is_(None)).all():
-                    sync_area_coords(area)
-                    dirty = True
-            if "events" in tables:
-                for ev in Event.query.filter(Event.latitude.is_(None)).all():
-                    sync_event_coords(ev)
-                    dirty = True
-            if dirty:
-                db.session.commit()
-        except Exception:
-            db.session.rollback()
+                tables = set(inspect(db.engine).get_table_names())
+                if "risk_areas" in tables or "events" in tables:
+                    ensure_geo_columns()
+                dirty = False
+                if "risk_areas" in tables:
+                    for area in RiskArea.query.filter(RiskArea.latitude.is_(None)).all():
+                        sync_area_coords(area)
+                        dirty = True
+                if "events" in tables:
+                    for ev in Event.query.filter(Event.latitude.is_(None)).all():
+                        sync_event_coords(ev)
+                        dirty = True
+                if dirty:
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
 
     get_logger(__name__).info("SafeRoute AI application initialized.")
     return app

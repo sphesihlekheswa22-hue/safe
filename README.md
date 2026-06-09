@@ -164,15 +164,12 @@ demo data. App available at **http://localhost:5000**.
 |---------|--------|
 | **Build command** | `pip install -r requirements.txt` |
 | **Pre-deploy command** | `python scripts/setup_db.py` |
-| **Start command** | `bash scripts/render_start.sh` |
-
-Or paste the start command directly:
-
-```bash
-gunicorn --worker-class gthread --workers 1 --threads 4 --bind 0.0.0.0:$PORT --timeout 120 --graceful-timeout 30 wsgi:app
-```
+| **Start command** | `gunicorn --worker-class gthread --workers 1 --threads 4 --bind 0.0.0.0:$PORT --timeout 120 --graceful-timeout 30 wsgi:app` |
+| **Health check path** | `/healthz` |
 
 Do **not** use `--workers 2` on the free plan — it causes memory pressure and worker kills.
+
+**Bad Gateway?** Usually the start command is wrong or `DATABASE_URL` is missing. Confirm `DATABASE_URL` (Neon) is set in Environment, then redeploy.
 
 ---
 
