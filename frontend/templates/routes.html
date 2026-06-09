@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Safe Routes · SafeRoute AI{% endblock %}
+
+
+
+{% block extra_head %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+<style>
+
+  #route-leaflet-map { height: 360px; border-radius: 0.75rem; z-index: 0; }
+
+  .geo-suggestions {
+
+    position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+
+    margin-top: 4px; max-height: 200px; overflow-y: auto;
+
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem;
+
+    box-shadow: 0 8px 24px rgba(15,23,42,.12);
+
+  }
+
+  .geo-suggestions li { padding: 0.6rem 0.85rem; font-size: 0.8rem; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+
+  .geo-suggestions li:hover { background: #eff6ff; }
+
+  .geo-suggestions li:last-child { border-bottom: none; }
+
+  .geo-suggestions .sub { color: #64748b; font-size: 0.7rem; margin-top: 2px; }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="glass-card rounded-2xl p-6 border-gradient tilt-card">
+
+    <h3 class="font-semibold text-slate-900 mb-1">Generate a Safe Route</h3>
+
+    <p class="text-xs text-surface-500 mb-4">Enter any real address in South Africa — geocoded via OpenStreetMap</p>
+
+    <form id="route-form" class="space-y-3">
+
+      <div class="relative">
+
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Origin</label>
+
+        <div class="flex gap-2">
+
+          <input class="input flex-1 glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" id="start-location" name="start_location" autocomplete="off" placeholder="e.g. 123 Florida Rd, Durban" />
+
+          <button type="button" id="btn-my-location" class="shrink-0 px-3 py-2 rounded-xl bg-primary-50 text-primary-700 border border-primary-200 hover:bg-primary-100 transition-colors text-sm font-semibold" title="Use my current location">
+
+            <span class="text-base leading-none">📍</span>
+
+          </button>
+
+        </div>
+
+        <input type="hidden" id="start-lat" name="start_lat" />
+
+        <input type="hidden" id="start-lng" name="start_lng" />
+
+        <ul id="start-suggestions" class="geo-suggestions hidden" role="listbox"></ul>
+
+      </div>
+
+      <div class="relative">
+
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Destination</label>
+
+        <input class="input w-full glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" id="end-location" name="end_location" required autocomplete="off" placeholder="e.g. UKZN Westville campus" />
+
+        <input type="hidden" id="end-lat" name="end_lat" />
+
+        <input type="hidden" id="end-lng" name="end_lng" />
+
+        <ul id="end-suggestions" class="geo-suggestions hidden" role="listbox"></ul>
+
+      </div>
+
+      <button class="btn-primary w-full magnetic-btn ripple liquid-btn" type="submit" id="route-submit-btn">Find safest route</button>
+
+    </form>
+
+    <div id="route-result" class="mt-6 hidden reveal">
+
+      <div class="flex items-center justify-between mb-2">
+
+        <span class="text-sm text-surface-500 font-medium">Route assessment</span>
+
+        <span id="route-risk" class="badge badge-low">—</span>
+
+      </div>
+
+      <p id="route-explanation" class="text-sm text-surface-600 mb-3 leading-relaxed"></p>
+
+      <div id="route-leaflet-map" class="w-full bg-surface-50 border border-surface-200/50 shadow-inner"></div>
+
+      <div id="route-alternatives" class="mt-4 space-y-2 hidden"></div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="glass-card rounded-2xl p-6 lg:col-span-2 border-gradient tilt-card">
+
+    <h3 class="font-semibold text-slate-900 mb-1">Recent Routes</h3>
+
+    <p class="text-xs text-surface-500 mb-4">Click a row to preview on the map</p>
+
+    <div class="overflow-x-auto">
+
+      <table class="data w-full text-sm">
+
+        <thead><tr><th>From</th><th>To</th><th>Risk</th><th></th></tr></thead>
+
+        <tbody id="routes-body"><tr><td colspan="4" class="text-slate-400">Loading…</td></tr></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block page_script %}
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script src="/static/js/leaflet-map.js"></script>
+
+<script src="/static/js/routes.js"></script>
+
+{% endblock %}
+

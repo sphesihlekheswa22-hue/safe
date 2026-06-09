@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% from 'base.html' import kpi_card %}
+{% block title %}Analytics · SafeRoute AI{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="grid grid-cols-2 xl:grid-cols-5 gap-4">
+    {{ kpi_card('Users', 'a-users', '👥') }}
+    {{ kpi_card('Institutions', 'a-inst', '🏢') }}
+    {{ kpi_card('Events', 'a-events', '⚠️') }}
+    {{ kpi_card('Alerts', 'a-alerts', '🔔') }}
+    {{ kpi_card('Risk Areas', 'a-areas', '🗺️') }}
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="glass-card rounded-2xl p-6 border-gradient tilt-card">
+      <h3 class="font-semibold text-slate-900 mb-4">Users by Role</h3>
+      <div id="chart-roles" class="space-y-3"></div>
+    </div>
+    <div class="glass-card rounded-2xl p-6 border-gradient tilt-card">
+      <h3 class="font-semibold text-slate-900 mb-4">Events by Severity</h3>
+      <div id="chart-severity" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <div class="glass-card rounded-2xl p-6 border-gradient tilt-card">
+    <h3 class="font-semibold text-slate-900 mb-4">Top Risk Areas</h3>
+    <div id="chart-areas" class="space-y-3"></div>
+  </div>
+
+  <div class="glass-card rounded-2xl p-6 border-gradient tilt-card">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-slate-900">AI Model</h3>
+      <button id="recompute" class="btn-ghost magnetic-btn ripple">Recompute risk areas</button>
+    </div>
+    <pre id="model-info" class="text-xs bg-surface-900/90 border border-surface-700/50 rounded-xl p-4 overflow-x-auto text-emerald-300 font-mono shadow-inner">Loading…</pre>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script>
+(function () {
+  function setText(id, v){const el=document.getElementById(id);if(el)el.textContent=v;}
+
+  async function load() {
+    const rpt = await SR.get("/api/reports/analytics");
+    setText("a-users", rpt.totals.users);
+    setText("a-inst", rpt.totals.institutions);
+    setText("a-events", rpt.totals.events);
+    setText("a-alerts", rpt.totals.alerts);
+    setText("a-areas", rpt.totals.risk_areas);
+
+    Charts.barChart("chart-roles", Object.entries(rpt.users_by_role).map(([k,v]) => ({ label: k.replaceAll("_"," "), value: v })));
+    Charts.barChart("chart-severity", Object.entries(rpt.events_by_severity).map(([k,v]) => ({ label: "Severity " + k, value: v })), { color: "#d97706" });
+    Charts.barChart("chart-areas", rpt.top_risk_areas.map((a) => ({
+      label: a.area_name, value: a.risk_score,
+      color: a.risk_level === "HIGH" ? "#dc2626" : a.risk_level === "MEDIUM" ? "#d97706" : "#059669",
+    })), { max: 100 });
+
+    try {
+      const { models } = await SR.get("/api/reports/model-info");
+      document.getElementById("model-info").textContent = JSON.stringify(models, null, 2);
+    } catch (e) { /* analyst-only ok */ }
+  }
+
+  document.getElementById("recompute").addEventListener("click", async () => {
+    try { await SR.post("/api/ai/recompute"); flash("Risk areas recomputed.", "success"); load(); }
+    catch (e) { flash(e.message, "error"); }
+  });
+
+  document.addEventListener("sr:user-ready", load);
+})();
+</script>
+{% endblock %}

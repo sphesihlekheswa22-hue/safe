@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeRoute AI — Secure Access</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    
+    /* Animated gradient background */
+    .gradient-bg {
+      background: linear-gradient(-45deg, #0f172a, #1e3a8a, #2563eb, #0f172a);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Floating shapes animation */
+    .floating-shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.1;
+      animation: float 20s infinite ease-in-out;
+    }
+    
+    .shape-1 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(37,99,235,0.8) 0%, transparent 70%);
+      top: -150px; left: -100px;
+      animation-delay: 0s;
+    }
+    
+    .shape-2 {
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(59,130,246,0.6) 0%, transparent 70%);
+      bottom: -100px; right: -50px;
+      animation-delay: -5s;
+    }
+    
+    .shape-3 {
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, rgba(96,165,250,0.5) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      animation-delay: -10s;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+    
+    /* Glassmorphism card */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    }
+    
+    /* Dark glass card for left panel */
+    .dark-glass {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Input animations */
+    .input-group {
+      position: relative;
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      background: rgba(248, 250, 252, 0.8);
+      border: 2px solid #e2e8f0;
+      border-radius: 0.75rem;
+      font-size: 0.95rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+    }
+    
+    .input-field:hover {
+      background: rgba(255, 255, 255, 1);
+      border-color: #cbd5e1;
+    }
+    
+    .input-field:focus {
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      transition: color 0.3s ease;
+    }
+    
+    .input-field:focus ~ .input-icon {
+      color: #2563eb;
+    }
+    
+    /* Floating label */
+    .floating-label {
+      position: absolute;
+      left: 3rem;
+      top: 1rem;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: transparent;
+      padding: 0 0.25rem;
+    }
+    
+    .input-field:focus ~ .floating-label,
+    .input-field:not(:placeholder-shown) ~ .floating-label {
+      top: -0.5rem;
+      left: 0.75rem;
+      font-size: 0.75rem;
+      color: #2563eb;
+      background: white;
+      font-weight: 600;
+    }
+    
+    /* Tab buttons */
+    .tab-btn {
+      position: relative;
+      padding: 0.875rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #64748b;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 0.5rem;
+    }
+    
+    .tab-btn:hover {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.05);
+    }
+    
+    .tab-btn.active {
+      color: #2563eb;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 3px;
+      background: #2563eb;
+      border-radius: 2px;
+    }
+    
+    /* Primary button */
+    .btn-primary {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1);
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    /* Alert/notification styles */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .alert-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+    }
+    
+    .alert-success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #16a34a;
+    }
+    
+    /* Feature cards */
+    .feature-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+    
+    /* Password strength indicator */
+    .password-strength {
+      height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .password-strength-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    /* Checkbox custom */
+    .custom-checkbox {
+      appearance: none;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    .custom-checkbox:checked {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .custom-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 0.75rem;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .btn-primary.loading .spinner {
+      display: inline-block;
+    }
+    
+    .btn-primary.loading .btn-text {
+      opacity: 0.7;
+    }
+    
+    /* Smooth transitions for form switching */
+    .form-container {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .form-container.hidden {
+      display: none;
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+  <!-- Floating background shapes -->
+  <div class="floating-shape shape-1"></div>
+  <div class="floating-shape shape-2"></div>
+  <div class="floating-shape shape-3"></div>
+
+  <!-- Main container -->
+  <div class="w-full max-w-6xl grid lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden shadow-2xl relative z-10">
+    
+    <!-- Left Panel - Brand/Info -->
+    <div class="dark-glass p-8 lg:p-12 flex flex-col justify-between text-white min-h-[500px]">
+      <div>
+        <!-- Logo -->
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-2xl shadow-lg">
+            🛡️
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight">SafeRoute <span class="text-blue-400">AI</span></h1>
+            <p class="text-xs text-slate-400">Intelligent Risk Prediction Platform</p>
+          </div>
+        </div>
+        
+        <!-- Headline -->
+        <h2 class="text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+          Secure Communities<br>
+          <span class="text-blue-400">Smarter Routes</span>
+        </h2>
+        
+        <p class="text-slate-300 text-lg mb-8 leading-relaxed max-w-md">
+          AI-powered community risk analysis and safe route recommendations for institutions, transport operators, and government authorities.
+        </p>
+        
+        <!-- Feature highlights -->
+        <div class="space-y-3">
+          <div class="feature-card flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-xl">
+              📊
+            </div>
+            <div>
+              <p class="font-semibold text-sm">Real-time Risk Scoring</p>
+              <p class="text-xs text-slate-400">AI-powered area analysis</p>
+            </div>
+          </div>
+          
+          <div class="feature-card flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-xl">
+              🗺️
+            </div>
+            <div>
+              <p class="font-semibold text-sm">Smart Route Planning</p>
+              <p class="text-xs text-slate-400">Safety-optimized navigation</p>
+            </div>
+          </div>
+          
+          <div class="feature-card flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-xl">
+              🔔
+            </div>
+            <div>
+              <p class="font-semibold text-sm">Instant Alerts</p>
+              <p class="text-xs text-slate-400">Role-based notifications</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer stats -->
+      <div class="mt-8 pt-6 border-t border-white/10">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-2xl font-bold text-blue-400">99.9%</p>
+            <p class="text-xs text-slate-400">Uptime</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-blue-400">50+</p>
+            <p class="text-xs text-slate-400">Cities</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-blue-400">24/7</p>
+            <p class="text-xs text-slate-400">Monitoring</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Panel - Forms -->
+    <div class="glass-card p-8 lg:p-12 flex flex-col justify-center">
+      
+      <!-- Tab Switcher -->
+      <div class="flex bg-slate-100/80 p-1 rounded-xl mb-8">
+        <button id="tab-login" class="tab-btn active flex-1" onclick="switchTab('login')">
+          Sign In
+        </button>
+        <button id="tab-register" class="tab-btn flex-1" onclick="switchTab('register')">
+          Create Account
+        </button>
+      </div>
+      
+      <!-- Alerts -->
+      <div id="form-error" class="hidden mb-6"></div>
+      <div id="form-success" class="hidden mb-6"></div>
+      
+      <!-- Login Form -->
+      <form id="login-form" class="form-container space-y-5">
+        <div class="text-center mb-6">
+          <h3 class="text-2xl font-bold text-slate-900 mb-1">Welcome Back</h3>
+          <p class="text-slate-500 text-sm">Sign in to access your dashboard</p>
+        </div>
+        
+        <div class="input-group">
+          <input type="email" name="email" class="input-field" placeholder=" " required autocomplete="email">
+          <svg class="input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+          </svg>
+          <label class="floating-label">Email Address</label>
+        </div>
+        
+        <div class="input-group">
+          <input type="password" name="password" class="input-field" placeholder=" " required autocomplete="current-password">
+          <svg class="input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <label class="floating-label">Password</label>
+        </div>
+        
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="custom-checkbox">
+            <span class="text-slate-600">Remember me</span>
+          </label>
+          <a href="#" class="text-blue-600 hover:text-blue-700 font-medium transition-colors">Forgot password?</a>
+        </div>
+        
+        <button type="submit" class="btn-primary mt-2">
+          <span class="spinner"></span>
+          <span class="btn-text">Sign In to Dashboard</span>
+        </button>
+        
+        <!-- Demo accounts hint -->
+        <div class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <p class="text-xs text-slate-500 mb-2 font-semibold uppercase tracking-wide">Demo Accounts</p>
+          <div class="space-y-1 text-xs text-slate-600">
+            <div class="flex justify-between">
+              <span>Admin:</span>
+              <code class="bg-white px-2 py-0.5 rounded border">admin@saferoute.ai</code>
+            </div>
+            <div class="flex justify-between">
+              <span>Password:</span>
+              <code class="bg-white px-2 py-0.5 rounded border">Admin#12345</code>
+            </div>
+          </div>
+        </div>
+      </form>
+      
+      <!-- Register Form -->
+      <form id="register-form" class="form-container space-y-5 hidden">
+        <div class="text-center mb-6">
+          <h3 class="text-2xl font-bold text-slate-900 mb-1">Create Account</h3>
+          <p class="text-slate-500 text-sm">Join SafeRoute AI community</p>
+        </div>
+        
+        <div class="input-group">
+          <input type="text" name="name" class="input-field" placeholder=" " required autocomplete="name">
+          <svg class="input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+          <label class="floating-label">Full Name</label>
+        </div>
+        
+        <div class="input-group">
+          <input type="email" name="email" class="input-field" placeholder=" " required autocomplete="email">
+          <svg class="input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+          </svg>
+          <label class="floating-label">Email Address</label>
+        </div>
+        
+        <div class="input-group">
+          <input type="password" name="password" class="input-field" placeholder=" " required autocomplete="new-password" id="reg-password">
+          <svg class="input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <label class="floating-label">Password</label>
+        </div>
+        
+        <!-- Password strength indicator -->
+        <div class="password-strength">
+          <div class="password-strength-bar" id="strength-bar"></div>
+        </div>
+        <p class="text-xs text-slate-500" id="password-hint">Min 8 chars with letter & number</p>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-3">
+          <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-xs text-blue-700 leading-relaxed">
+            New accounts are created as <strong>Public User</strong>. Roles are assigned by system administrators.
+          </p>
+        </div>
+        
+        <button type="submit" class="btn-primary">
+          <span class="spinner"></span>
+          <span class="btn-text">Create Account</span>
+        </button>
+        
+        <p class="text-center text-xs text-slate-500">
+          By creating an account, you agree to our 
+          <a href="#" class="text-blue-600 hover:underline">Terms</a> & 
+          <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>
+        </p>
+      </form>
+      
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    // Check if already authenticated
+    if (SR.getToken()) location.href = "/dashboard";
+    
+    // Tab switching
+    function switchTab(tab) {
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const loginTab = document.getElementById('tab-login');
+      const registerTab = document.getElementById('tab-register');
+      
+      // Clear alerts
+      document.getElementById('form-error').classList.add('hidden');
+      document.getElementById('form-success').classList.add('hidden');
+      
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+        
+        // Small delay for animation
+        setTimeout(() => {
+          loginForm.style.opacity = '1';
+          loginForm.style.transform = 'translateX(0)';
+        }, 10);
+      } else {
+        loginForm.style.opacity = '0';
+        loginForm.style.transform = 'translateX(-20px)';
+        
+        setTimeout(() => {
+          loginForm.classList.add('hidden');
+          registerForm.classList.remove('hidden');
+          registerTab.classList.add('active');
+          loginTab.classList.remove('active');
+          
+          setTimeout(() => {
+            registerForm.style.opacity = '1';
+            registerForm.style.transform = 'translateX(0)';
+          }, 10);
+        }, 300);
+      }
+      
+      // Update URL hash
+      history.pushState(null, null, tab === 'register' ? '#register' : '#login');
+    }
+    
+    // Check hash on load
+    if (location.hash === '#register') {
+      switchTab('register');
+    }
+    
+    // Password strength indicator
+    document.getElementById('reg-password')?.addEventListener('input', function(e) {
+      const password = e.target.value;
+      const bar = document.getElementById('strength-bar');
+      const hint = document.getElementById('password-hint');
+      
+      let strength = 0;
+      if (password.length >= 8) strength += 25;
+      if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength += 25;
+      if (password.match(/\d/)) strength += 25;
+      if (password.match(/[^a-zA-Z\d]/)) strength += 25;
+      
+      bar.style.width = strength + '%';
+      
+      if (strength <= 25) {
+        bar.style.background = '#ef4444';
+        hint.textContent = 'Weak password';
+        hint.className = 'text-xs text-red-500';
+      } else if (strength <= 50) {
+        bar.style.background = '#f59e0b';
+        hint.textContent = 'Fair password';
+        hint.className = 'text-xs text-amber-500';
+      } else if (strength <= 75) {
+        bar.style.background = '#3b82f6';
+        hint.textContent = 'Good password';
+        hint.className = 'text-xs text-blue-500';
+      } else {
+        bar.style.background = '#10b981';
+        hint.textContent = 'Strong password';
+        hint.className = 'text-xs text-emerald-500';
+      }
+    });
+    
+    // Form helpers
+    function showAlert(elementId, message, type) {
+      const el = document.getElementById(elementId);
+      const icon = type === 'error' 
+        ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+        : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+      
+      el.innerHTML = icon + '<span>' + message + '</span>';
+      el.className = 'alert alert-' + type;
+      el.classList.remove('hidden');
+    }
+    
+    function hideAlerts() {
+      document.getElementById('form-error').classList.add('hidden');
+      document.getElementById('form-success').classList.add('hidden');
+    }
+    
+    function setLoading(form, loading) {
+      const btn = form.querySelector('.btn-primary');
+      if (loading) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+    
+    // Login form
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      hideAlerts();
+      setLoading(this, true);
+      
+      const formData = new FormData(this);
+      
+      try {
+        const res = await SR.login({
+          email: formData.get('email'),
+          password: formData.get('password')
+        });
+        
+        SR.setSession(res.access_token, res.user);
+        showAlert('form-success', 'Login successful! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          location.href = '/dashboard';
+        }, 500);
+        
+      } catch (err) {
+        showAlert('form-error', err.message || 'Invalid email or password', 'error');
+        setLoading(this, false);
+      }
+    });
+    
+    // Register form
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      hideAlerts();
+      setLoading(this, true);
+      
+      const formData = new FormData(this);
+      
+      try {
+        const res = await SR.register({
+          name: formData.get('name'),
+          email: formData.get('email'),
+          password: formData.get('password')
+        });
+        
+        SR.setSession(res.access_token, res.user);
+        showAlert('form-success', 'Account created successfully! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          location.href = '/dashboard';
+        }, 500);
+        
+      } catch (err) {
+        showAlert('form-error', err.message || 'Registration failed', 'error');
+        setLoading(this, false);
+      }
+    });
+  </script>
+</body>
+</html>

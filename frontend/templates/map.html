@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Safety Map · SafeRoute AI{% endblock %}
+
+
+
+{% block extra_head %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+<style>
+
+  #safety-map { height: 520px; border-radius: 1rem; z-index: 0; }
+
+  .leaflet-popup-content { font-size: 13px; line-height: 1.4; margin: 10px 14px; }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+
+  <div>
+
+    <h1 class="text-2xl font-display font-bold text-surface-800">Safety Map</h1>
+
+    <p class="text-sm text-surface-500 mt-1">Live risk zones, incidents, and alerts across South Africa</p>
+
+  </div>
+
+  <div class="flex flex-wrap gap-3 text-xs">
+
+    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Low</span>
+
+    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Medium</span>
+
+    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> High</span>
+
+    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-950 text-white border border-red-800"><span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Critical</span>
+
+    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface-100 text-surface-600 border border-surface-200"><span class="w-2.5 h-2.5 rounded-full bg-surface-500"></span> Incident</span>
+
+  </div>
+
+</div>
+
+
+
+<div class="glass-card rounded-2xl p-4 mb-6 relative">
+
+  <div id="safety-map" class="w-full bg-surface-100"></div>
+
+  <p id="map-status" class="text-xs text-surface-400 mt-2 text-center">Loading map data…</p>
+
+</div>
+
+
+
+<div class="glass-card rounded-2xl overflow-hidden">
+
+  <div class="px-6 py-4 border-b border-surface-200">
+
+    <h2 class="font-display font-bold text-surface-800">Area details</h2>
+
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="data w-full text-sm">
+
+      <thead>
+
+        <tr><th>Area</th><th>Score</th><th>Level</th><th>Last updated</th></tr>
+
+      </thead>
+
+      <tbody id="map-areas-body">
+
+        <tr><td colspan="4" class="text-surface-400 py-6 text-center">Loading…</td></tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block page_script %}
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script src="/static/js/leaflet-map.js"></script>
+
+<script src="/static/js/map.js"></script>
+
+{% endblock %}
+

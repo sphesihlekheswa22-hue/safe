@@ -1,0 +1,612 @@
+{# Shared UI macros — imported by dashboard.html, analytics.html, etc. #}
+{% macro kpi_card(label, value_id, icon, color='blue', trend=None, trend_value=None) -%}
+<div class="glass-card rounded-2xl p-6 relative overflow-hidden group cursor-pointer">
+  <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-{{ color }}-200/50 to-{{ color }}-400/30 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:scale-150 duration-500"></div>
+  <div class="relative z-10">
+    <div class="flex items-start justify-between mb-4">
+      <div class="p-3 rounded-xl bg-gradient-to-br from-{{ color }}-100 to-{{ color }}-200 text-{{ color }}-600 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+        <span class="text-2xl">{{ icon }}</span>
+      </div>
+      {% if trend %}
+      <div class="flex items-center gap-1 px-2 py-1 rounded-lg {% if trend == 'up' %}bg-emerald-50 text-emerald-600{% else %}bg-rose-50 text-rose-600{% endif %}">
+        <span class="text-xs font-bold">{{ trend_value|default('12%') }}</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="mb-1">
+      <span id="{{ value_id }}" class="text-3xl lg:text-4xl font-display font-bold text-surface-800 group-hover:text-{{ color }}-700 transition-colors duration-300">—</span>
+      {% if label == 'Risk Score' %}<span class="text-lg text-surface-400 font-medium">/100</span>{% endif %}
+    </div>
+    <p class="text-sm font-medium text-surface-500 group-hover:text-surface-600 transition-colors">{{ label }}</p>
+    {% if label in ['Average Risk', 'Risk Score'] %}
+    <div class="mt-4 h-1.5 bg-surface-200 rounded-full overflow-hidden">
+      <div id="{{ value_id }}-bar" class="h-full bg-gradient-to-r from-{{ color }}-400 to-{{ color }}-600 rounded-full transition-all duration-1000" style="width: 0%"></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro kpi_card_advanced(label, value_id, icon, color='blue', chart_id=None) -%}
+<div class="glass-card rounded-2xl p-6 relative overflow-hidden group cursor-pointer">
+  <div class="relative z-10">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-{{ color }}-400 to-{{ color }}-600 text-white flex items-center justify-center text-xl shadow-lg">
+          {{ icon }}
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-{{ color }}-600 uppercase tracking-wider">{{ label }}</p>
+          <h3 id="{{ value_id }}" class="text-2xl font-display font-bold text-surface-800">—</h3>
+        </div>
+      </div>
+    </div>
+    {% if chart_id %}<div id="{{ chart_id }}" class="h-16 mt-2"></div>{% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro status_card(title, status_id, status_text_id, icon) -%}
+<div class="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500 group cursor-pointer">
+  <div class="flex items-center gap-4">
+    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center text-2xl shadow-lg">
+      {{ icon }}
+    </div>
+    <div class="flex-1">
+      <p class="text-sm font-medium text-surface-500">{{ title }}</p>
+      <div class="flex items-center gap-2">
+        <span id="{{ status_id }}" class="text-lg font-display font-bold text-surface-800">—</span>
+        <span id="{{ status_text_id }}" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Active</span>
+      </div>
+    </div>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro risk_badge(level) -%}
+{% if level == 'HIGH' %}
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-rose-500 to-red-600 text-white text-xs font-bold rounded-full">HIGH RISK</span>
+{% elif level == 'MEDIUM' %}
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-full">MEDIUM RISK</span>
+{% else %}
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-400 to-teal-500 text-white text-xs font-bold rounded-full">LOW RISK</span>
+{% endif %}
+{%- endmacro %}
+
+{% macro severity_badge(severity) -%}
+{% if severity >= 4 %}
+<span class="inline-flex items-center px-2.5 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200">SEV {{ severity }}</span>
+{% elif severity == 3 %}
+<span class="inline-flex items-center px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-200">SEV {{ severity }}</span>
+{% else %}
+<span class="inline-flex items-center px-2.5 py-1 bg-surface-100 text-surface-600 text-xs font-bold rounded-lg border border-surface-200">SEV {{ severity }}</span>
+{% endif %}
+{%- endmacro %}
+
+{% macro alert_badge(severity) -%}
+{% if severity == 'CRITICAL' %}
+<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-rose-600 to-red-700 text-white text-[10px] font-bold rounded-full uppercase">{{ severity }}</span>
+{% elif severity == 'HIGH' %}
+<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold rounded-full uppercase">{{ severity }}</span>
+{% elif severity == 'MEDIUM' %}
+<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold rounded-full uppercase">{{ severity }}</span>
+{% else %}
+<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-200 text-surface-600 text-[10px] font-bold rounded-full uppercase">{{ severity }}</span>
+{% endif %}
+{%- endmacro %}
+
+{% macro panel(title, subtitle='', action=None) -%}
+<div class="glass-card rounded-2xl overflow-hidden group">
+  <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between bg-gradient-to-r from-white to-surface-50/50">
+    <div>
+      <h3 class="font-display font-bold text-surface-800 group-hover:text-primary-700 transition-colors">{{ title }}</h3>
+      {% if subtitle %}<p class="text-xs text-surface-500 mt-0.5">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% if action %}<div class="flex items-center gap-2">{{ action }}</div>{% endif %}
+  </div>
+  <div class="p-6">{{ caller() }}</div>
+</div>
+{%- endmacro %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}SafeRoute AI{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+              800: '#1e40af', 900: '#1e3a8a', 950: '#172554',
+            },
+            surface: {
+              50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+              400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
+              800: '#1e293b', 900: '#0f172a', 950: '#020617',
+            }
+          },
+          boxShadow: {
+            'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+            'glass-lg': '0 8px 32px 0 rgba(31, 38, 135, 0.25)',
+            'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+            'glow': '0 0 40px rgba(59, 130, 246, 0.15)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+    .mesh-gradient {
+      background:
+        radial-gradient(at 40% 20%, hsla(217,91%,60%,0.08) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(263,70%,60%,0.08) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(330,80%,60%,0.06) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, hsla(217,91%,60%,0.06) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(263,70%,60%,0.06) 0px, transparent 50%);
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05), 0 0 0 1px rgba(255,255,255,0.6) inset;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 20px 25px -5px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset;
+    }
+
+    /* ===== CLEAN SIDEBAR STYLES ===== */
+    .sidebar {
+      background: #0f172a;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-brand {
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.875rem;
+      border-radius: 0.625rem;
+      color: #94a3b8;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      position: relative;
+      margin-bottom: 0.125rem;
+    }
+    .sidebar-nav-item:hover {
+      background: rgba(255,255,255,0.04);
+      color: #e2e8f0;
+    }
+    .sidebar-nav-item.active {
+      background: rgba(37, 99, 235, 0.12);
+      color: #60a5fa;
+    }
+    .sidebar-nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #3b82f6;
+      border-radius: 0 3px 3px 0;
+    }
+    .sidebar-nav-item.active .sidebar-icon {
+      color: #60a5fa;
+    }
+    .sidebar-icon {
+      width: 18px;
+      height: 18px;
+      color: #64748b;
+      transition: color 0.2s ease;
+      flex-shrink: 0;
+    }
+    .sidebar-nav-item:hover .sidebar-icon {
+      color: #94a3b8;
+    }
+    .sidebar-nav-item.active .sidebar-icon {
+      color: #60a5fa;
+    }
+    .sidebar-section-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #475569;
+      padding: 0 0.875rem;
+      margin: 1.25rem 0 0.5rem 0;
+    }
+    .sidebar-badge {
+      font-size: 0.625rem;
+      font-weight: 700;
+      padding: 0.125rem 0.375rem;
+      border-radius: 9999px;
+      margin-left: auto;
+    }
+    .sidebar-badge-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+    .sidebar-badge-rose {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+    .sidebar-badge-violet {
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+    }
+    .sidebar-badge-amber-admin {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+    .sidebar-footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(2, 6, 23, 0.5);
+    }
+    .sidebar-user-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.75rem;
+      padding: 0.875rem;
+    }
+    .sidebar-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 0.625rem;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    .sidebar-logout {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.12);
+      transition: all 0.2s ease;
+      margin-top: 0.75rem;
+    }
+    .sidebar-logout:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+
+    /* Navbar */
+    .topbar {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.4); }
+
+    /* Chat */
+    .sr-chat-panel { backdrop-filter: blur(20px); }
+    .sr-chat-bubble-user {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border-bottom-right-radius: 0.25rem;
+    }
+    .sr-chat-bubble-bot {
+      background: #fff;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 0.25rem;
+    }
+  </style>
+
+  <link rel="stylesheet" href="/static/css/tailwind.css" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-surface-50 text-surface-800 antialiased min-h-screen flex mesh-gradient">
+
+  <!-- ===== CLEAN SIDEBAR ===== -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 sidebar z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden">
+
+    <!-- Brand -->
+    <div class="sidebar-brand flex-shrink-0 h-16 flex items-center gap-3 px-5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/20">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h1 class="text-sm font-display font-bold text-white tracking-tight">SafeRoute</h1>
+        <p class="text-[10px] text-surface-500 uppercase tracking-wider font-semibold">AI Platform</p>
+      </div>
+      <button id="close-sidebar" class="lg:hidden text-surface-500 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain">
+
+      <div class="sidebar-section-label">Overview</div>
+
+      <a href="/dashboard" data-nav="dashboard" class="sidebar-nav-item active">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="/events" data-nav="events" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+        </svg>
+        <span>Events</span>
+        <span id="events-badge" class="sidebar-badge sidebar-badge-amber hidden">0</span>
+      </a>
+
+      <a href="/routes" data-nav="routes" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/>
+        </svg>
+        <span>Safe Routes</span>
+      </a>
+
+      <a href="/map" data-nav="map" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+        </svg>
+        <span>Safety Map</span>
+      </a>
+
+      <a href="/alerts" data-nav="alerts" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+        </svg>
+        <span>Alerts</span>
+        <span id="alerts-badge" class="sidebar-badge sidebar-badge-rose hidden">0</span>
+      </a>
+
+      <div class="sidebar-section-label">Management</div>
+
+      <a href="/institution" data-nav="institution" data-roles="INSTITUTION_ADMIN,SYSTEM_ADMIN" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/>
+        </svg>
+        <span>Institution</span>
+      </a>
+
+      <a href="/transport" data-nav="transport" data-roles="TRANSPORT_OPERATOR,SYSTEM_ADMIN" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+        </svg>
+        <span>Transport</span>
+      </a>
+
+      <a href="/government" data-nav="government" data-roles="GOVERNMENT_AUTHORITY,SYSTEM_ADMIN" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6M3 10.5v-1.5m18 1.5V3m0 18v-6M3 15h18M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+        <span>Government</span>
+      </a>
+
+      <a href="/profile" data-nav="profile" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+        </svg>
+        <span>My Profile</span>
+      </a>
+
+      <div class="sidebar-section-label">Advanced</div>
+
+      <a href="/analytics" data-nav="analytics" data-roles="SYSTEM_ANALYST,GOVERNMENT_AUTHORITY,SYSTEM_ADMIN" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+        </svg>
+        <span>Analytics</span>
+        <span class="sidebar-badge sidebar-badge-violet">PRO</span>
+      </a>
+
+      <a href="/admin" data-nav="admin" data-roles="SYSTEM_ADMIN" class="sidebar-nav-item">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.212 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Admin Panel</span>
+        <span class="sidebar-badge sidebar-badge-amber-admin">ADMIN</span>
+      </a>
+    </nav>
+
+    <!-- User Footer -->
+    <div class="sidebar-footer flex-shrink-0 p-4">
+      <div class="sidebar-user-card">
+        <div class="flex items-center gap-3">
+          <div id="user-avatar" class="sidebar-avatar">?</div>
+          <div class="flex-1 min-w-0">
+            <p id="user-name" class="text-sm font-semibold text-surface-200 truncate">Loading...</p>
+            <p id="user-role" class="text-[10px] text-surface-500 uppercase tracking-wide font-medium truncate">...</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-surface-700/50">
+          <div class="text-center">
+            <p class="text-base font-bold text-surface-200" id="user-risk-score">—</p>
+            <p class="text-[10px] text-surface-500 uppercase tracking-wide">Risk</p>
+          </div>
+          <div class="text-center">
+            <p class="text-base font-bold text-surface-200" id="user-alerts">—</p>
+            <p class="text-[10px] text-surface-500 uppercase tracking-wide">Alerts</p>
+          </div>
+        </div>
+        <button id="logout-btn" class="sidebar-logout">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+          Sign Out
+        </button>
+      </div>
+      <p class="text-[10px] text-surface-600 text-center mt-3">SafeRoute AI v2.0.1</p>
+    </div>
+  </aside>
+
+  <!-- Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden lg:hidden opacity-0 transition-opacity duration-300"></div>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0 ml-0 lg:ml-64 relative z-10">
+
+    <!-- Navbar -->
+    <header class="sticky top-0 z-30 h-16 topbar">
+      <div class="h-full px-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button id="mobile-menu" class="lg:hidden w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center text-surface-600 hover:bg-surface-200 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          </button>
+          <div class="hidden sm:block">
+            <h1 id="page-heading" class="text-lg font-display font-bold text-surface-800">{{ heading|default('Dashboard') }}</h1>
+            <p id="breadcrumb" class="text-[11px] text-surface-400">SafeRoute AI / {{ heading|default('Dashboard') }}</p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-4">
+          <div class="flex items-center gap-2 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+            <span class="text-[11px] font-medium text-emerald-700">Online</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-surface-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-[11px] font-medium" id="last-update">Just now</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 hover:bg-surface-200 hover:text-surface-700 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+          </button>
+          <button class="relative w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 hover:bg-surface-200 hover:text-surface-700 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+            <span id="nav-alert-badge" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center hidden">3</span>
+          </button>
+          <button class="w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 hover:bg-surface-200 hover:text-surface-700 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.212 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </button>
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary-500/20 cursor-pointer hover:scale-105 transition-transform">
+            <span id="nav-avatar">?</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash Messages -->
+    <div id="flash-container" class="fixed top-16 right-6 z-50 space-y-2 max-w-sm"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 lg:p-8 overflow-x-hidden relative">
+      <div class="max-w-7xl mx-auto">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <!-- Safety Assistant Chat -->
+  <div id="sr-chat-root" class="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+    <div id="sr-chat-panel" class="hidden w-[min(100vw-2rem,380px)] h-[min(70vh,520px)] flex flex-col rounded-2xl shadow-2xl border border-white/40 overflow-hidden glass-card sr-chat-panel">
+      <div class="flex items-center gap-3 px-4 py-3 border-b border-surface-200 bg-gradient-to-r from-primary-600 to-primary-700 text-white flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-display font-bold text-sm">Safety Assistant</p>
+          <p class="text-[10px] text-primary-100">Live alerts · risk · incidents</p>
+        </div>
+        <button id="sr-chat-close" type="button" class="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors" aria-label="Close chat">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="sr-chat-messages" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-surface-50/80"></div>
+      <div id="sr-chat-suggestions" class="flex flex-wrap gap-2 px-4 pb-2 bg-surface-50/80 flex-shrink-0"></div>
+      <form id="sr-chat-form" class="flex gap-2 p-3 border-t border-surface-200 bg-white flex-shrink-0">
+        <input id="sr-chat-input" type="text" class="flex-1 text-sm rounded-xl border border-surface-200 px-3 py-2 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" placeholder="Ask about safety in your area…" maxlength="2000" autocomplete="off" />
+        <button type="submit" class="px-4 rounded-xl bg-primary-600 text-white hover:bg-primary-700 transition-colors flex-shrink-0" aria-label="Send">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+        </button>
+      </form>
+    </div>
+    <button id="sr-chat-toggle" type="button" class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 hover:scale-105 transition-all flex items-center justify-center" aria-label="Open safety assistant">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+    </button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/charts.js"></script>
+  <script src="/static/js/websocket.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/chat.js"></script>
+  {% block page_script %}{% endblock %}
+
+  <style>
+    .sr-chat-msg { display: flex; }
+    .sr-chat-msg-user { justify-content: flex-end; }
+    .sr-chat-msg-bot { justify-content: flex-start; }
+    .sr-chat-bubble {
+      max-width: 88%;
+      padding: 0.65rem 0.85rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    .sr-chat-msg-user .sr-chat-bubble { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border-bottom-right-radius: 0.25rem; }
+    .sr-chat-msg-bot .sr-chat-bubble { background: #fff; color: #334155; border: 1px solid #e2e8f0; border-bottom-left-radius: 0.25rem; }
+    .sr-chat-action { display: inline-block; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #2563eb; }
+    .sr-chat-action:hover { text-decoration: underline; }
+    .sr-chat-chip { padding: 0.25rem 0.6rem; font-size: 0.7rem; font-weight: 600; border-radius: 9999px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; transition: background 0.15s; }
+    .sr-chat-chip:hover { background: #dbeafe; }
+    .sr-chat-typing { display: flex; gap: 4px; align-items: center; padding: 0.75rem 1rem; }
+    .sr-chat-typing span { width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; animation: srChatDot 1.2s infinite ease-in-out; }
+    .sr-chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+    .sr-chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes srChatDot { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  </style>
+</body>
+</html>

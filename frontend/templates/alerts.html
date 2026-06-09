@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Alerts · SafeRoute AI{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div id="create-card" class="glass-card rounded-2xl p-6 hidden border-gradient tilt-card">
+    <h3 class="font-semibold text-slate-900 mb-4">Broadcast an Alert</h3>
+    <form id="alert-form" class="space-y-3">
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Message</label>
+        <textarea class="textarea w-full glass-card rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none" name="message" rows="3" required></textarea>
+      </div>
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Severity</label>
+        <select class="select w-full glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="severity">
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+      </div>
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Target audience</label>
+        <select class="select w-full glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="target_role">
+          <option value="ALL">Everyone</option>
+          <option value="PUBLIC_USER">Public Users</option>
+          <option value="INSTITUTION_ADMIN">Institution Admins</option>
+          <option value="TRANSPORT_OPERATOR">Transport Operators</option>
+          <option value="GOVERNMENT_AUTHORITY">Government Authorities</option>
+          <option value="SYSTEM_ANALYST">System Analysts</option>
+        </select>
+      </div>
+      <button class="btn-primary w-full magnetic-btn ripple liquid-btn" type="submit">Send alert</button>
+    </form>
+  </div>
+
+  <div class="glass-card rounded-2xl p-6 lg:col-span-2 border-gradient tilt-card" id="alerts-col">
+    <h3 class="font-semibold text-slate-900 mb-4">Alerts Feed</h3>
+    <div id="alerts-list" class="space-y-3">Loading…</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script>
+(function () {
+  const WRITE_ROLES = ["INSTITUTION_ADMIN","GOVERNMENT_AUTHORITY","SYSTEM_ANALYST","SYSTEM_ADMIN"];
+  let canWrite = false;
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+  function badge(sev){const m={LOW:"badge-low",MEDIUM:"badge-medium",HIGH:"badge-high",CRITICAL:"badge-critical"};return `<span class="badge ${m[sev]||"badge-gray"} hover:scale-105 transition-transform cursor-pointer">${sev}</span>`;}
+
+  async function load() {
+    const { alerts } = await SR.get("/api/alerts");
+    const el = document.getElementById("alerts-list");
+    if (!alerts.length) { el.innerHTML = '<div class="text-center py-8"><div class="w-16 h-16 mx-auto mb-3 rounded-full bg-surface-100 flex items-center justify-center text-2xl">📭</div><p class="text-surface-400 text-sm">No alerts at this time.</p></div>'; return; }
+    el.innerHTML = alerts.map((a) => `
+      <div class="glass-card rounded-xl p-4 border border-white/50 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+        <div class="flex justify-between items-start gap-3">
+          <p class="text-surface-700 font-medium group-hover:text-surface-900 transition-colors">${esc(a.message)}</p>
+          <div class="flex items-center gap-2 shrink-0">
+            ${badge(a.severity)}
+            ${canWrite ? `<button class="btn-danger magnetic-btn ripple" data-del="${a.id}">✕</button>` : ""}
+          </div>
+        </div>
+        <p class="text-xs text-surface-400 mt-2 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-surface-300"></span>Target: ${esc(a.target_role)} · ${new Date(a.created_at).toLocaleString()}</p>
+      </div>`).join("");
+    if (canWrite) el.querySelectorAll("[data-del]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        try { await SR.del("/api/alerts/" + b.dataset.del); flash("Alert deleted.", "success"); load(); }
+        catch (err) { flash(err.message, "error"); }
+      }));
+  }
+
+  document.addEventListener("sr:user-ready", (ev) => {
+    canWrite = WRITE_ROLES.includes(ev.detail.role);
+    if (canWrite) document.getElementById("create-card").classList.remove("hidden");
+    else document.getElementById("alerts-col").classList.add("lg:col-span-3");
+    load();
+    setInterval(load, 30000);
+    if (window.Realtime) Realtime.connect(() => load());
+  });
+
+  document.getElementById("alert-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await SR.post("/api/alerts", {
+        message: fd.get("message"), severity: fd.get("severity"), target_role: fd.get("target_role"),
+      });
+      e.target.reset();
+      flash("Alert broadcast.", "success");
+      load();
+    } catch (err) { flash(err.message, "error"); }
+  });
+})();
+</script>
+{% endblock %}

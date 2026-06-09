@@ -1,0 +1,766 @@
+{% extends 'base.html' %}
+
+{% block title %}System Admin · SafeRoute AI{% endblock %}
+
+
+
+{% block content %}
+
+<!-- Header -->
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+  <div>
+
+    <div class="flex items-center gap-3">
+
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30">🛠️</div>
+
+      <div>
+
+        <h1 class="text-2xl font-display font-bold text-surface-800">System Admin Control Center</h1>
+
+        <p class="text-sm text-surface-500">Full platform control — users, institutions, AI, security & monitoring</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="system-pill" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
+
+    <span class="w-2 h-2 bg-emerald-500 rounded-full status-dot"></span>
+
+    <span class="text-sm font-semibold text-emerald-700">System Operational</span>
+
+  </div>
+
+</div>
+
+
+
+<!-- Tab Navigation -->
+
+<div class="flex flex-wrap gap-2 mb-6 p-1.5 glass-card rounded-2xl">
+
+  <button class="admin-tab active" data-tab="users">👤 Users</button>
+
+  <button class="admin-tab" data-tab="institutions">🏢 Institutions</button>
+
+  <button class="admin-tab" data-tab="ai">🧠 AI Model</button>
+
+  <button class="admin-tab" data-tab="system">🚨 Monitoring</button>
+
+  <button class="admin-tab" data-tab="audit">📊 Audit Logs</button>
+
+  <button class="admin-tab" data-tab="security">🔐 Security</button>
+
+  <button class="admin-tab" data-tab="broadcast">📡 Broadcast</button>
+
+</div>
+
+
+
+<!-- ============ USERS ============ -->
+
+<section id="panel-users" class="admin-panel reveal">
+
+  <div class="glass-card rounded-2xl overflow-hidden">
+
+    <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between">
+
+      <div>
+
+        <h3 class="font-display font-bold text-surface-800">User Management</h3>
+
+        <p class="text-xs text-surface-500">Create users, assign roles, block & reset passwords</p>
+
+      </div>
+
+      <button id="btn-create-user" class="btn-primary magnetic-btn ripple">+ New User</button>
+
+    </div>
+
+    <div class="overflow-x-auto">
+
+      <table class="data w-full text-sm">
+
+        <thead><tr><th>User</th><th>Role</th><th>Institution</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+
+        <tbody id="users-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- ============ INSTITUTIONS ============ -->
+
+<section id="panel-institutions" class="admin-panel hidden reveal">
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="glass-card rounded-2xl p-6">
+
+      <h3 class="font-display font-bold text-surface-800 mb-4" id="inst-form-title">Add Institution</h3>
+
+      <form id="inst-form" class="space-y-4">
+
+        <input type="hidden" name="id" />
+
+        <div><label class="label">Name</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="name" required /></div>
+
+        <div>
+
+          <label class="label">Type</label>
+
+          <select class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="type">
+
+            <option>TRANSPORT</option><option>HEALTHCARE</option><option>GOVERNMENT</option>
+
+            <option>EDUCATION</option><option>NGO</option><option>GENERIC</option>
+
+          </select>
+
+        </div>
+
+        <div><label class="label">Location</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="location" /></div>
+
+        <div class="flex gap-2">
+
+          <button class="btn-primary flex-1" type="submit">Save</button>
+
+          <button class="btn-ghost hidden" type="button" id="inst-cancel">Cancel</button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+    <div class="glass-card rounded-2xl overflow-hidden lg:col-span-2">
+
+      <div class="px-6 py-4 border-b border-surface-200">
+
+        <h3 class="font-display font-bold text-surface-800">Institutions</h3>
+
+        <p class="text-xs text-surface-500">Universities, companies & government departments</p>
+
+      </div>
+
+      <div class="overflow-x-auto">
+
+        <table class="data w-full text-sm">
+
+          <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Users</th><th class="text-right">Actions</th></tr></thead>
+
+          <tbody id="inst-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- ============ AI MODEL ============ -->
+
+<section id="panel-ai" class="admin-panel hidden reveal">
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Engine controls -->
+
+    <div class="glass-card rounded-2xl p-6 space-y-6">
+
+      <div class="flex items-center gap-3">
+
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center text-xl text-white shadow-lg shadow-violet-500/30">🧠</div>
+
+        <div>
+
+          <h3 class="font-display font-bold text-surface-800">AI Engine Control</h3>
+
+          <p class="text-xs text-surface-500">Configure the brain of the platform</p>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Risk engine toggle -->
+
+      <div class="flex items-center justify-between p-4 rounded-xl bg-surface-50 border border-surface-200">
+
+        <div>
+
+          <p class="font-semibold text-surface-800 text-sm">Risk Engine</p>
+
+          <p class="text-xs text-surface-500">Enable area risk scoring</p>
+
+        </div>
+
+        <button id="toggle-risk" class="toggle" data-on="false"><span class="toggle-dot"></span></button>
+
+      </div>
+
+
+
+      <!-- AI model selector -->
+
+      <div>
+
+        <label class="label">AI Model</label>
+
+        <div class="grid grid-cols-2 gap-3">
+
+          <button class="model-option" data-model="rule_based">
+
+            <span class="text-lg">📐</span>
+
+            <span class="font-semibold text-sm">Rule-Based</span>
+
+            <span class="text-[10px] text-surface-500">Fast · deterministic</span>
+
+          </button>
+
+          <button class="model-option" data-model="ml_advanced">
+
+            <span class="text-lg">🤖</span>
+
+            <span class="font-semibold text-sm">ML Advanced</span>
+
+            <span class="text-[10px] text-surface-500">Experimental</span>
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Sentiment mode -->
+
+      <div>
+
+        <label class="label">Sentiment Analysis</label>
+
+        <select id="sentiment-mode" class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer">
+
+          <option value="lexicon">Lexicon-based (default)</option>
+
+          <option value="advanced">Advanced (experimental)</option>
+
+        </select>
+
+      </div>
+
+
+
+      <button id="save-ai" class="btn-primary w-full">Save AI Configuration</button>
+
+    </div>
+
+
+
+    <!-- Weights + performance -->
+
+    <div class="space-y-6">
+
+      <div class="glass-card rounded-2xl p-6">
+
+        <h3 class="font-display font-bold text-surface-800 mb-1">Risk Formula Weights</h3>
+
+        <p class="text-xs text-surface-500 mb-4">Tune how the engine weighs each factor (auto-normalized)</p>
+
+        <div class="space-y-4">
+
+          <div>
+
+            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-surface-700">Severity</span><span id="w-sev-val" class="font-bold text-primary-600">0.5</span></div>
+
+            <input type="range" id="w-sev" min="0" max="1" step="0.05" value="0.5" class="range" />
+
+          </div>
+
+          <div>
+
+            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-surface-700">Density</span><span id="w-den-val" class="font-bold text-primary-600">0.3</span></div>
+
+            <input type="range" id="w-den" min="0" max="1" step="0.05" value="0.3" class="range" />
+
+          </div>
+
+          <div>
+
+            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-surface-700">Sentiment</span><span id="w-sen-val" class="font-bold text-primary-600">0.2</span></div>
+
+            <input type="range" id="w-sen" min="0" max="1" step="0.05" value="0.2" class="range" />
+
+          </div>
+
+        </div>
+
+        <div class="flex gap-2 mt-5">
+
+          <button id="save-weights" class="btn-primary flex-1">Apply Weights</button>
+
+          <button id="recompute-btn" class="btn-ghost magnetic-btn ripple">↻ Recompute</button>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="glass-card rounded-2xl p-6">
+
+        <h3 class="font-display font-bold text-surface-800 mb-4">Model Performance</h3>
+
+        <pre id="model-info" class="text-xs bg-surface-900 text-emerald-300 rounded-xl p-4 overflow-x-auto">Loading…</pre>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- ============ SYSTEM MONITORING ============ -->
+
+<section id="panel-system" class="admin-panel hidden reveal">
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    <div class="glass-card rounded-2xl p-5">
+
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🔌</span><span id="svc-api" class="status-chip">—</span></div>
+
+      <p class="text-sm font-semibold text-surface-800">API Service</p>
+
+    </div>
+
+    <div class="glass-card rounded-2xl p-5">
+
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🗄️</span><span id="svc-db" class="status-chip">—</span></div>
+
+      <p class="text-sm font-semibold text-surface-800">Database</p>
+
+    </div>
+
+    <div class="glass-card rounded-2xl p-5">
+
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🧠</span><span id="svc-risk" class="status-chip">—</span></div>
+
+      <p class="text-sm font-semibold text-surface-800">Risk Engine</p>
+
+    </div>
+
+    <div class="glass-card rounded-2xl p-5">
+
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">👥</span><span id="sys-logins" class="text-lg font-display font-bold text-surface-800">—</span></div>
+
+      <p class="text-sm font-semibold text-surface-800">Logins (24h)</p>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="glass-card rounded-2xl p-6">
+
+    <div class="flex items-center justify-between mb-4">
+
+      <h3 class="font-display font-bold text-surface-800">Platform Statistics</h3>
+
+      <button id="refresh-system" class="btn-ghost text-xs">↻ Refresh</button>
+
+    </div>
+
+    <div id="system-counts" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+
+    <p class="text-xs text-surface-400 mt-4" id="server-time"></p>
+
+  </div>
+
+</section>
+
+
+
+<!-- ============ AUDIT LOGS ============ -->
+
+<section id="panel-audit" class="admin-panel hidden reveal">
+
+  <div class="glass-card rounded-2xl overflow-hidden">
+
+    <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between gap-4">
+
+      <div>
+
+        <h3 class="font-display font-bold text-surface-800">Audit Trail</h3>
+
+        <p class="text-xs text-surface-500">Every privileged action is recorded</p>
+
+      </div>
+
+      <input id="audit-filter" class="input max-w-xs" placeholder="Filter by action (e.g. user.login)…" />
+
+    </div>
+
+    <div class="overflow-x-auto max-h-[600px]">
+
+      <table class="data w-full text-sm">
+
+        <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
+
+        <tbody id="audit-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- ============ SECURITY ============ -->
+
+<section id="panel-security" class="admin-panel hidden reveal">
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <div class="glass-card rounded-2xl p-6 space-y-6">
+
+      <div class="flex items-center gap-3">
+
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-400 to-red-600 flex items-center justify-center text-xl text-white shadow-lg shadow-rose-500/30">🔐</div>
+
+        <div>
+
+          <h3 class="font-display font-bold text-surface-800">Security Control</h3>
+
+          <p class="text-xs text-surface-500">Access rules & API protection</p>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="flex items-center justify-between p-4 rounded-xl bg-surface-50 border border-surface-200">
+
+        <div>
+
+          <p class="font-semibold text-surface-800 text-sm">Public Registration</p>
+
+          <p class="text-xs text-surface-500">Allow self sign-up (as Public User)</p>
+
+        </div>
+
+        <button id="toggle-registration" class="toggle" data-on="false"><span class="toggle-dot"></span></button>
+
+      </div>
+
+
+
+      <div>
+
+        <label class="label">Rate Limit — Max Requests</label>
+
+        <input type="number" id="rl-max" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" min="1" max="1000" />
+
+        <p class="text-xs text-surface-400 mt-1">Requests allowed per window on auth endpoints</p>
+
+      </div>
+
+      <div>
+
+        <label class="label">Rate Limit — Window (seconds)</label>
+
+        <input type="number" id="rl-window" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" min="1" max="3600" />
+
+      </div>
+
+      <div>
+
+        <label class="label">JWT Token Expiry (minutes)</label>
+
+        <input type="number" id="jwt-exp" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" min="5" max="10080" />
+
+        <p class="text-xs text-surface-400 mt-1">Applied to newly issued tokens after restart</p>
+
+      </div>
+
+
+
+      <button id="save-security" class="btn-primary w-full">Save Security Settings</button>
+
+    </div>
+
+
+
+    <div class="glass-card rounded-2xl p-6">
+
+      <h3 class="font-display font-bold text-surface-800 mb-1">Role Permission Matrix</h3>
+
+      <p class="text-xs text-surface-500 mb-4">Server-enforced capabilities by role</p>
+
+      <div id="perm-matrix" class="space-y-2 max-h-[460px] overflow-y-auto pr-1"></div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- ============ BROADCAST ============ -->
+
+<section id="panel-broadcast" class="admin-panel hidden reveal">
+
+  <div class="max-w-2xl mx-auto">
+
+    <div class="glass-card rounded-2xl p-8 border-t-4 border-t-rose-500">
+
+      <div class="flex items-center gap-3 mb-6">
+
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-2xl text-white shadow-lg shadow-rose-500/40 animate-pulse">📡</div>
+
+        <div>
+
+          <h3 class="font-display font-bold text-xl text-surface-800">Emergency Broadcast</h3>
+
+          <p class="text-sm text-surface-500">Override AI and alert users directly</p>
+
+        </div>
+
+      </div>
+
+
+
+      <form id="broadcast-form" class="space-y-5">
+
+        <div>
+
+          <label class="label">Message</label>
+
+          <textarea id="bc-message" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" rows="4" placeholder="e.g. Severe flooding in South District — avoid all routes through the area." required></textarea>
+
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+
+          <div>
+
+            <label class="label">Severity</label>
+
+            <select id="bc-severity" class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer">
+
+              <option value="CRITICAL">🔴 Critical</option>
+
+              <option value="HIGH">🟠 High</option>
+
+              <option value="MEDIUM">🟡 Medium</option>
+
+              <option value="LOW">⚪ Low</option>
+
+            </select>
+
+          </div>
+
+          <div>
+
+            <label class="label">Audience</label>
+
+            <select id="bc-target" class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer">
+
+              <option value="ALL">Everyone</option>
+
+              <option value="PUBLIC_USER">Public Users</option>
+
+              <option value="INSTITUTION_ADMIN">Institution Admins</option>
+
+              <option value="TRANSPORT_OPERATOR">Transport Operators</option>
+
+              <option value="GOVERNMENT_AUTHORITY">Government Authorities</option>
+
+              <option value="SYSTEM_ANALYST">System Analysts</option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+        <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold rounded-xl hover:from-rose-600 hover:to-red-700 transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 active:scale-95 magnetic-btn ripple liquid-btn">
+
+          🚨 Send Emergency Broadcast
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- ===== Modals ===== -->
+
+<div id="modal-backdrop" class="hidden fixed inset-0 bg-surface-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300">
+
+  <!-- User modal -->
+
+  <div id="user-modal" class="modal-box hidden">
+
+    <h3 id="user-modal-title" class="font-display font-bold text-lg text-surface-800 mb-4">New User</h3>
+
+    <form id="user-form" class="space-y-3">
+
+      <input type="hidden" name="id" />
+
+      <div><label class="label">Full Name</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="name" required /></div>
+
+      <div><label class="label">Email</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" type="email" name="email" required /></div>
+
+      <div id="user-pw-wrap"><label class="label">Password</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" type="password" name="password" /></div>
+
+      <div>
+
+        <label class="label">Role</label>
+
+        <select class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="role" id="user-role-select"></select>
+
+      </div>
+
+      <div>
+
+        <label class="label">Institution (optional)</label>
+
+        <select class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="institution_id" id="user-inst-select"><option value="">— None —</option></select>
+
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+
+        <button type="button" class="btn-ghost modal-close">Cancel</button>
+
+        <button type="submit" class="btn-primary magnetic-btn ripple">Save</button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+
+  <!-- Password reset modal -->
+
+  <div id="pw-modal" class="modal-box hidden">
+
+    <h3 class="font-display font-bold text-lg text-surface-800 mb-1">Reset Password</h3>
+
+    <p id="pw-modal-user" class="text-sm text-surface-500 mb-4"></p>
+
+    <form id="pw-form" class="space-y-3">
+
+      <input type="hidden" name="id" />
+
+      <div><label class="label">New Password</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" type="password" name="password" required /></div>
+
+      <p class="text-xs text-surface-400">Min 8 characters with a letter and a number.</p>
+
+      <div class="flex justify-end gap-2 pt-2">
+
+        <button type="button" class="btn-ghost modal-close">Cancel</button>
+
+        <button type="submit" class="btn-primary magnetic-btn ripple">Reset Password</button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+
+<style>
+
+  .admin-tab { padding:.6rem 1rem; border-radius:.75rem; font-size:.85rem; font-weight:600; color:#64748b; transition:all .3s cubic-bezier(0.4,0,0.2,1); white-space:nowrap; position:relative; overflow:hidden; cursor:pointer; }
+
+  .admin-tab:hover { background:rgba(37,99,235,.06); color:#2563eb; transform:translateY(-1px); }
+
+  .admin-tab.active { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; box-shadow:0 4px 20px -2px rgba(37,99,235,.5), 0 0 0 1px rgba(255,255,255,.2) inset; transform:translateY(-1px); }
+
+  .toggle { width:52px; height:28px; border-radius:9999px; background:#cbd5e1; position:relative; transition:all .3s cubic-bezier(0.4,0,0.2,1); flex-shrink:0; cursor:pointer; box-shadow:inset 0 2px 4px rgba(0,0,0,.1); }
+
+  .toggle[data-on="true"] { background:linear-gradient(135deg,#3b82f6,#2563eb); box-shadow:0 0 15px rgba(37,99,235,.4), inset 0 2px 4px rgba(0,0,0,.1); }
+
+  .toggle-dot { position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:all .3s cubic-bezier(0.4,0,0.2,1); box-shadow:0 2px 5px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.05); }
+
+  .toggle[data-on="true"] .toggle-dot { transform:translateX(24px); box-shadow:0 2px 8px rgba(37,99,235,.3); }
+
+  .model-option { display:flex; flex-direction:column; align-items:center; gap:.25rem; padding:1.25rem; border:2px solid #e2e8f0; border-radius:1rem; transition:all .3s cubic-bezier(0.4,0,0.2,1); background:rgba(255,255,255,.9); cursor:pointer; position:relative; overflow:hidden; }
+
+  .model-option:hover { border-color:#93c5fd; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(37,99,235,.15); }
+
+  .model-option.active { border-color:#2563eb; background:linear-gradient(135deg,#eff6ff,#dbeafe); box-shadow:0 0 0 3px rgba(37,99,235,.15), 0 8px 25px -5px rgba(37,99,235,.2); transform:translateY(-2px); }
+
+  .range { width:100%; accent-color:#2563eb; height:8px; border-radius:999px; cursor:pointer; background:linear-gradient(to right, #e2e8f0, #e2e8f0); }
+
+  .range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#2563eb); cursor:pointer; box-shadow:0 2px 10px rgba(37,99,235,.4); transition:transform .2s; }
+
+  .range::-webkit-slider-thumb:hover { transform:scale(1.2); }
+
+  .status-chip { padding:.25rem .75rem; border-radius:9999px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.025em; transition:all .2s; }
+
+  .status-chip.ok { background:#ecfdf5; color:#059669; }
+
+  .status-chip.bad { background:#fef2f2; color:#dc2626; }
+
+  .modal-box { background:rgba(255,255,255,.95); backdrop-filter:blur(20px); border-radius:1.25rem; box-shadow:0 25px 50px -12px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.5) inset; width:100%; max-width:28rem; padding:1.5rem; border:1px solid rgba(255,255,255,.4); animation:modalEnter .3s cubic-bezier(0.4,0,0.2,1); }
+
+  @keyframes modalEnter { from { opacity:0; transform:scale(.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+  .stat-tile { text-align:center; padding:1.25rem; border-radius:1rem; background:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.5); backdrop-filter:blur(10px); transition:all .3s cubic-bezier(0.4,0,0.2,1); cursor:pointer; }
+
+  .stat-tile:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,.08); }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block page_script %}
+
+<script src="/static/js/admin.js"></script>
+
+{% endblock %}
+

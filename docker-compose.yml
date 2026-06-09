@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: saferoute
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: change-me-in-production
+      JWT_SECRET_KEY: change-me-too-in-production
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/saferoute
+      SEED_ADMIN_EMAIL: admin@saferoute.ai
+      SEED_ADMIN_PASSWORD: Admin#12345
+    ports:
+      - "5000:5000"
+
+volumes:
+  pgdata:

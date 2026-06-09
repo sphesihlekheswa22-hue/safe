@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Events · SafeRoute AI{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Create event (write roles only) -->
+  <div id="create-card" class="glass-card rounded-2xl p-6 hidden border-gradient tilt-card">
+    <h3 class="font-semibold text-slate-900 mb-4">Report an Event</h3>
+    <form id="event-form" class="space-y-3">
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Title</label>
+        <input class="input w-full glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="title" required />
+      </div>
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Location / Area</label>
+        <input class="input w-full glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="location" required placeholder="e.g. Warwick Junction, Durban" />
+      </div>
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Severity (1–5)</label>
+        <select class="select w-full glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="severity">
+          <option value="1">1 · Minor</option>
+          <option value="2">2 · Low</option>
+          <option value="3">3 · Moderate</option>
+          <option value="4">4 · High</option>
+          <option value="5">5 · Critical</option>
+        </select>
+      </div>
+      <div>
+        <label class="label text-sm font-medium text-surface-700 mb-1.5 block">Description</label>
+        <textarea class="textarea w-full glass-card rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none" name="description" rows="3"></textarea>
+      </div>
+      <button class="btn-primary w-full magnetic-btn ripple liquid-btn" type="submit">Create event</button>
+    </form>
+  </div>
+
+  <!-- Events table -->
+  <div class="glass-card rounded-2xl p-6 lg:col-span-2 border-gradient tilt-card" id="events-col">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display font-bold text-surface-800">Recent Incidents</h3>
+      <input id="filter" class="input max-w-xs glass-card rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" placeholder="Filter by location…" />
+    </div>
+    <div class="overflow-x-auto">
+      <table class="data w-full text-sm">
+        <thead>
+          <tr><th>Title</th><th>Location</th><th>Severity</th><th>Source</th><th></th></tr>
+        </thead>
+        <tbody id="events-body">
+          <tr><td colspan="5" class="text-slate-400">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script>
+(function () {
+  const WRITE_ROLES = ["INSTITUTION_ADMIN","TRANSPORT_OPERATOR","GOVERNMENT_AUTHORITY","SYSTEM_ANALYST","SYSTEM_ADMIN"];
+  let canWrite = false;
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+  function sevBadge(s){const cls=s>=4?"badge-high":s===3?"badge-medium":"badge-low";return `<span class="badge ${cls} hover:scale-105 transition-transform cursor-pointer">${s}</span>`;}
+
+  async function load(location) {
+    const q = location ? ("?location=" + encodeURIComponent(location)) : "";
+    const { events } = await SR.get("/api/events" + q);
+    const body = document.getElementById("events-body");
+    if (!events.length) { body.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="w-16 h-16 mx-auto mb-3 rounded-full bg-surface-100 flex items-center justify-center text-2xl">📭</div><p class="text-surface-400 text-sm">No events found.</p></td></tr>'; return; }
+    body.innerHTML = events.map((e) => `
+      <tr>
+        <td class="font-medium text-surface-700 group-hover:text-surface-900 transition-colors">${esc(e.title)}</td>
+        <td>${esc(e.location)}</td>
+        <td>${sevBadge(e.severity)}</td>
+        <td class="text-surface-500">${esc(e.source)}</td>
+        <td class="text-right">${canWrite ? `<button class="btn-danger magnetic-btn ripple" data-del="${e.id}">Delete</button>` : ""}</td>
+      </tr>`).join("");
+    if (canWrite) {
+      body.querySelectorAll("[data-del]").forEach((b) =>
+        b.addEventListener("click", async () => {
+          if (!confirm("Delete this event?")) return;
+          try { await SR.del("/api/events/" + b.dataset.del); flash("Event deleted.", "success"); load(document.getElementById("filter").value.trim()); }
+          catch (err) { flash(err.message, "error"); }
+        }));
+    }
+  }
+
+  document.addEventListener("sr:user-ready", (ev) => {
+    canWrite = WRITE_ROLES.includes(ev.detail.role);
+    if (canWrite) document.getElementById("create-card").classList.remove("hidden");
+    else document.getElementById("events-col").classList.add("lg:col-span-3");
+    load();
+    setInterval(() => load(document.getElementById("filter").value.trim()), 30000);
+  });
+
+  document.getElementById("event-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await SR.post("/api/events", {
+        title: fd.get("title"), location: fd.get("location"),
+        severity: parseInt(fd.get("severity"), 10), description: fd.get("description"),
+      });
+      e.target.reset();
+      flash("Event created and risk recomputed.", "success");
+      load();
+    } catch (err) { flash(err.message, "error"); }
+  });
+
+  let t;
+  document.getElementById("filter").addEventListener("input", (e) => {
+    clearTimeout(t); t = setTimeout(() => load(e.target.value.trim()), 300);
+  });
+})();
+</script>
+{% endblock %}

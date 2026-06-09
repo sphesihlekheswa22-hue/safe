@@ -1,0 +1,25 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Connect this repo, then set DATABASE_URL to your Neon PostgreSQL connection string.
+services:
+  - type: web
+    name: saferoute-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/setup_db.py && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 wsgi:app
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: SEED_ADMIN_EMAIL
+        value: admin@saferoute.ai
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
