@@ -20,6 +20,32 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+def bearing_deg(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Initial bearing from point 1 to point 2 in degrees (0 = north)."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dl = math.radians(lon2 - lon1)
+    y = math.sin(dl) * math.cos(p2)
+    x = math.cos(p1) * math.sin(p2) - math.sin(p1) * math.cos(p2) * math.cos(dl)
+    return (math.degrees(math.atan2(y, x)) + 360) % 360
+
+
+def destination_point(lat: float, lon: float, bearing: float, distance_km: float) -> tuple[float, float]:
+    """Return (lon, lat) reached by moving distance_km along bearing from the start point."""
+    r = 6371.0
+    br = math.radians(bearing)
+    lat1 = math.radians(lat)
+    lon1 = math.radians(lon)
+    lat2 = math.asin(
+        math.sin(lat1) * math.cos(distance_km / r)
+        + math.cos(lat1) * math.sin(distance_km / r) * math.cos(br)
+    )
+    lon2 = lon1 + math.atan2(
+        math.sin(br) * math.sin(distance_km / r) * math.cos(lat1),
+        math.cos(distance_km / r) - math.sin(lat1) * math.sin(lat2),
+    )
+    return math.degrees(lon2), math.degrees(lat2)
+
+
 def sample_line(coords: list, max_points: int = 40) -> list[tuple[float, float]]:
     """Sample (lon, lat) pairs evenly along a LineString."""
     if not coords:

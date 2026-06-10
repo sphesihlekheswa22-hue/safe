@@ -465,9 +465,9 @@
       ${alts.map((a, i) => `
         <button type="button" class="r-alt-item" data-alt-idx="${i}">
           <span class="r-alt-num">${i + 1}</span>
-          <span class="r-alt-info">
+            <span class="r-alt-info">
             <strong>${esc(a.label || "Alternative " + (i + 1))}</strong>
-            <span>${esc(a.explanation || formatDistance(a.distance_m) + " · " + formatDuration(a.duration_s))}</span>
+            <span>${esc(a.explanation || formatDistance(a.distance_m) + " · " + formatDuration(a.duration_s))}${a.incidents_on_route != null ? " · " + (a.incidents_on_route === 0 ? "Clear of incidents" : a.incidents_on_route + " incident(s) nearby") : ""}</span>
           </span>
           <span class="r-alt-risk ${riskPillClass(a.risk_score)}">${Math.round(a.risk_score)}</span>
         </button>`).join("")}`;
@@ -521,7 +521,13 @@
       showRoute(route.geojson, route.risk_score, route.risk_level, false, route);
       renderAlternatives(route.alternatives || [], route, badge);
 
-      flash("Safest route found.", "success");
+      if (route.incidents_on_route > 0 && (route.alternatives || []).some((a) => a.incidents_on_route === 0)) {
+        flash("A detour avoiding nearby incidents is available — compare alternate routes below.", "info");
+      } else if (route.incidents_on_route === 0) {
+        flash("Safest route found — clear of nearby incidents.", "success");
+      } else {
+        flash("Safest route found.", "success");
+      }
       loadRoutes();
     } catch (err) {
       flash(err.message, "error");

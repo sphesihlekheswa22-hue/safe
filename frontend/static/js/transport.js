@@ -322,7 +322,7 @@
 
       altEl.innerHTML = alts.length
 
-        ? alts.map((a) => `<div class="text-xs p-2 bg-surface-50 rounded-lg">${esc(a.label || "Alt")}: <span class="badge ${badgeCls(a.risk_level)}">${a.risk_score}</span></div>`).join("")
+        ? alts.map((a) => `<div class="text-xs p-2 bg-surface-50 rounded-lg">${esc(a.label || "Alt")}: <span class="badge ${badgeCls(a.risk_level)}">${a.risk_score}</span>${a.incidents_on_route != null ? " · " + (a.incidents_on_route === 0 ? "Clear of incidents" : a.incidents_on_route + " incident(s) nearby") : ""}</div>`).join("")
 
         : "";
 
