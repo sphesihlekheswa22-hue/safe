@@ -171,19 +171,16 @@ Do **not** use `--workers 2` on the free plan — it causes memory pressure and 
 
 **Bad Gateway?** Usually the start command is wrong or `DATABASE_URL` is missing. Confirm `DATABASE_URL` (Neon) is set in Environment, then redeploy.
 
-### Safety Assistant (real AI)
+### Safety Assistant (Serper + live DB)
 
-Set `OPENAI_API_KEY` in `.env` (local) or Render **Environment**. The chat uses a **real LLM** grounded in live DB data (risk areas, incidents, alerts, routes) with **South Africa / SAST** time. Without a key, it falls back to built-in rules.
+Set `SERPER_API_KEY` from [serper.dev](https://serper.dev) in `.env` or Render **Environment**. The chat combines:
 
-Works with **OpenAI** or **OpenRouter** (OpenAI-compatible API):
+- **SafeRoute database** — risk areas, incidents, alerts, routes (role-scoped)
+- **Serper real-time search** — South Africa web & news (`gl=za`, SAST timestamps)
 
-| Variable | OpenAI | OpenRouter |
-|----------|--------|------------|
-| `OPENAI_API_KEY` | `sk-...` | Your OpenRouter key |
-| `OPENAI_API_BASE` | *(omit)* | `https://openrouter.ai/api/v1` |
-| `OPENAI_CHAT_MODEL` | `gpt-4o-mini` | `openai/gpt-4o-mini` |
+Optional: add `OPENAI_API_KEY` for an extra LLM layer (OpenAI / OpenRouter).
 
-**Never commit API keys to git.** Add them only in `.env` (local) or Render Environment.
+**Never commit API keys to git.**
 
 ---
 

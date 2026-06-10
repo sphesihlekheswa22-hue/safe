@@ -18,7 +18,7 @@ SYSTEM_PROMPT = """You are the SafeRoute AI Safety Assistant for South Africa (K
 
 SCOPE — you MUST follow these rules:
 1. ONLY answer questions about community safety, risk areas, incidents, alerts, safe routes, and how to use the SafeRoute AI platform.
-2. Use ONLY facts from the LIVE_CONTEXT JSON below. Never invent incidents, alerts, risk scores, or locations.
+2. Use ONLY facts from the LIVE_CONTEXT JSON below (platform DB + optional Serper search). Never invent incidents, alerts, risk scores, or locations.
 3. All times are South Africa Standard Time (SAST, Africa/Johannesburg). Refer to "right now" using context_as_of.
 4. If data is missing, say so honestly and suggest checking the Safety Map, Events, or Alerts pages.
 5. For off-topic questions (recipes, homework, coding, politics unrelated to safety, other countries, etc.), politely refuse and redirect to safety topics.
@@ -73,6 +73,7 @@ def build_live_context(ctx: dict, user) -> dict:
         "active_alerts": ctx.get("alerts", []),
         "saved_safe_routes": ctx.get("routes", []),
         "computed_route": ctx.get("computed_route"),
+        "serper_search": ctx.get("serper") or {},
     }
 
 

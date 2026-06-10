@@ -45,7 +45,9 @@ class Config:
     # (used by the test suite).
     RATELIMIT_ENABLED = os.environ.get("RATELIMIT_ENABLED", "true").lower() == "true"
 
-    # Safety Assistant (OpenAI). Set OPENAI_API_KEY to enable real AI replies.
+    # Safety Assistant — Serper real-time SA search (primary)
+    SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
+    # Optional LLM (OpenAI / OpenRouter) — separate from Serper
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
     OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
     OPENAI_CHAT_MODEL = os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")

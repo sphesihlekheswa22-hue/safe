@@ -81,7 +81,7 @@
   appendMessage(
     "bot",
     formatReply(
-      "Hi! I'm your **SafeRoute Safety Assistant** for **South Africa**. I answer using **live database data** and current **SAST** time — ask about Umlazi, Durban CBD, UKZN, alerts, incidents, or safe routes."
+      "Hi! I'm your **SafeRoute Safety Assistant** for **South Africa**. I use **live platform data**, **real-time web search**, and **SAST** time — ask about Umlazi, Durban, alerts, incidents, or safe routes."
     )
   );
   setSuggestions(["Is Umlazi safe?", "Active alerts", "Route from Durban Station to UKZN", "Highest risk areas"]);
