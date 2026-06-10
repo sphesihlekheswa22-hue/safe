@@ -19,7 +19,11 @@ def geocode_search():
     q = (request.args.get("q") or "").strip()
     if len(q) < 2:
         return jsonify(results=[])
-    results = geocoding_service.search(q)
+    try:
+        limit = min(12, max(1, int(request.args.get("limit", 8))))
+    except (TypeError, ValueError):
+        limit = 8
+    results = geocoding_service.search(q, limit=limit)
     return jsonify(results=results)
 
 

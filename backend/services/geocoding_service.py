@@ -7,12 +7,18 @@ from typing import Optional
 
 import requests
 
+from services import gazetteer
+
 logger = logging.getLogger(__name__)
 
 NOMINATIM = "https://nominatim.openstreetmap.org"
 USER_AGENT = "SafeRouteAI/1.0 (South Africa safety routing)"
 SA_BOUNDS = {"min_lat": -35.0, "max_lat": -22.0, "min_lon": 16.0, "max_lon": 33.0}
+# Nominatim viewbox: left, top, right, bottom (lon/lat)
+SA_VIEWBOX = "16.0,-22.0,33.0,-35.0"
 _last_request_at = 0.0
+_search_cache: dict[str, tuple[float, list[dict]]] = {}
+CACHE_TTL_SEC = 300
 
 
 class GeocodeError(Exception):
@@ -29,7 +35,11 @@ def _throttle():
 
 
 def _headers() -> dict:
-    return {"User-Agent": USER_AGENT}
+    return {"User-Agent": USER_AGENT, "Accept-Language": "en"}
+
+
+def _normalize(query: str) -> str:
+    return " ".join((query or "").strip().lower().split())
 
 
 def _in_south_africa(lat: float, lon: float) -> bool:
@@ -39,43 +49,89 @@ def _in_south_africa(lat: float, lon: float) -> bool:
     )
 
 
+def _title_key(key: str) -> str:
+    return " ".join(part.capitalize() for part in key.split())
+
+
 def _short_name(item: dict) -> str:
     addr = item.get("address") or {}
     parts = [
-        addr.get("amenity"),
+        addr.get("house_number"),
         addr.get("road"),
         addr.get("suburb"),
+        addr.get("neighbourhood"),
         addr.get("town"),
         addr.get("city"),
         addr.get("municipality"),
+        addr.get("county"),
         addr.get("state"),
     ]
     label = ", ".join(p for p in parts if p)
     return label or item.get("display_name", "Unknown location")
 
 
-def search(query: str, limit: int = 6) -> list[dict]:
-    """Return location suggestions for a free-text query within South Africa."""
-    q = (query or "").strip()
+def _result_key(lat: float, lng: float) -> str:
+    return f"{round(lat, 4)}:{round(lng, 4)}"
+
+
+def _merge_results(*groups: list[dict]) -> list[dict]:
+    seen: set[str] = set()
+    merged: list[dict] = []
+    for group in groups:
+        for item in group:
+            key = _result_key(item["lat"], item["lng"])
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(item)
+    return merged
+
+
+def _gazetteer_suggestions(query: str, limit: int = 8) -> list[dict]:
+    """Instant local matches for known SA places (works offline / when Nominatim is slow)."""
+    q = _normalize(query)
     if len(q) < 2:
         return []
 
+    scored: list[tuple[int, str, tuple[float, float, float]]] = []
+    for key, coords in gazetteer.GAZETTEER.items():
+        if q in key or key.startswith(q) or (len(q) >= 3 and q in key.replace(" ", "")):
+            priority = 0 if key == q else (1 if key.startswith(q) else 2)
+            scored.append((priority, key, coords))
+
+    scored.sort(key=lambda x: (x[0], len(x[1])))
+    results: list[dict] = []
+    for _, key, (lon, lat, _radius) in scored[:limit]:
+        title = _title_key(key)
+        results.append({
+            "name": title,
+            "display_name": f"{title}, South Africa",
+            "lat": lat,
+            "lng": lon,
+            "source": "gazetteer",
+        })
+    return results
+
+
+def _nominatim_search(query: str, limit: int = 8) -> list[dict]:
     _throttle()
     try:
         resp = requests.get(
             f"{NOMINATIM}/search",
             params={
-                "q": q,
+                "q": query,
                 "format": "json",
                 "limit": limit,
                 "countrycodes": "za",
                 "addressdetails": 1,
+                "viewbox": SA_VIEWBOX,
+                "dedupe": 1,
             },
             headers=_headers(),
-            timeout=10,
+            timeout=12,
         )
         resp.raise_for_status()
-        results = []
+        results: list[dict] = []
         for item in resp.json():
             lat = float(item["lat"])
             lon = float(item["lon"])
@@ -86,20 +142,64 @@ def search(query: str, limit: int = 6) -> list[dict]:
                 "display_name": item.get("display_name", ""),
                 "lat": lat,
                 "lng": lon,
+                "source": "nominatim",
             })
         return results
     except Exception as exc:
-        logger.warning("Geocode search failed: %s", exc)
+        logger.warning("Nominatim search failed for %r: %s", query, exc)
         return []
+
+
+def search(query: str, limit: int = 8) -> list[dict]:
+    """Return location suggestions for a free-text query within South Africa."""
+    q = (query or "").strip()
+    if len(q) < 2:
+        return []
+
+    cache_key = _normalize(q)
+    cached = _search_cache.get(cache_key)
+    if cached and (time.time() - cached[0]) < CACHE_TTL_SEC:
+        return cached[1][:limit]
+
+    local = _gazetteer_suggestions(q, limit=limit)
+    remote = _nominatim_search(q, limit=limit)
+
+    if not remote and "south africa" not in cache_key:
+        remote = _nominatim_search(f"{q}, South Africa", limit=limit)
+
+    merged = _merge_results(local, remote)[:limit]
+    _search_cache[cache_key] = (time.time(), merged)
+    return merged
 
 
 def forward(query: str) -> dict:
     """Resolve a place name or address to coordinates."""
-    matches = search(query, limit=1)
-    if not matches:
-        raise GeocodeError(f"Could not find '{query}' in South Africa. Try a more specific address.")
-    m = matches[0]
-    return {"name": m["name"], "display_name": m["display_name"], "lat": m["lat"], "lng": m["lng"]}
+    q = (query or "").strip()
+    if not q:
+        raise GeocodeError("Location name is required.")
+
+    matches = search(q, limit=5)
+    if matches:
+        m = matches[0]
+        return {
+            "name": m["name"],
+            "display_name": m["display_name"],
+            "lat": m["lat"],
+            "lng": m["lng"],
+        }
+
+    entry = gazetteer.lookup(q)
+    if entry:
+        lon, lat, _ = entry
+        name = q.strip()
+        return {
+            "name": name,
+            "display_name": f"{name}, South Africa",
+            "lat": lat,
+            "lng": lon,
+        }
+
+    raise GeocodeError(f"Could not find '{q}' in South Africa. Pick an address from the suggestions while typing.")
 
 
 def reverse(lat: float, lng: float) -> dict:
@@ -113,7 +213,7 @@ def reverse(lat: float, lng: float) -> dict:
             f"{NOMINATIM}/reverse",
             params={"lat": lat, "lon": lng, "format": "json", "addressdetails": 1},
             headers=_headers(),
-            timeout=10,
+            timeout=12,
         )
         resp.raise_for_status()
         item = resp.json()
