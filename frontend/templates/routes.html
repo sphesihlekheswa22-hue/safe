@@ -3,126 +3,879 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="" />
 <style>
-  #route-leaflet-map { height: 380px; border-radius: 0.75rem; z-index: 0; }
-  .geo-suggestions {
-    position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
-    margin-top: 4px; max-height: 220px; overflow-y: auto;
-    background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem;
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  /* ════════════════════════════════════════
+     SAFE ROUTE PLANNER — ULTIMATE EDITION
+     ════════════════════════════════════════ */
+
+  :root {
+    --r-primary: #2563eb;
+    --r-primary-dark: #1d4ed8;
+    --r-primary-light: #eff6ff;
+    --r-success: #10b981;
+    --r-warning: #f59e0b;
+    --r-danger: #ef4444;
+    --r-critical: #dc2626;
+    --r-surface: #f8fafc;
+    --r-text: #0f172a;
+    --r-text-muted: #64748b;
+    --r-border: #e2e8f0;
+    --r-shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
+    --r-shadow-md: 0 4px 6px -1px rgba(15,23,42,0.06), 0 2px 4px -2px rgba(15,23,42,0.04);
+    --r-shadow-lg: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.04);
+    --r-shadow-xl: 0 20px 25px -5px rgba(15,23,42,0.1), 0 8px 10px -6px rgba(15,23,42,0.04);
+    --r-glow-primary: 0 0 20px rgba(37,99,235,0.15);
+    --r-glow-success: 0 0 20px rgba(16,185,129,0.15);
+    --r-glow-warning: 0 0 20px rgba(245,158,11,0.15);
+    --r-glow-danger: 0 0 20px rgba(239,68,68,0.15);
   }
-  .geo-suggestions li { padding: 0.65rem 0.875rem; font-size: 0.8125rem; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.12s; }
-  .geo-suggestions li:hover { background: #eff6ff; }
-  .geo-suggestions li:last-child { border-bottom: none; }
-  .geo-suggestions .sub { color: #64748b; font-size: 0.6875rem; margin-top: 2px; }
-  .page-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
+
+  /* ── Animations ── */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  .page-card-header {
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes pulse-ring {
+    0%   { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+  @keyframes route-draw {
+    from { stroke-dashoffset: 1000; }
+    to   { stroke-dashoffset: 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+  @keyframes spin-once {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-up { animation: fadeSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-fade-in { animation: fadeSlideIn 0.4s ease both; }
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+  .delay-4 { animation-delay: 0.32s; }
+
+  /* ── Page Header ── */
+  .route-hero {
+    position: relative;
+    padding: 1.5rem 0 0.5rem;
+  }
+  .route-hero::before {
+    content: '';
+    position: absolute;
+    top: -20px; left: -40px; right: -40px;
+    height: 200px;
+    background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(37,99,235,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(16,185,129,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .route-hero-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(37,99,235,0.03));
+    border: 1px solid rgba(37,99,235,0.12);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--r-primary);
+  }
+  .route-hero-badge i { font-size: 0.5rem; }
+  .route-hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .route-hero p { color: var(--r-text-muted); max-width: 420px; }
+
+  /* ── Glass Cards ── */
+  .r-card {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(24px) saturate(1.3);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 1.25rem;
+    box-shadow: var(--r-shadow-lg), 0 0 0 1px rgba(15,23,42,0.03);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .r-card:hover { box-shadow: var(--r-shadow-xl), 0 0 0 1px rgba(15,23,42,0.04); }
+  .r-card-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(to right, #fff, rgba(248, 250, 252, 0.8));
+    border-bottom: 1px solid rgba(226,232,240,0.6);
+    background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(248,250,252,0.85));
+    display: flex; align-items: center; justify-content: space-between;
   }
-  .field-label { display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.375rem; letter-spacing: 0.01em; }
-  .field-input {
-    width: 100%; padding: 0.625rem 0.875rem; font-size: 0.875rem;
-    background: #fff; border: 1px solid #e2e8f0; border-radius: 0.625rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
+  .r-card-header h2 {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
   }
-  .field-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
-  .loc-btn {
-    flex-shrink: 0; width: 2.75rem; height: 2.75rem;
+  .r-card-header p { font-size: 0.6875rem; color: var(--r-text-muted); margin-top: 0.15rem; }
+  .r-card-header .tag {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    padding: 0.25rem 0.6rem;
+    background: rgba(148,163,184,0.08);
+    border-radius: 0.375rem;
+  }
+
+  /* ── Form Fields ── */
+  .r-field-group { position: relative; }
+  .r-field-label {
+    display: flex; align-items: center; gap: 0.35rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #475569;
+    margin-bottom: 0.5rem;
+  }
+  .r-field-label i { color: #94a3b8; font-size: 0.6rem; }
+  .r-input-wrap { display: flex; gap: 0.5rem; }
+  .r-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #0f172a;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: inset 0 1px 2px rgba(15,23,42,0.02);
+  }
+  .r-input::placeholder { color: #94a3b8; }
+  .r-input:hover { border-color: #cbd5e1; }
+  .r-input:focus {
+    outline: none;
+    border-color: var(--r-primary);
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.08), inset 0 1px 2px rgba(15,23,42,0.02);
+  }
+  .r-input.is-loading {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%23e2e8f0' stroke-width='3'/%3E%3Cpath fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round' d='M12 2a10 10 0 0 1 10 10'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 12 12' to='360 12 12' dur='1s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  /* Location Button */
+  .r-loc-btn {
+    flex-shrink: 0;
+    width: 2.875rem; height: 2.875rem;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 0.625rem; background: #eff6ff; color: #2563eb;
-    border: 1px solid #bfdbfe; transition: all 0.15s;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: var(--r-primary);
+    border: 1.5px solid #bfdbfe;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
   }
-  .loc-btn:hover { background: #dbeafe; border-color: #93c5fd; }
-  .submit-btn {
-    width: 100%; padding: 0.75rem 1rem; font-size: 0.875rem; font-weight: 600;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
-    border-radius: 0.625rem; border: none; cursor: pointer;
-    box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.35);
-    transition: all 0.2s;
+  .r-loc-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(37,99,235,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
   }
-  .submit-btn:hover { box-shadow: 0 6px 18px -2px rgba(37, 99, 235, 0.45); transform: translateY(-1px); }
-  table.data tbody tr { cursor: pointer; transition: background 0.12s; }
+  .r-loc-btn:hover { border-color: #93c5fd; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.12); }
+  .r-loc-btn:hover::before { opacity: 1; }
+  .r-loc-btn:active { transform: translateY(0); }
+  .r-loc-btn i { font-size: 0.875rem; position: relative; z-index: 1; }
+  .r-loc-btn.pulse-ring::after {
+    content: '';
+    position: absolute; inset: -2px;
+    border-radius: 0.875rem;
+    border: 2px solid var(--r-primary);
+    animation: pulse-ring 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  /* Swap Button */
+  .r-swap-btn {
+    width: 2rem; height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border: 1.5px solid #cbd5e1;
+    color: #64748b;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    margin: -0.25rem auto;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    z-index: 2;
+  }
+  .r-swap-btn:hover {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: #93c5fd;
+    color: var(--r-primary);
+    transform: rotate(180deg);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.1);
+  }
+  .r-swap-btn i { font-size: 0.625rem; }
+
+  /* Submit Button */
+  .r-submit {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    border-radius: 0.875rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 4px 16px -2px rgba(37,99,235,0.35), 0 0 0 1px rgba(37,99,235,0.1);
+    letter-spacing: -0.01em;
+  }
+  .r-submit::before {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.6s ease;
+  }
+  .r-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgba(37,99,235,0.4), 0 0 0 1px rgba(37,99,235,0.15);
+  }
+  .r-submit:hover::before { left: 100%; }
+  .r-submit:active { transform: translateY(0); }
+  .r-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .r-submit i { margin-right: 0.4rem; }
+  .r-submit .spinner {
+    display: inline-block;
+    width: 0.875rem; height: 0.875rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin-once 0.8s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  /* ── Suggestions ── */
+  .geo-suggestions {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+    z-index: 60;
+    max-height: 260px; overflow-y: auto;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(226,232,240,0.8);
+    border-radius: 0.875rem;
+    box-shadow: 0 16px 48px -8px rgba(15,23,42,0.15), 0 0 0 1px rgba(15,23,42,0.02);
+    padding: 0.375rem;
+    opacity: 0; transform: translateY(-8px) scale(0.98);
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .geo-suggestions.visible {
+    opacity: 1; transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .geo-suggestions li {
+    padding: 0.65rem 0.875rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.12s ease;
+    display: flex; align-items: center; gap: 0.6rem;
+    color: #334155;
+  }
+  .geo-suggestions li i { color: #94a3b8; font-size: 0.6875rem; width: 1rem; text-align: center; }
+  .geo-suggestions li:hover { background: #eff6ff; color: var(--r-primary); }
+  .geo-suggestions li:hover i { color: var(--r-primary); }
+  .geo-suggestions li .sub { color: #94a3b8; font-size: 0.6875rem; margin-top: 1px; }
+  .geo-suggestions .suggestion-divider {
+    padding: 0.25rem 0.875rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    pointer-events: none;
+  }
+
+  /* ── Route Result ── */
+  #route-result {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #route-result.visible { opacity: 1; transform: translateY(0); }
+
+  .r-result-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid rgba(226,232,240,0.6);
+  }
+  .r-result-header span:first-child {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+  }
+
+  /* Risk Badge */
+  .risk-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: all 0.3s ease;
+  }
+  .risk-badge i { font-size: 0.5rem; }
+  .risk-low    { background: rgba(16,185,129,0.1);  color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+  .risk-medium { background: rgba(245,158,11,0.1);  color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
+  .risk-high   { background: rgba(239,68,68,0.1);   color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+  .risk-critical { background: rgba(220,38,38,0.1); color: #b91c1c; border: 1px solid rgba(220,38,38,0.2); }
+
+  .r-explanation {
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    color: #475569;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(248,250,252,0.8), rgba(241,245,249,0.6));
+    border-radius: 0.75rem;
+    border: 1px solid rgba(226,232,240,0.5);
+  }
+
+  /* ── Route Stats Bar ── */
+  .r-stats-bar {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .r-stat {
+    text-align: center;
+    padding: 0.875rem 0.5rem;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(226,232,240,0.5);
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+  }
+  .r-stat:hover { background: rgba(255,255,255,0.9); transform: translateY(-1px); box-shadow: var(--r-shadow-sm); }
+  .r-stat-value {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .r-stat-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-top: 0.35rem;
+  }
+
+  /* ── Map ── */
+  #route-leaflet-map {
+    height: 400px;
+    border-radius: 1rem;
+    z-index: 0;
+    border: 1px solid rgba(226,232,240,0.6);
+    box-shadow: inset 0 2px 8px rgba(15,23,42,0.03);
+  }
+  .leaflet-popup-content-wrapper {
+    border-radius: 0.875rem !important;
+    box-shadow: 0 12px 40px rgba(15,23,42,0.15) !important;
+    border: 1px solid rgba(226,232,240,0.5);
+  }
+  .leaflet-popup-content { font-size: 0.8125rem; line-height: 1.5; margin: 12px 16px; }
+
+  /* ── Alternatives ── */
+  .r-alt-list { margin-top: 1rem; }
+  .r-alt-item {
+    display: flex; align-items: center; gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(226,232,240,0.5);
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .r-alt-item::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--r-primary);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .r-alt-item:hover { background: rgba(255,255,255,0.9); transform: translateX(2px); box-shadow: var(--r-shadow-sm); }
+  .r-alt-item:hover::before { opacity: 1; }
+  .r-alt-item.selected { background: rgba(37,99,235,0.04); border-color: rgba(37,99,235,0.2); }
+  .r-alt-item.selected::before { opacity: 1; }
+  .r-alt-num {
+    width: 1.75rem; height: 1.75rem;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    background: #f1f5f9;
+    color: #64748b;
+    flex-shrink: 0;
+  }
+  .r-alt-item.selected .r-alt-num { background: var(--r-primary); color: #fff; }
+  .r-alt-info { flex: 1; }
+  .r-alt-info strong { font-size: 0.8125rem; color: #0f172a; }
+  .r-alt-info span { font-size: 0.6875rem; color: #94a3b8; display: block; margin-top: 1px; }
+  .r-alt-risk { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Table ── */
+  .r-table-wrap { overflow-x: auto; }
+  .r-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .r-table thead th {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    background: rgba(248,250,252,0.6);
+    border-bottom: 1px solid rgba(226,232,240,0.6);
+    white-space: nowrap;
+  }
+  .r-table tbody td {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.8125rem;
+    color: #334155;
+    border-bottom: 1px solid rgba(226,232,240,0.4);
+    transition: background 0.15s ease;
+  }
+  .r-table tbody tr {
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .r-table tbody tr:hover {
+    background: rgba(37,99,235,0.03);
+    transform: scale(1.002);
+  }
+  .r-table tbody tr:last-child td { border-bottom: none; }
+  .r-table .route-from, .r-table .route-to {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .r-table .route-from i { color: var(--r-primary); font-size: 0.5rem; }
+  .r-table .route-to i { color: var(--r-success); font-size: 0.5rem; }
+  .r-table .route-text { font-weight: 600; color: #0f172a; }
+  .r-table .route-sub { font-size: 0.6875rem; color: #94a3b8; }
+  .r-table .risk-pill {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .r-table .action-btn {
+    width: 1.75rem; height: 1.75rem;
+    border-radius: 0.5rem;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(241,245,249,0.8);
+    color: #94a3b8;
+    border: 1px solid rgba(226,232,240,0.5);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.625rem;
+  }
+  .r-table .action-btn:hover { background: var(--r-primary); color: #fff; border-color: var(--r-primary); }
+
+  /* ── Empty States ── */
+  .r-empty {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 3rem 1.5rem;
+    color: #94a3b8;
+  }
+  .r-empty i { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4; }
+  .r-empty span { font-size: 0.8125rem; font-weight: 500; }
+
+  /* ── Skeleton Loading ── */
+  .r-skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 0.5rem;
+  }
+
+  /* ── Scrollbar ── */
+  .geo-suggestions::-webkit-scrollbar { width: 5px; }
+  .geo-suggestions::-webkit-scrollbar-track { background: transparent; }
+  .geo-suggestions::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .geo-suggestions::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .r-stats-bar { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .route-hero h1 { font-size: 1.5rem; }
+    .r-card-header { padding: 1rem; }
+    .r-table thead th, .r-table tbody td { padding: 0.625rem 0.875rem; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="mb-6">
-  <p class="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-1.5">Navigation</p>
-  <h1 class="text-2xl font-display font-bold text-surface-800 tracking-tight">Safe Route Planner</h1>
-  <p class="text-sm text-surface-500 mt-1">AI-assessed paths with real-time risk scoring across South Africa</p>
+
+<!-- ═══ HERO HEADER ═══ -->
+<div class="route-hero mb-6">
+  <div class="route-hero-badge animate-fade-up">
+    <i class="fas fa-circle text-[6px]"></i> AI-Powered Navigation
+  </div>
+  <h1 class="mt-3 animate-fade-up delay-1">Safe Route Planner</h1>
+  <p class="mt-1.5 text-sm animate-fade-up delay-2">AI-assessed paths with real-time risk scoring across South Africa. Find the safest way, every time.</p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <div class="page-card rounded-2xl overflow-hidden">
-    <div class="page-card-header">
-      <h2 class="font-display font-bold text-surface-800 text-base">Generate Route</h2>
-      <p class="text-xs text-surface-500 mt-0.5">Geocoded via OpenStreetMap</p>
-    </div>
-    <div class="p-6">
-      <form id="route-form" class="space-y-4">
-        <div class="relative">
-          <label class="field-label" for="start-location">Origin</label>
-          <div class="flex gap-2">
-            <input class="field-input flex-1" id="start-location" name="start_location" autocomplete="off" placeholder="e.g. 123 Florida Rd, Durban" />
-            <button type="button" id="btn-my-location" class="loc-btn" title="Use my current location" aria-label="Use my current location">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+  <!-- ═══ LEFT: ROUTE FORM ═══ -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="r-card animate-fade-up delay-2">
+      <div class="r-card-header">
+        <div>
+          <h2><i class="fas fa-route text-primary-500 mr-1.5 text-xs"></i>Generate Route</h2>
+          <p>Geocoded via OpenStreetMap Nominatim</p>
+        </div>
+        <span class="tag">Planner</span>
+      </div>
+      <div class="p-6">
+        <form id="route-form" class="space-y-3">
+
+          <!-- Origin -->
+          <div class="r-field-group">
+            <label class="r-field-label" for="start-location">
+              <i class="fas fa-location-dot"></i> Origin
+            </label>
+            <div class="r-input-wrap">
+              <input class="r-input" id="start-location" name="start_location" autocomplete="off"
+                placeholder="e.g. 123 Florida Rd, Durban" />
+              <button type="button" id="btn-my-location" class="r-loc-btn" title="Use my current location"
+                aria-label="Use my current location">
+                <i class="fas fa-crosshairs"></i>
+              </button>
+            </div>
+            <input type="hidden" id="start-lat" name="start_lat" />
+            <input type="hidden" id="start-lng" name="start_lng" />
+            <ul id="start-suggestions" class="geo-suggestions" role="listbox"></ul>
+          </div>
+
+          <!-- Swap -->
+          <div class="flex justify-center">
+            <button type="button" class="r-swap-btn" onclick="swapLocations()" title="Swap origin & destination">
+              <i class="fas fa-arrow-right-arrow-left"></i>
             </button>
           </div>
-          <input type="hidden" id="start-lat" name="start_lat" />
-          <input type="hidden" id="start-lng" name="start_lng" />
-          <ul id="start-suggestions" class="geo-suggestions hidden" role="listbox"></ul>
-        </div>
 
-        <div class="relative">
-          <label class="field-label" for="end-location">Destination</label>
-          <input class="field-input" id="end-location" name="end_location" required autocomplete="off" placeholder="e.g. UKZN Westville campus" />
-          <input type="hidden" id="end-lat" name="end_lat" />
-          <input type="hidden" id="end-lng" name="end_lng" />
-          <ul id="end-suggestions" class="geo-suggestions hidden" role="listbox"></ul>
-        </div>
+          <!-- Destination -->
+          <div class="r-field-group">
+            <label class="r-field-label" for="end-location">
+              <i class="fas fa-flag-checkered"></i> Destination
+            </label>
+            <input class="r-input" id="end-location" name="end_location" required autocomplete="off"
+              placeholder="e.g. UKZN Westville campus" />
+            <input type="hidden" id="end-lat" name="end_lat" />
+            <input type="hidden" id="end-lng" name="end_lng" />
+            <ul id="end-suggestions" class="geo-suggestions" role="listbox"></ul>
+          </div>
 
-        <button class="submit-btn" type="submit" id="route-submit-btn">Find Safest Route</button>
-      </form>
+          <!-- Submit -->
+          <button class="r-submit mt-2" type="submit" id="route-submit-btn">
+            <i class="fas fa-wand-magic-sparkles"></i> Find Safest Route
+          </button>
+        </form>
 
-      <div id="route-result" class="mt-6 hidden">
-        <div class="flex items-center justify-between mb-3 pt-4 border-t border-surface-200">
-          <span class="text-xs font-semibold text-surface-500 uppercase tracking-wider">Route Assessment</span>
-          <span id="route-risk" class="badge badge-low">—</span>
+        <!-- ═══ RESULTS ═══ -->
+        <div id="route-result" class="hidden">
+          <div class="r-result-header">
+            <span><i class="fas fa-chart-pie mr-1 text-[10px]"></i>Route Assessment</span>
+            <span id="route-risk" class="risk-badge">—</span>
+          </div>
+
+          <!-- Stats Bar -->
+          <div class="r-stats-bar">
+            <div class="r-stat">
+              <div class="r-stat-value" id="stat-distance">—</div>
+              <div class="r-stat-label">Distance</div>
+            </div>
+            <div class="r-stat">
+              <div class="r-stat-value" id="stat-duration">—</div>
+              <div class="r-stat-label">Duration</div>
+            </div>
+            <div class="r-stat">
+              <div class="r-stat-value" id="stat-score">—</div>
+              <div class="r-stat-label">Safety Score</div>
+            </div>
+          </div>
+
+          <p id="route-explanation" class="r-explanation"></p>
+
+          <div id="route-leaflet-map" class="w-full bg-surface-50"></div>
+
+          <!-- Alternatives -->
+          <div id="route-alternatives" class="r-alt-list hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-surface-400">Alternative Routes</span>
+              <span class="text-[10px] text-surface-400">Tap to compare</span>
+            </div>
+          </div>
         </div>
-        <p id="route-explanation" class="text-sm text-surface-600 mb-4 leading-relaxed"></p>
-        <div id="route-leaflet-map" class="w-full bg-surface-50 border border-surface-200"></div>
-        <div id="route-alternatives" class="mt-4 space-y-2 hidden"></div>
+      </div>
+    </div>
+
+    <!-- Quick Tips Card -->
+    <div class="r-card animate-fade-up delay-3">
+      <div class="r-card-header">
+        <div>
+          <h2><i class="fas fa-lightbulb text-amber-500 mr-1.5 text-xs"></i>Quick Tips</h2>
+          <p>Stay safe while navigating</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-shield-halved text-emerald-500 text-[10px]"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-surface-700">Stick to main roads</p>
+            <p class="text-[11px] text-surface-400 mt-0.5">Well-lit arterial routes have 60% lower incident rates.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-clock text-amber-500 text-[10px]"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-surface-700">Avoid late-night travel</p>
+            <p class="text-[11px] text-surface-400 mt-0.5">Incidents spike between 22:00 – 04:00 in high-risk zones.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-users text-indigo-500 text-[10px]"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-surface-700">Travel in groups</p>
+            <p class="text-[11px] text-surface-400 mt-0.5">Solo travelers are 4× more likely to be targeted.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="page-card rounded-2xl overflow-hidden lg:col-span-2">
-    <div class="page-card-header flex items-center justify-between">
-      <div>
-        <h2 class="font-display font-bold text-surface-800 text-base">Recent Routes</h2>
-        <p class="text-xs text-surface-500 mt-0.5">Select a row to preview on the map</p>
+  <!-- ═══ RIGHT: HISTORY TABLE ═══ -->
+  <div class="lg:col-span-3">
+    <div class="r-card animate-fade-up delay-3 h-full flex flex-col">
+      <div class="r-card-header">
+        <div>
+          <h2><i class="fas fa-clock-rotate-left text-primary-500 mr-1.5 text-xs"></i>Recent Routes</h2>
+          <p>Select a row to preview instantly on the map</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" id="route-search" placeholder="Search routes…"
+            class="text-[11px] px-2.5 py-1.5 rounded-lg border border-surface-200 bg-white/60 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 w-36 transition-all"
+            oninput="filterRoutes(this.value)">
+          <span class="tag">History</span>
+        </div>
       </div>
-      <span class="text-[10px] font-semibold text-surface-400 uppercase tracking-wider">History</span>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="data w-full text-sm">
-        <thead><tr><th>From</th><th>To</th><th>Risk</th><th></th></tr></thead>
-        <tbody id="routes-body"><tr><td colspan="4" class="text-surface-400 py-8 text-center">Loading…</td></tr></tbody>
-      </table>
+      <div class="r-table-wrap flex-1">
+        <table class="r-table">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>To</th>
+              <th class="text-center">Risk</th>
+              <th class="text-center">When</th>
+              <th class="text-right pr-6">Action</th>
+            </tr>
+          </thead>
+          <tbody id="routes-body">
+            <tr>
+              <td colspan="5">
+                <div class="r-empty">
+                  <i class="fas fa-spinner fa-spin text-primary-400"></i>
+                  <span>Loading route history…</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+      <div class="px-6 py-3 border-t border-surface-200/60 flex items-center justify-between">
+        <span class="text-[11px] text-surface-400 font-medium" id="route-table-info">Loading…</span>
+        <div class="flex items-center gap-1">
+          <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px] transition-all" onclick="prevRoutePage()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="text-xs text-surface-500 font-semibold px-2" id="route-page-num">1</span>
+          <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px] transition-all" onclick="nextRoutePage()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block page_script %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin=""></script>
 <script src="/static/js/leaflet-map.js"></script>
 <script src="/static/js/routes.js"></script>
+
+<script>
+// ════════════════════════════════════════
+// ENHANCED UI HELPERS
+// ════════════════════════════════════════
+
+function swapLocations() {
+  const startInput = document.getElementById('start-location');
+  const endInput = document.getElementById('end-location');
+  const startLat = document.getElementById('start-lat');
+  const startLng = document.getElementById('start-lng');
+  const endLat = document.getElementById('end-lat');
+  const endLng = document.getElementById('end-lng');
+
+  // Animate swap
+  const btn = document.querySelector('.r-swap-btn');
+  btn.style.transform = 'rotate(180deg) scale(0.9)';
+  setTimeout(() => btn.style.transform = '', 300);
+
+  // Swap values
+  [startInput.value, endInput.value] = [endInput.value, startInput.value];
+  [startLat.value, endLat.value] = [endLat.value, startLat.value];
+  [startLng.value, endLng.value] = [endLng.value, startLng.value];
+
+  // Visual feedback
+  [startInput, endInput].forEach(el => {
+    el.style.transition = 'background 0.3s';
+    el.style.background = '#eff6ff';
+    setTimeout(() => el.style.background = '', 400);
+  });
+}
+
+function filterRoutes(query) {
+  if (window.filterRouteTable) window.filterRouteTable(query);
+}
+
+function prevRoutePage() { if (window.changeRoutePage) window.changeRoutePage(-1); }
+function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1); }
+
+// Location + suggestion dropdown UX
+(function() {
+  const btn = document.getElementById('btn-my-location');
+  const input = document.getElementById('start-location');
+  if (btn && input) {
+    btn.addEventListener('click', async () => {
+      if (!navigator.geolocation) {
+        flash('Geolocation is not supported by your browser.', 'error');
+        return;
+      }
+      btn.classList.add('pulse-ring');
+      input.classList.add('is-loading');
+      input.placeholder = 'Detecting your location…';
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          try {
+            const { result } = await SR.post('/api/routes/geocode/reverse', { lat, lng });
+            input.value = result.name;
+            document.getElementById('start-lat').value = result.lat;
+            document.getElementById('start-lng').value = result.lng;
+            flash('Current location set as origin.', 'success');
+          } catch (err) {
+            input.value = lat.toFixed(5) + ', ' + lng.toFixed(5);
+            document.getElementById('start-lat').value = lat;
+            document.getElementById('start-lng').value = lng;
+            flash(err.message || 'Location set (address lookup failed).', 'warning');
+          }
+          btn.classList.remove('pulse-ring');
+          input.classList.remove('is-loading');
+          input.placeholder = 'e.g. 123 Florida Rd, Durban';
+        },
+        () => {
+          btn.classList.remove('pulse-ring');
+          input.classList.remove('is-loading');
+          input.placeholder = 'Location access denied';
+          flash('Could not get your location.', 'error');
+          setTimeout(() => { input.placeholder = 'e.g. 123 Florida Rd, Durban'; }, 2000);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      );
+    });
+  }
+})();
+
+// Enhance suggestion dropdowns
+(function() {
+  ['start', 'end'].forEach(field => {
+    const input = document.getElementById(field + '-location');
+    const list = document.getElementById(field + '-suggestions');
+    if (!input || !list) return;
+
+    input.addEventListener('focus', () => {
+      if (list.children.length > 0) list.classList.add('visible');
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !list.contains(e.target)) {
+        list.classList.remove('visible');
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}
