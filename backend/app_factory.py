@@ -110,16 +110,32 @@ def _register_jwt_handlers(jwt_manager):
 
 
 def _register_error_handlers(app):
+    log = get_logger(__name__)
+
     @app.errorhandler(404)
     def _not_found(err):
-        # Keep API 404s as JSON; let page routes 404 render normally.
         if request.path.startswith("/api/"):
             return jsonify(error="Resource not found."), 404
         return render_template("login.html"), 404
 
+    @app.errorhandler(403)
+    def _forbidden(err):
+        if request.path.startswith("/api/"):
+            return jsonify(error="You do not have permission to access this resource."), 403
+        return render_template("login.html"), 403
+
     @app.errorhandler(500)
     def _server_error(err):
-        return jsonify(error="Internal server error."), 500
+        log.exception("Unhandled server error on %s", request.path)
+        if request.path.startswith("/api/"):
+            return jsonify(error="Internal server error."), 500
+        return render_template("login.html"), 500
+
+    @app.errorhandler(405)
+    def _method_not_allowed(err):
+        if request.path.startswith("/api/"):
+            return jsonify(error="Method not allowed."), 405
+        return render_template("login.html"), 405
 
 
 def _register_pages(app):
@@ -132,6 +148,10 @@ def _register_pages(app):
     @app.get("/login")
     def login_page():
         return render_template("login.html")
+
+    @app.get("/register")
+    def register_page():
+        return render_template("register.html")
 
     @app.get("/dashboard")
     def dashboard_page():

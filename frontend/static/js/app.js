@@ -1,7 +1,20 @@
 /* SafeRoute AI - Premium Application Shell */
 (function () {
   const path = location.pathname;
-  const PUBLIC_PAGES = ["/", "/login"];
+  const PUBLIC_PAGES = ["/", "/login", "/register"];
+
+  // Global error surfacing — avoids silent failures during demos
+  window.addEventListener("unhandledrejection", (ev) => {
+    console.error("Unhandled promise rejection:", ev.reason);
+    const msg = ev.reason && ev.reason.message ? ev.reason.message : "Something went wrong.";
+    if (!PUBLIC_PAGES.includes(path) && window.showFlash) {
+      showFlash(msg, "error");
+    }
+  });
+
+  window.addEventListener("error", (ev) => {
+    console.error("Uncaught error:", ev.error || ev.message);
+  });
 
   // Premium Flash Notification System
   window.showFlash = function(message, type = 'info', duration = 4000) {

@@ -32,23 +32,34 @@ const SR = (() => {
       const t = getToken();
       if (t) headers["Authorization"] = "Bearer " + t;
     }
-    const res = await fetch(path, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+
+    let res;
+    try {
+      res = await fetch(path, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    } catch (e) {
+      const err = new Error("Network error — check your connection and try again.");
+      err.status = 0;
+      err.cause = e;
+      throw err;
+    }
 
     let data = null;
-    try {
-      data = await res.json();
-    } catch (e) {
-      data = null;
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = null;
+      }
     }
 
     if (res.status === 401 && auth) {
-      // Token missing/expired -> bounce to login.
       clearSession();
-      if (!location.pathname.startsWith("/login") && location.pathname !== "/") {
+      if (!location.pathname.startsWith("/login") && location.pathname !== "/" && location.pathname !== "/register") {
         location.href = "/login";
       }
     }

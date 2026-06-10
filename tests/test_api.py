@@ -32,6 +32,26 @@ def test_login_page_served(client):
     assert b"SafeRoute" in res.data
 
 
+def test_register_page_served(client):
+    res = client.get("/register")
+    assert res.status_code == 200
+    assert b"SafeRoute" in res.data
+
+
+def test_geocode_requires_query(client, public_token):
+    res = client.get("/api/routes/geocode?q=D", headers=auth(public_token))
+    assert res.status_code == 200
+    assert res.get_json()["results"] == []
+
+
+def test_geocode_durban(client, public_token):
+    res = client.get("/api/routes/geocode?q=Durban", headers=auth(public_token))
+    assert res.status_code == 200
+    results = res.get_json()["results"]
+    assert len(results) >= 1
+    assert any("Durban" in r["name"] for r in results)
+
+
 def test_alerts_scoped_by_role(client, public_token):
     res = client.get("/api/alerts", headers=auth(public_token))
     assert res.status_code == 200

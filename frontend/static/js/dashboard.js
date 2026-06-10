@@ -291,7 +291,13 @@
       if (sidebarAlerts) sidebarAlerts.textContent = data.kpis.active_alerts || 0;
     } catch (e) {
       console.error("Dashboard load error:", e);
-      if (window.showFlash) showFlash("Failed to load dashboard data", "error");
+      if (window.flash) flash("Failed to load dashboard data", "error");
+      ["risk-areas-container", "alerts-feed", "events-feed", "routes-feed"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = `<div class="text-center py-8"><p class="text-sm" style="color:#94a3b8">${esc(e.message || "Unable to load")}</p><button type="button" class="btn-secondary mt-3" onclick="location.reload()">Retry</button></div>`;
+        }
+      });
     }
   }
 

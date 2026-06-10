@@ -23,7 +23,10 @@ def geocode_search():
         limit = min(12, max(1, int(request.args.get("limit", 8))))
     except (TypeError, ValueError):
         limit = 8
-    results = geocoding_service.search(q, limit=limit)
+    try:
+        results = geocoding_service.search(q, limit=limit)
+    except Exception:
+        results = []
     return jsonify(results=results)
 
 
@@ -69,12 +72,15 @@ def generate():
     except GeocodeError as e:
         return jsonify(error=str(e)), 400
 
-    result = route_optimizer.generate_route(
-        start["name"],
-        end["name"],
-        start_coord=(start["lng"], start["lat"]),
-        end_coord=(end["lng"], end["lat"]),
-    )
+    try:
+        result = route_optimizer.generate_route(
+            start["name"],
+            end["name"],
+            start_coord=(start["lng"], start["lat"]),
+            end_coord=(end["lng"], end["lat"]),
+        )
+    except Exception:
+        return jsonify(error="Could not generate route. Try different locations or pick from suggestions."), 502
 
     user = current_user()
     route = Route(

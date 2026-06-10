@@ -400,10 +400,14 @@
   }
 
   async function loadRoutes() {
-    const { routes } = await SR.get("/api/routes");
-    savedRoutes = routes || [];
-    const search = document.getElementById("route-search");
-    applyRouteFilter(search ? search.value : "");
+    try {
+      const { routes } = await SR.get("/api/routes");
+      savedRoutes = routes || [];
+      const search = document.getElementById("route-search");
+      applyRouteFilter(search ? search.value : "");
+    } catch (err) {
+      flash(err.message, "error");
+    }
   }
 
   function applyRouteFilter(query) {
