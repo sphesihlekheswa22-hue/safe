@@ -54,3 +54,24 @@ def test_chat_message_without_ai_key(client, public_token):
     assert res.status_code == 200
     data = res.get_json()
     assert "reply" in data and len(data["reply"]) > 0
+
+
+def test_chat_refuses_unrelated_person_query(client, public_token, monkeypatch):
+    monkeypatch.setenv("SERPER_API_KEY", "test-key-should-not-be-called")
+
+    def _boom(*_a, **_k):
+        raise AssertionError("Serper must not run for off-topic person queries")
+
+    import services.serper_service as ss
+
+    monkeypatch.setattr(ss, "fetch_sa_context", _boom)
+
+    res = client.post(
+        "/api/chat/message",
+        json={"message": "Nelson Mandela"},
+        headers=auth(public_token),
+    )
+    assert res.status_code == 200
+    reply = res.get_json()["reply"].lower()
+    assert "saferoute" in reply or "south africa" in reply
+    assert "can't look up people" in reply or "only help" in reply
