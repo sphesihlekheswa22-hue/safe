@@ -137,6 +137,16 @@
     }
   }
 
+  function focusFromQuery() {
+    if (!map) return;
+    const params = new URLSearchParams(location.search);
+    const lat = parseFloat(params.get("lat"));
+    const lng = parseFloat(params.get("lng"));
+    if (!isNaN(lat) && !isNaN(lng)) {
+      map.setView([lat, lng], 14);
+    }
+  }
+
   function renderMap(data) {
     const center = data.map_center || { lat: -29.8587, lng: 31.0218, zoom: 11 };
     if (!map) {
@@ -155,6 +165,7 @@
     }
 
     updateStats(data);
+    focusFromQuery();
   }
 
   async function load() {

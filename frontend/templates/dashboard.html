@@ -3,217 +3,833 @@
 {% block title %}Dashboard · SafeRoute AI{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="" />
 <style>
-  .dash-stat {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ════════════════════════════════════════════════════════
+     SAFEROUTE AI — ULTIMATE DASHBOARD REDESIGN
+     ════════════════════════════════════════════════════════ */
+
+  :root {
+    --d-bg: #f8fafc;
+    --d-card: rgba(255,255,255,0.78);
+    --d-border: rgba(226,232,240,0.6);
+    --d-text: #0f172a;
+    --d-muted: #64748b;
+    --d-primary: #2563eb;
+    --d-primary-light: #eff6ff;
+    --d-success: #10b981;
+    --d-warning: #f59e0b;
+    --d-danger: #ef4444;
+    --d-critical: #dc2626;
+    --d-violet: #8b5cf6;
   }
-  .dash-stat:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 20px 25px -5px rgba(0,0,0,0.08); }
-  .dash-stat-icon {
-    width: 2.75rem; height: 2.75rem; border-radius: 0.75rem;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp      { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn       { from{opacity:0} to{opacity:1} }
+  @keyframes slideRight   { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes countPop     { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  @keyframes shimmer      { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes livePulse   { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{opacity:0.7;box-shadow:0 0 0 8px rgba(16,185,129,0)} }
+  @keyframes barGrow     { from{width:0} }
+  @keyframes floatCard   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes ringPulse   { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.5);opacity:0} }
+  @keyframes dotBounce   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes glowPulse   { 0%,100%{box-shadow:0 0 20px rgba(37,99,235,0.08)} 50%{box-shadow:0 0 30px rgba(37,99,235,0.18)} }
+
+  .a-fade-up  { animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+  .a-fade-in  { animation: fadeIn 0.5s ease both; }
+  .a-slide-r  { animation: slideRight 0.5s ease both; }
+  .a-pop      { animation: countPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+  .d1 { animation-delay: 0.05s; }
+  .d2 { animation-delay: 0.12s; }
+  .d3 { animation-delay: 0.20s; }
+  .d4 { animation-delay: 0.28s; }
+  .d5 { animation-delay: 0.36s; }
+  .d6 { animation-delay: 0.44s; }
+
+  /* ── Hero Section ── */
+  .dash-hero {
+    position: relative;
+    padding: 1rem 0 0.5rem;
+    margin-bottom: 1.5rem;
   }
-  .dash-mini-stat {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    transition: all 0.25s ease;
+  .dash-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: -60px; right: -60px;
+    height: 320px;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 20%, rgba(37,99,235,0.055) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 85% 15%, rgba(16,185,129,0.04) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 35% at 50% 10%, rgba(139,92,246,0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
   }
-  .dash-mini-stat:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(0,0,0,0.08); }
-  .dash-cta {
+  .dash-hero-greet {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--d-muted);
+    margin-bottom: 0.25rem;
+  }
+  .dash-hero h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #0f172a 0%, #334155 60%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .dash-hero p {
+    color: var(--d-muted);
+    max-width: 440px;
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  .dash-hero-cta {
     display: inline-flex; align-items: center; gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
+    padding: 0.75rem 1.5rem;
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #fff; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600;
-    box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.4);
+    color: #fff;
+    border-radius: 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+    box-shadow: 0 4px 16px -2px rgba(37,99,235,0.35), 0 0 0 1px rgba(37,99,235,0.1);
+    letter-spacing: -0.01em;
+  }
+  .dash-hero-cta::before {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    transition: left 0.6s ease;
+  }
+  .dash-hero-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px -4px rgba(37,99,235,0.45), 0 0 0 1px rgba(37,99,235,0.15);
+  }
+  .dash-hero-cta:hover::before { left: 100%; }
+  .dash-hero-cta i { font-size: 0.75rem; }
+
+  /* ── Live Status Pill ── */
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.35rem 0.875rem;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.18);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #059669;
+  }
+  .live-pill-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: livePulse 2s ease infinite;
+    position: relative;
+  }
+  .live-pill-dot::after {
+    content: '';
+    position: absolute; inset: -2px;
+    border-radius: 50%;
+    border: 1.5px solid #10b981;
+    animation: ringPulse 2s ease infinite;
+  }
+
+  /* ── KPI Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+  .kpi-card {
+    background: var(--d-card);
+    backdrop-filter: blur(24px) saturate(1.3);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px -2px rgba(15,23,42,0.04), 0 0 0 1px rgba(15,23,42,0.02);
+    transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 1.25rem 1.25rem 0 0;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+  }
+  .kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px -8px rgba(15,23,42,0.1), 0 0 0 1px rgba(15,23,42,0.03);
+  }
+  .kpi-card:hover::before { opacity: 1; }
+  .kpi-card.kpi-blue::before   { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .kpi-card.kpi-rose::before   { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .kpi-card.kpi-amber::before  { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .kpi-card.kpi-violet::before { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
+
+  .kpi-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .kpi-icon-wrap {
+    width: 3rem; height: 3rem;
+    border-radius: 0.875rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.125rem;
+    position: relative;
+  }
+  .kpi-icon-wrap::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border-radius: 1rem;
+    opacity: 0.15;
+    filter: blur(8px);
+  }
+  .kpi-blue   .kpi-icon-wrap { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+  .kpi-blue   .kpi-icon-wrap::after { background: #3b82f6; }
+  .kpi-rose   .kpi-icon-wrap { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #ef4444; }
+  .kpi-rose   .kpi-icon-wrap::after { background: #f87171; }
+  .kpi-amber  .kpi-icon-wrap { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #f59e0b; }
+  .kpi-amber  .kpi-icon-wrap::after { background: #fbbf24; }
+  .kpi-violet .kpi-icon-wrap { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #8b5cf6; }
+  .kpi-violet .kpi-icon-wrap::after { background: #a78bfa; }
+
+  .kpi-trend {
+    display: inline-flex; align-items: center; gap: 0.2rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .trend-up   { background: rgba(16,185,129,0.1); color: #059669; }
+  .trend-down { background: rgba(239,68,68,0.1);   color: #dc2626; }
+  .trend-flat { background: rgba(148,163,184,0.1); color: #64748b; }
+
+  .kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--d-text);
+  }
+  .kpi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--d-muted);
+    margin-top: 0.375rem;
+    letter-spacing: -0.01em;
+  }
+  .kpi-bar-wrap {
+    margin-top: 1rem;
+    height: 5px;
+    background: rgba(226,232,240,0.5);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .kpi-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1.2s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+  }
+  .kpi-bar::after {
+    content: '';
+    position: absolute; right: 0; top: -2px; bottom: -2px;
+    width: 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.6);
+    filter: blur(2px);
+  }
+  .kpi-blue   .kpi-bar { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+  .kpi-rose   .kpi-bar { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .kpi-amber  .kpi-bar { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .kpi-violet .kpi-bar { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
+
+  /* ── Glass Panel ── */
+  .d-panel {
+    background: var(--d-card);
+    backdrop-filter: blur(24px) saturate(1.3);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 12px -2px rgba(15,23,42,0.04), 0 0 0 1px rgba(15,23,42,0.02);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+    display: flex; flex-direction: column;
+  }
+  .d-panel:hover { box-shadow: 0 12px 32px -6px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.03); }
+  .d-panel-head {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--d-border);
+    background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(248,250,252,0.85));
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .d-panel-head h3 {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--d-text);
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .d-panel-head h3 i { font-size: 0.75rem; opacity: 0.7; }
+  .d-panel-head p {
+    font-size: 0.6875rem;
+    color: var(--d-muted);
+    margin-top: 0.15rem;
+  }
+  .d-panel-body { padding: 1.25rem 1.5rem; flex: 1; }
+  .d-panel-foot {
+    padding: 0.875rem 1.5rem;
+    border-top: 1px solid var(--d-border);
+    background: rgba(248,250,252,0.4);
+  }
+  .d-panel-foot a {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.75rem; font-weight: 700; color: var(--d-muted);
     transition: all 0.2s ease;
   }
-  .dash-cta:hover { box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.5); transform: translateY(-1px); }
-  .live-pill {
-    display: inline-flex; align-items: center; gap: 0.375rem;
-    padding: 0.25rem 0.625rem; border-radius: 9999px;
-    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.02em;
-    background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);
+  .d-panel-foot a:hover { color: var(--d-primary); }
+  .d-panel-foot a i { font-size: 0.625rem; transition: transform 0.2s; }
+  .d-panel-foot a:hover i { transform: translateX(3px); }
+
+  /* ── Risk Area Items ── */
+  .risk-item {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.875rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
   }
-  .live-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: livePulse 2s ease infinite; }
-  @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .panel-link {
-    display: flex; align-items: center; justify-content: center; gap: 0.375rem;
-    font-size: 0.8125rem; font-weight: 600; color: #2563eb;
-    transition: color 0.15s;
+  .risk-item:hover {
+    background: rgba(37,99,235,0.03);
+    border-color: rgba(37,99,235,0.08);
+    transform: translateX(3px);
   }
-  .panel-link:hover { color: #1d4ed8; }
-  .panel-footer-link {
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 0.75rem; font-weight: 600; color: #64748b;
-    transition: color 0.15s;
+  .risk-item-icon {
+    width: 2.25rem; height: 2.25rem;
+    border-radius: 0.625rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
   }
-  .panel-footer-link:hover { color: #2563eb; }
+  .risk-item-info { flex: 1; min-width: 0; }
+  .risk-item-name {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--d-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .risk-item-meta {
+    font-size: 0.6875rem;
+    color: var(--d-muted);
+    margin-top: 1px;
+  }
+  .risk-item-bar-wrap {
+    width: 100%;
+    height: 4px;
+    background: rgba(226,232,240,0.5);
+    border-radius: 999px;
+    margin-top: 0.375rem;
+    overflow: hidden;
+  }
+  .risk-item-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.8s cubic-bezier(0.22,1,0.36,1);
+  }
+  .risk-item-score {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    width: 2.5rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .risk-item-arrow {
+    color: #cbd5e1;
+    font-size: 0.625rem;
+    transition: all 0.2s;
+  }
+  .risk-item:hover .risk-item-arrow { color: var(--d-primary); transform: translateX(2px); }
+
+  /* ── Alert Items ── */
+  .alert-item {
+    display: flex; align-items: flex-start; gap: 0.875rem;
+    padding: 1rem;
+    border-radius: 0.875rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .alert-item::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .alert-item:hover {
+    background: rgba(255,255,255,0.6);
+    border-color: var(--d-border);
+    transform: translateX(2px);
+  }
+  .alert-item:hover::before { opacity: 1; }
+  .alert-item.alert-high::before   { background: var(--d-danger); }
+  .alert-item.alert-medium::before { background: var(--d-warning); }
+  .alert-item.alert-low::before    { background: var(--d-success); }
+
+  .alert-icon {
+    width: 2rem; height: 2rem;
+    border-radius: 0.5rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .alert-icon.alert-high   { background: rgba(239,68,68,0.08);  color: #ef4444; }
+  .alert-icon.alert-medium { background: rgba(245,158,11,0.08); color: #f59e0b; }
+  .alert-icon.alert-low    { background: rgba(16,185,129,0.08); color: #10b981; }
+
+  .alert-content { flex: 1; min-width: 0; }
+  .alert-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--d-text);
+    line-height: 1.3;
+  }
+  .alert-desc {
+    font-size: 0.6875rem;
+    color: var(--d-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .alert-time {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  /* ── Event Items ── */
+  .event-item {
+    display: flex; align-items: center; gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .event-item:hover {
+    background: rgba(255,255,255,0.6);
+    border-color: var(--d-border);
+    transform: translateX(2px);
+  }
+  .event-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .event-dot::after {
+    content: '';
+    position: absolute; inset: -3px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    opacity: 0.3;
+  }
+  .event-info { flex: 1; min-width: 0; }
+  .event-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--d-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event-meta {
+    font-size: 0.6875rem;
+    color: var(--d-muted);
+    margin-top: 1px;
+  }
+  .event-badge {
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.375rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Route Items ── */
+  .route-card {
+    display: flex; align-items: center; gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.875rem;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(226,232,240,0.4);
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+  .route-card:hover {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(37,99,235,0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(15,23,42,0.06);
+  }
+  .route-num {
+    width: 1.75rem; height: 1.75rem;
+    border-radius: 0.5rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    background: #f1f5f9;
+    color: #64748b;
+    flex-shrink: 0;
+  }
+  .route-info { flex: 1; min-width: 0; }
+  .route-path {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--d-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .route-path i { color: #cbd5e1; font-size: 0.5rem; margin: 0 0.25rem; }
+  .route-sub {
+    font-size: 0.6875rem;
+    color: var(--d-muted);
+    margin-top: 1px;
+  }
+  .route-risk {
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.375rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Mini Stats ── */
+  .mini-stat {
+    background: var(--d-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-stat::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2.5px;
+    border-radius: 1rem 1rem 0 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .mini-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -6px rgba(15,23,42,0.08);
+  }
+  .mini-stat:hover::before { opacity: 1; }
+  .mini-stat.ms-green::before  { background: linear-gradient(90deg, #34d399, #10b981); }
+  .mini-stat.ms-blue::before   { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+  .mini-stat-icon {
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.75rem;
+    font-size: 0.875rem;
+    position: relative;
+  }
+  .mini-stat-icon::after {
+    content: '';
+    position: absolute; inset: -3px;
+    border-radius: 0.875rem;
+    opacity: 0.12;
+    filter: blur(6px);
+  }
+  .ms-green .mini-stat-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #059669; }
+  .ms-green .mini-stat-icon::after { background: #34d399; }
+  .ms-blue .mini-stat-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+  .ms-blue .mini-stat-icon::after { background: #60a5fa; }
+  .mini-stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--d-text);
+    line-height: 1;
+  }
+  .mini-stat-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-top: 0.375rem;
+  }
+
+  /* ── Skeleton ── */
+  .skel { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .dash-hero h1 { font-size: 1.75rem; }
+    .d-panel-head, .d-panel-body, .d-panel-foot { padding-left: 1rem; padding-right: 1rem; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Page header -->
-<div class="mb-8">
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-    <div>
-      <p class="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-1.5">Overview</p>
-      <h1 id="dash-title" class="text-2xl lg:text-3xl font-display font-bold text-surface-800 tracking-tight">Your Safety Dashboard</h1>
-      <p id="dash-subtitle" class="text-sm text-surface-500 mt-1.5 max-w-xl">Live area risk, alerts, incidents, and safe routes across your community</p>
-    </div>
-    <a href="/routes" class="dash-cta">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
-      Find Safe Route
-    </a>
-  </div>
-</div>
 
-<!-- KPI row -->
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-  <div class="dash-stat rounded-2xl p-5">
-    <div class="flex items-start justify-between mb-4">
-      <div class="dash-stat-icon bg-primary-50 text-primary-600">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
-      </div>
+<!-- ═══ HERO ═══ -->
+<div class="dash-hero">
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+    <div class="a-fade-up">
+      <p class="dash-hero-greet">Welcome back</p>
+      <h1 id="dash-title">Your Safety<br>Dashboard</h1>
+      <p id="dash-subtitle">Live area risk, alerts, incidents, and safe routes across your community — all in one place.</p>
     </div>
-    <p id="kpi-avg-risk" class="text-3xl font-display font-bold text-surface-800">—</p>
-    <p class="text-sm font-medium text-surface-500 mt-0.5">Average Risk</p>
-    <div class="mt-4 h-1.5 bg-surface-200 rounded-full overflow-hidden">
-      <div id="kpi-avg-risk-bar" class="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000" style="width: 0%"></div>
-    </div>
-  </div>
-
-  <div class="dash-stat rounded-2xl p-5">
-    <div class="flex items-start justify-between mb-4">
-      <div class="dash-stat-icon bg-rose-50 text-rose-600">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
-      </div>
-    </div>
-    <p id="kpi-high-risk" class="text-3xl font-display font-bold text-surface-800">—</p>
-    <p class="text-sm font-medium text-surface-500 mt-0.5">High-Risk Areas</p>
-  </div>
-
-  <div class="dash-stat rounded-2xl p-5">
-    <div class="flex items-start justify-between mb-4">
-      <div class="dash-stat-icon bg-amber-50 text-amber-600">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
-      </div>
-    </div>
-    <p id="kpi-alerts" class="text-3xl font-display font-bold text-surface-800">—</p>
-    <p class="text-sm font-medium text-surface-500 mt-0.5">Active Alerts</p>
-  </div>
-
-  <div class="dash-stat rounded-2xl p-5">
-    <div class="flex items-start justify-between mb-4">
-      <div class="dash-stat-icon bg-violet-50 text-violet-600">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
-      </div>
-    </div>
-    <p id="kpi-events" class="text-3xl font-display font-bold text-surface-800">—</p>
-    <p class="text-sm font-medium text-surface-500 mt-0.5">Tracked Events</p>
-  </div>
-</div>
-
-<!-- Main grid -->
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-  {% call panel('Risk Area Status', 'Live monitoring of community areas', '<span class="live-pill"><span class="live-pill-dot"></span>Live</span>') %}
-    <div id="risk-areas-container" class="space-y-4">
-      <div class="animate-pulse space-y-4">
-        {% for i in range(5) %}
-        <div class="flex items-center gap-4">
-          <div class="w-8 h-8 bg-surface-200 rounded-lg"></div>
-          <div class="flex-1 space-y-2">
-            <div class="h-3 bg-surface-200 rounded w-1/3"></div>
-            <div class="h-2 bg-surface-100 rounded-full"></div>
-          </div>
-          <div class="w-12 h-6 bg-surface-200 rounded"></div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    <div class="mt-6 pt-4 border-t border-surface-200">
-      <a href="/map" class="panel-link">
-        View Safety Map
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    <div class="flex items-center gap-3 a-fade-up d2">
+      <span class="live-pill"><span class="live-pill-dot"></span>Live Monitoring</span>
+      <a href="/routes" class="dash-hero-cta">
+        <i class="fas fa-route"></i> Find Safe Route
       </a>
     </div>
-  {% endcall %}
+  </div>
+</div>
 
-  <div class="space-y-6">
-    {% call panel('Active Alerts', 'Priority notifications for your role') %}
-      <div id="alerts-feed" class="space-y-3">
-        <div class="animate-pulse space-y-3">
-          {% for i in range(3) %}
-          <div class="h-16 bg-surface-100 rounded-xl"></div>
+<!-- ═══ KPI ROW ═══ -->
+<div class="kpi-grid">
+  <!-- Average Risk -->
+  <div class="kpi-card kpi-blue a-fade-up d1">
+    <div class="kpi-top">
+      <div class="kpi-icon-wrap"><i class="fas fa-chart-simple"></i></div>
+      <span class="kpi-trend trend-down"><i class="fas fa-arrow-trend-down text-[8px]"></i> -12%</span>
+    </div>
+    <p id="kpi-avg-risk" class="kpi-value">—</p>
+    <p class="kpi-label">Average Risk Score</p>
+    <div class="kpi-bar-wrap"><div id="kpi-avg-risk-bar" class="kpi-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- High Risk Areas -->
+  <div class="kpi-card kpi-rose a-fade-up d2">
+    <div class="kpi-top">
+      <div class="kpi-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
+      <span class="kpi-trend trend-up"><i class="fas fa-arrow-trend-up text-[8px]"></i> +2</span>
+    </div>
+    <p id="kpi-high-risk" class="kpi-value">—</p>
+    <p class="kpi-label">High-Risk Areas</p>
+    <div class="kpi-bar-wrap"><div id="kpi-high-risk-bar" class="kpi-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Active Alerts -->
+  <div class="kpi-card kpi-amber a-fade-up d3">
+    <div class="kpi-top">
+      <div class="kpi-icon-wrap"><i class="fas fa-bell"></i></div>
+      <span class="kpi-trend trend-flat"><i class="fas fa-minus text-[8px]"></i> Same</span>
+    </div>
+    <p id="kpi-alerts" class="kpi-value">—</p>
+    <p class="kpi-label">Active Alerts</p>
+    <div class="kpi-bar-wrap"><div id="kpi-alerts-bar" class="kpi-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Tracked Events -->
+  <div class="kpi-card kpi-violet a-fade-up d4">
+    <div class="kpi-top">
+      <div class="kpi-icon-wrap"><i class="fas fa-calendar-check"></i></div>
+      <span class="kpi-trend trend-up"><i class="fas fa-arrow-trend-up text-[8px]"></i> +8</span>
+    </div>
+    <p id="kpi-events" class="kpi-value">—</p>
+    <p class="kpi-label">Tracked Events</p>
+    <div class="kpi-bar-wrap"><div id="kpi-events-bar" class="kpi-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- ═══ MAIN GRID ═══ -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+
+  <!-- Risk Areas Panel -->
+  <div class="d-panel a-fade-up d2">
+    <div class="d-panel-head">
+      <div>
+        <h3><i class="fas fa-map-location-dot text-primary-500"></i> Risk Area Status</h3>
+        <p>Live monitoring of community areas</p>
+      </div>
+      <span class="live-pill"><span class="live-pill-dot"></span>Live</span>
+    </div>
+    <div class="d-panel-body">
+      <div id="risk-areas-container" class="space-y-1">
+        <!-- Skeleton -->
+        <div class="a-fade-in">
+          {% for i in range(5) %}
+          <div class="flex items-center gap-3 py-3 px-1">
+            <div class="w-9 h-9 skel rounded-lg flex-shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-3 skel rounded w-2/5"></div>
+              <div class="h-2 skel rounded-full w-full"></div>
+            </div>
+            <div class="w-10 h-5 skel rounded flex-shrink-0"></div>
+          </div>
           {% endfor %}
         </div>
       </div>
-      <div class="mt-4 pt-4 border-t border-surface-200">
-        <a href="/alerts" class="panel-footer-link">
-          View all alerts
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </div>
+    <div class="d-panel-foot">
+      <a href="/map">
+        View Safety Map <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Right Column -->
+  <div class="xl:col-span-2 space-y-6">
+
+    <!-- Alerts Panel -->
+    <div class="d-panel a-fade-up d3">
+      <div class="d-panel-head">
+        <div>
+          <h3><i class="fas fa-bell text-amber-500"></i> Active Alerts</h3>
+          <p>Priority notifications for your role</p>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-surface-400 bg-surface-100/80 px-2 py-1 rounded-md">Priority</span>
+      </div>
+      <div class="d-panel-body">
+        <div id="alerts-feed" class="space-y-1">
+          {% for i in range(3) %}
+          <div class="h-16 skel rounded-xl"></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="d-panel-foot">
+        <a href="/alerts">
+          View all alerts <i class="fas fa-chevron-right"></i>
         </a>
       </div>
-    {% endcall %}
+    </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div class="dash-mini-stat rounded-xl p-4 text-center">
-        <div class="w-10 h-10 mx-auto mb-2.5 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <p id="safe-routes-count" class="text-xl font-display font-bold text-surface-800">—</p>
-        <p class="text-[10px] text-surface-500 uppercase tracking-wider font-semibold mt-0.5">Safe Routes</p>
+    <!-- Mini Stats Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="mini-stat ms-green a-fade-up d4">
+        <div class="mini-stat-icon"><i class="fas fa-shield-halved"></i></div>
+        <p id="safe-routes-count" class="mini-stat-value">—</p>
+        <p class="mini-stat-label">Safe Routes</p>
       </div>
-      <div class="dash-mini-stat rounded-xl p-4 text-center">
-        <div class="w-10 h-10 mx-auto mb-2.5 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+      <div class="mini-stat ms-blue a-fade-up d5">
+        <div class="mini-stat-icon"><i class="fas fa-building"></i></div>
+        <p id="institutions-count" class="mini-stat-value">—</p>
+        <p class="mini-stat-label">Monitored Areas</p>
+      </div>
+      <div class="mini-stat ms-green a-fade-up d4" style="--delay:0.40s">
+        <div class="mini-stat-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;">
+          <i class="fas fa-users"></i>
         </div>
-        <p id="institutions-count" class="text-xl font-display font-bold text-surface-800">—</p>
-        <p class="text-[10px] text-surface-500 uppercase tracking-wider font-semibold mt-0.5">Monitored Areas</p>
+        <p id="community-count" class="mini-stat-value">—</p>
+        <p class="mini-stat-label">Community</p>
+      </div>
+      <div class="mini-stat ms-blue a-fade-up d5" style="--delay:0.48s">
+        <div class="mini-stat-icon" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#db2777;">
+          <i class="fas fa-heart-pulse"></i>
+        </div>
+        <p id="health-count" class="mini-stat-value">—</p>
+        <p class="mini-stat-label">Safety Health</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Bottom row -->
+<!-- ═══ BOTTOM ROW ═══ -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  {% call panel('Recent Events', 'Latest community incidents and reports') %}
-    <div id="events-feed" class="space-y-1">
-      <div class="animate-pulse space-y-3">
-        {% for i in range(4) %}
-        <div class="h-14 bg-surface-100 rounded-xl"></div>
-        {% endfor %}
-      </div>
-    </div>
-    <div class="mt-4 pt-4 border-t border-surface-200">
-      <a href="/events" class="panel-footer-link">
-        View all events
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </a>
-    </div>
-  {% endcall %}
 
-  {% call panel('Recommended Safe Routes', 'Low-risk corridor options') %}
-    <div id="routes-feed" class="space-y-3">
-      <div class="animate-pulse space-y-3">
-        {% for i in range(3) %}
-        <div class="h-16 bg-surface-100 rounded-xl"></div>
+  <!-- Recent Events -->
+  <div class="d-panel a-fade-up d4">
+    <div class="d-panel-head">
+      <div>
+        <h3><i class="fas fa-clock-rotate-left text-rose-500"></i> Recent Events</h3>
+        <p>Latest community incidents and reports</p>
+      </div>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-surface-400 bg-surface-100/80 px-2 py-1 rounded-md">Today</span>
+    </div>
+    <div class="d-panel-body">
+      <div id="events-feed" class="space-y-1">
+        {% for i in range(4) %}
+        <div class="h-14 skel rounded-xl"></div>
         {% endfor %}
       </div>
     </div>
-    <div class="mt-4 pt-4 border-t border-surface-200">
-      <a href="/routes" class="panel-footer-link">
-        View all routes
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    <div class="d-panel-foot">
+      <a href="/events">
+        View all events <i class="fas fa-chevron-right"></i>
       </a>
     </div>
-  {% endcall %}
+  </div>
+
+  <!-- Recommended Routes -->
+  <div class="d-panel a-fade-up d5">
+    <div class="d-panel-head">
+      <div>
+        <h3><i class="fas fa-route text-primary-500"></i> Recommended Safe Routes</h3>
+        <p>Low-risk corridor options curated by AI</p>
+      </div>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-surface-400 bg-surface-100/80 px-2 py-1 rounded-md">Top 5</span>
+    </div>
+    <div class="d-panel-body">
+      <div id="routes-feed" class="space-y-2">
+        {% for i in range(3) %}
+        <div class="h-16 skel rounded-xl"></div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="d-panel-foot">
+      <a href="/routes">
+        View all routes <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+  </div>
 </div>
+
 {% endblock %}
 
 {% block page_script %}
 <script src="/static/js/dashboard.js"></script>
 {% endblock %}
+
