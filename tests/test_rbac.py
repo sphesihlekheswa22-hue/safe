@@ -13,16 +13,43 @@ def test_admin_can_list_users(client, admin_token):
     assert "users" in res.get_json()
 
 
-def test_public_cannot_create_event(client, public_token):
+def test_public_can_create_event(client, public_token):
     res = client.post("/api/events", headers=auth(public_token), json={
-        "title": "x", "location": "Downtown", "severity": 2,
+        "title": "Community report",
+        "location": "Downtown",
+        "severity": 2,
+        "description": "Test incident",
     })
-    assert res.status_code == 403
+    assert res.status_code == 201
+    body = res.get_json()
+    assert body["event"]["source"] == "community"
 
 
-def test_public_cannot_create_alert(client, public_token):
-    res = client.post("/api/alerts", headers=auth(public_token), json={"message": "hi"})
-    assert res.status_code == 403
+def test_public_can_create_alert(client, public_token):
+    res = client.post("/api/alerts", headers=auth(public_token), json={
+        "message": "Stay safe",
+        "severity": "LOW",
+        "target_role": "ALL",
+    })
+    assert res.status_code == 201
+
+
+def test_public_cannot_create_high_severity_alert(client, public_token):
+    res = client.post("/api/alerts", headers=auth(public_token), json={
+        "message": "Critical warning",
+        "severity": "HIGH",
+        "target_role": "ALL",
+    })
+    assert res.status_code == 400
+
+
+def test_public_cannot_target_role_specific_alert(client, public_token):
+    res = client.post("/api/alerts", headers=auth(public_token), json={
+        "message": "For admins only",
+        "severity": "LOW",
+        "target_role": "SYSTEM_ADMIN",
+    })
+    assert res.status_code == 400
 
 
 def test_only_admin_assigns_roles(client, public_token, analyst_token):

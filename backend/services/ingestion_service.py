@@ -5,14 +5,18 @@ or external API). Keeping this in one place means the risk areas are always
 recomputed consistently after new signals arrive.
 """
 from extensions import db
+from logger import get_logger
 from models.event import Event
 from services import risk_engine
 from services.geo_service import sync_event_coords
 
 
+log = get_logger(__name__)
+
+
 def ingest_event(*, title, location, severity, description=None,
                  source="manual", created_by=None, recompute=True) -> Event:
-    """Persist a new event and (optionally) refresh risk areas."""
+    """Persist a new event and (optionally) refresh risk for that location only."""
     severity = int(severity)
     severity = max(1, min(5, severity))
 
@@ -29,7 +33,11 @@ def ingest_event(*, title, location, severity, description=None,
     db.session.commit()
 
     if recompute:
-        risk_engine.recompute_all_areas()
+        try:
+            risk_engine.recompute_area(location)
+        except Exception:
+            log.exception("Risk recompute failed after creating event in %r", location)
+            db.session.rollback()
 
     return event
 
@@ -53,7 +61,12 @@ def simulate_feed(samples, source="simulated") -> list:
         db.session.add(ev)
         created.append(ev)
     db.session.commit()
-    risk_engine.recompute_all_areas()
+    try:
+        for loc in {ev.location for ev in created if ev.location}:
+            risk_engine.recompute_area(loc)
+    except Exception:
+        log.exception("Risk recompute failed after simulated feed ingest")
+        db.session.rollback()
     return created
 
 

@@ -9,15 +9,9 @@ from utils.rbac import Role, require_roles, current_user  # re-exported
 # Capability -> roles allowed. Documented centrally; mirrored in docs/rbac_matrix.md
 PERMISSION_MATRIX = {
     "event:read": Role.all(),
-    "event:write": [
-        Role.INSTITUTION_ADMIN, Role.TRANSPORT_OPERATOR,
-        Role.GOVERNMENT_AUTHORITY, Role.SYSTEM_ANALYST, Role.SYSTEM_ADMIN,
-    ],
+    "event:write": Role.all(),
     "alert:read": Role.all(),
-    "alert:write": [
-        Role.INSTITUTION_ADMIN, Role.GOVERNMENT_AUTHORITY,
-        Role.SYSTEM_ANALYST, Role.SYSTEM_ADMIN,
-    ],
+    "alert:write": Role.all(),
     "route:read": Role.all(),
     "route:generate": Role.all(),
     "route:delete": [Role.TRANSPORT_OPERATOR, Role.SYSTEM_ANALYST, Role.SYSTEM_ADMIN],

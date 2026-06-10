@@ -10,6 +10,7 @@ from utils.validators import ValidationError
 from repositories import event_repo
 from middleware.rbac_middleware import require_permission, current_user
 from utils.helpers import paginate_args
+from utils.rbac import Role
 
 bp = Blueprint("events", __name__)
 
@@ -46,7 +47,7 @@ def create_event():
         location=data["location"],
         severity=data["severity"],
         description=data["description"],
-        source=data["source"],
+        source="community" if user.role == Role.PUBLIC_USER else data.get("source", "manual"),
         created_by=user.id if user else None,
     )
     return jsonify(message="Event created.", event=event.to_dict()), 201
@@ -63,12 +64,18 @@ def update_event(event_id):
     except ValidationError as e:
         return jsonify(e.to_dict()), 400
 
+    old_location = event.location
     for key, value in changes.items():
         setattr(event, key, value)
     if "location" in changes:
         sync_event_coords(event)
     event_repo.save()
-    risk_engine.recompute_all_areas()
+    try:
+        risk_engine.recompute_area(event.location)
+        if "location" in changes and old_location and old_location != event.location:
+            risk_engine.recompute_area(old_location)
+    except Exception:
+        pass
     return jsonify(message="Event updated.", event=event.to_dict())
 
 
@@ -77,7 +84,11 @@ def update_event(event_id):
 def delete_event(event_id):
     event = event_repo.get(event_id)
     if event is None:
-        return jsonify(error="Event not found."), 404
+        return jsonify(message="Event already removed."), 200
+    location = event.location
     event_repo.delete(event)
-    risk_engine.recompute_all_areas()
+    try:
+        risk_engine.recompute_area(location)
+    except Exception:
+        pass
     return jsonify(message="Event deleted.")

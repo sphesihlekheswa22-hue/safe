@@ -5,20 +5,18 @@ Implements the MVP risk formula:
     risk_score = (event_severity * 0.5)
                + (event_density   * 0.3)
                + (sentiment_score * 0.2)
-
-Each input component is normalized to a 0..100 scale before weighting so the
-final ``risk_score`` is always in the 0..100 range and directly comparable
-across areas.
 """
-from collections import defaultdict
+from sqlalchemy import distinct
 
 from extensions import db
+from logger import get_logger
 from models.event import Event
 from models.risk import RiskArea
 from services import sentiment_service as sentiment
 from services import settings_service
 from services.geo_service import sync_area_coords
 
+log = get_logger(__name__)
 # Default weights from the product spec. The System Admin can override these at
 # runtime via the settings panel (see services.settings_service.risk_weights).
 W_SEVERITY = 0.5
@@ -93,36 +91,61 @@ def score_area(area_name: str) -> dict:
     }
 
 
-def recompute_all_areas() -> list:
-    """Recompute and persist RiskArea rows for every location that has events.
+def recompute_area(area_name: str, *, commit: bool = True) -> dict | None:
+    """Recompute risk for one location only (fast path after create/delete)."""
+    if not area_name or not settings_service.get("risk_engine_enabled", True):
+        return None
 
-    Returns the list of serialized RiskArea dicts.
-    """
-    # Respect the admin "risk engine enabled" toggle.
+    weights = settings_service.risk_weights()
+    area_events = Event.query.filter_by(location=area_name).all()
+
+    area = RiskArea.query.filter_by(area_name=area_name).first()
+    if not area_events:
+        if area is not None:
+            db.session.delete(area)
+            if commit:
+                db.session.commit()
+        return None
+
+    sentiment_score = sentiment.analyze_many(
+        [f"{e.title} {e.description or ''}" for e in area_events]
+    )
+    risk = compute_risk(area_events, sentiment_score, weights=weights)
+
+    if area is None:
+        area = RiskArea(area_name=area_name)
+        db.session.add(area)
+    area.risk_score = risk
+    area.sentiment_score = round(sentiment_score, 3)
+    sync_area_coords(area)
+    if commit:
+        db.session.commit()
+    return area.to_dict()
+
+
+def recompute_all_areas() -> list:
+    """Recompute every area that has events (admin bulk action)."""
     if not settings_service.get("risk_engine_enabled", True):
         return []
 
-    weights = settings_service.risk_weights()
-    events = Event.query.all()
-    grouped = defaultdict(list)
-    for e in events:
-        grouped[e.location].append(e)
-
+    location_rows = db.session.query(distinct(Event.location)).all()
     results = []
-    for area_name, area_events in grouped.items():
-        sentiment_score = sentiment.analyze_many(
-            [f"{e.title} {e.description or ''}" for e in area_events]
-        )
-        risk = compute_risk(area_events, sentiment_score, weights=weights)
+    for (area_name,) in location_rows:
+        if not area_name:
+            continue
+        try:
+            row = recompute_area(area_name, commit=False)
+            if row:
+                results.append(row)
+        except Exception:
+            log.exception("Failed to recompute risk for %r", area_name)
+            db.session.rollback()
 
-        area = RiskArea.query.filter_by(area_name=area_name).first()
-        if area is None:
-            area = RiskArea(area_name=area_name)
-            db.session.add(area)
-        area.risk_score = risk
-        area.sentiment_score = round(sentiment_score, 3)
-        sync_area_coords(area)
-        results.append(area)
+    try:
+        db.session.commit()
+    except Exception:
+        log.exception("Failed to commit bulk risk recompute")
+        db.session.rollback()
+        return []
 
-    db.session.commit()
-    return [a.to_dict() for a in results]
+    return results

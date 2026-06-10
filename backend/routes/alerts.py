@@ -33,6 +33,12 @@ def create_alert():
         return jsonify(e.to_dict()), 400
 
     user = current_user()
+    if user.role == Role.PUBLIC_USER:
+        if data["severity"] in ("HIGH", "CRITICAL"):
+            return jsonify(error="Public users may only send Low or Medium alerts.", field="severity"), 400
+        if data["target_role"] != "ALL":
+            return jsonify(error="Public alerts must target Everyone.", field="target_role"), 400
+
     alert = Alert(
         message=data["message"],
         severity=data["severity"],

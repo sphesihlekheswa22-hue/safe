@@ -98,7 +98,7 @@
 {% block page_script %}
 <script>
 (function () {
-  const WRITE_ROLES = ["INSTITUTION_ADMIN","GOVERNMENT_AUTHORITY","SYSTEM_ANALYST","SYSTEM_ADMIN"];
+  const WRITE_ROLES = ["PUBLIC_USER","INSTITUTION_ADMIN","GOVERNMENT_AUTHORITY","SYSTEM_ANALYST","SYSTEM_ADMIN"];
   let canWrite = false;
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
   function badge(sev){const m={LOW:"badge-low",MEDIUM:"badge-medium",HIGH:"badge-high",CRITICAL:"badge-critical"};return `<span class="badge ${m[sev]||"badge-gray"}">${sev}</span>`;}
