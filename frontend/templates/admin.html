@@ -1,766 +1,471 @@
 {% extends 'base.html' %}
-
 {% block title %}System Admin · SafeRoute AI{% endblock %}
 
-
+{% block extra_head %}
+<style>
+  .admin-tab {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.875rem; border-radius: 0.625rem;
+    font-size: 0.8125rem; font-weight: 600; color: #64748b;
+    transition: all 0.2s ease; white-space: nowrap; cursor: pointer;
+  }
+  .admin-tab:hover { background: rgba(37, 99, 235, 0.06); color: #2563eb; }
+  .admin-tab.active {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff; box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.45);
+  }
+  .admin-tab svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+  .admin-tab.active svg { color: rgba(255,255,255,0.9); }
+  .page-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  .page-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(to right, #fff, rgba(248, 250, 252, 0.8));
+  }
+  .svc-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: transform 0.2s ease;
+  }
+  .svc-card:hover { transform: translateY(-1px); }
+  .svc-icon {
+    width: 2.5rem; height: 2.5rem; border-radius: 0.625rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .toggle { width: 52px; height: 28px; border-radius: 9999px; background: #cbd5e1; position: relative; transition: all 0.3s ease; flex-shrink: 0; cursor: pointer; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08); }
+  .toggle[data-on="true"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  .toggle-dot { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+  .toggle[data-on="true"] .toggle-dot { transform: translateX(24px); }
+  .model-option {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;
+    padding: 1rem; border: 2px solid #e2e8f0; border-radius: 0.875rem;
+    background: #fff; cursor: pointer; transition: all 0.2s ease; text-align: left;
+  }
+  .model-option:hover { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08); }
+  .model-option.active { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+  .model-option-icon { width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; margin-bottom: 0.25rem; }
+  .range { width: 100%; accent-color: #2563eb; height: 6px; border-radius: 999px; cursor: pointer; }
+  .status-chip { padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .status-chip.ok { background: #ecfdf5; color: #059669; }
+  .status-chip.bad { background: #fef2f2; color: #dc2626; }
+  .modal-box { background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); width: 100%; max-width: 28rem; padding: 1.5rem; border: 1px solid #e2e8f0; animation: modalEnter 0.25s ease; }
+  @keyframes modalEnter { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .stat-tile { text-align: center; padding: 1rem; border-radius: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; }
+  .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 0.75rem; font-size: 0.8125rem; font-weight: 600; color: #059669; }
+  .status-pill-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+  .broadcast-card { border-top: 3px solid #e11d48; }
+  .emergency-btn {
+    width: 100%; padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, #e11d48, #dc2626);
+    color: #fff; font-weight: 700; font-size: 0.875rem;
+    border-radius: 0.75rem; border: none; cursor: pointer;
+    box-shadow: 0 4px 14px -2px rgba(225, 29, 72, 0.4);
+    transition: all 0.2s;
+  }
+  .emergency-btn:hover { box-shadow: 0 6px 20px -2px rgba(225, 29, 72, 0.5); transform: translateY(-1px); }
+</style>
+{% endblock %}
 
 {% block content %}
-
-<!-- Header -->
-
 <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-  <div>
-
-    <div class="flex items-center gap-3">
-
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30">🛠️</div>
-
-      <div>
-
-        <h1 class="text-2xl font-display font-bold text-surface-800">System Admin Control Center</h1>
-
-        <p class="text-sm text-surface-500">Full platform control — users, institutions, AI, security & monitoring</p>
-
-      </div>
-
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.212 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </div>
-
+    <div>
+      <h1 class="text-2xl font-display font-bold text-surface-800 tracking-tight">System Admin</h1>
+      <p class="text-sm text-surface-500">Users, institutions, AI engine, security & monitoring</p>
+    </div>
   </div>
-
-  <div id="system-pill" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
-
-    <span class="w-2 h-2 bg-emerald-500 rounded-full status-dot"></span>
-
-    <span class="text-sm font-semibold text-emerald-700">System Operational</span>
-
+  <div id="system-pill" class="status-pill">
+    <span class="status-pill-dot"></span>
+    System Operational
   </div>
-
 </div>
 
+<nav class="flex flex-wrap gap-1.5 mb-6 p-1.5 page-card rounded-xl">
+  <button class="admin-tab active" data-tab="users">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+    Users
+  </button>
+  <button class="admin-tab" data-tab="institutions">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+    Institutions
+  </button>
+  <button class="admin-tab" data-tab="ai">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+    AI Model
+  </button>
+  <button class="admin-tab" data-tab="system">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+    Monitoring
+  </button>
+  <button class="admin-tab" data-tab="audit">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+    Audit Logs
+  </button>
+  <button class="admin-tab" data-tab="security">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+    Security
+  </button>
+  <button class="admin-tab" data-tab="broadcast">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z"/></svg>
+    Broadcast
+  </button>
+</nav>
 
-
-<!-- Tab Navigation -->
-
-<div class="flex flex-wrap gap-2 mb-6 p-1.5 glass-card rounded-2xl">
-
-  <button class="admin-tab active" data-tab="users">👤 Users</button>
-
-  <button class="admin-tab" data-tab="institutions">🏢 Institutions</button>
-
-  <button class="admin-tab" data-tab="ai">🧠 AI Model</button>
-
-  <button class="admin-tab" data-tab="system">🚨 Monitoring</button>
-
-  <button class="admin-tab" data-tab="audit">📊 Audit Logs</button>
-
-  <button class="admin-tab" data-tab="security">🔐 Security</button>
-
-  <button class="admin-tab" data-tab="broadcast">📡 Broadcast</button>
-
-</div>
-
-
-
-<!-- ============ USERS ============ -->
-
-<section id="panel-users" class="admin-panel reveal">
-
-  <div class="glass-card rounded-2xl overflow-hidden">
-
-    <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between">
-
+<!-- USERS -->
+<section id="panel-users" class="admin-panel">
+  <div class="page-card rounded-2xl overflow-hidden">
+    <div class="page-card-header flex items-center justify-between">
       <div>
-
         <h3 class="font-display font-bold text-surface-800">User Management</h3>
-
-        <p class="text-xs text-surface-500">Create users, assign roles, block & reset passwords</p>
-
+        <p class="text-xs text-surface-500 mt-0.5">Create users, assign roles, block & reset passwords</p>
       </div>
-
-      <button id="btn-create-user" class="btn-primary magnetic-btn ripple">+ New User</button>
-
+      <button id="btn-create-user" class="btn-primary">+ New User</button>
     </div>
-
     <div class="overflow-x-auto">
-
       <table class="data w-full text-sm">
-
         <thead><tr><th>User</th><th>Role</th><th>Institution</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
-
         <tbody id="users-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
-
       </table>
-
     </div>
-
   </div>
-
 </section>
 
-
-
-<!-- ============ INSTITUTIONS ============ -->
-
-<section id="panel-institutions" class="admin-panel hidden reveal">
-
+<!-- INSTITUTIONS -->
+<section id="panel-institutions" class="admin-panel hidden">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    <div class="glass-card rounded-2xl p-6">
-
+    <div class="page-card rounded-2xl p-6">
       <h3 class="font-display font-bold text-surface-800 mb-4" id="inst-form-title">Add Institution</h3>
-
       <form id="inst-form" class="space-y-4">
-
         <input type="hidden" name="id" />
-
-        <div><label class="label">Name</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="name" required /></div>
-
+        <div><label class="label">Name</label><input class="input" name="name" required /></div>
         <div>
-
           <label class="label">Type</label>
-
-          <select class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="type">
-
+          <select class="select cursor-pointer" name="type">
             <option>TRANSPORT</option><option>HEALTHCARE</option><option>GOVERNMENT</option>
-
             <option>EDUCATION</option><option>NGO</option><option>GENERIC</option>
-
           </select>
-
         </div>
-
-        <div><label class="label">Location</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="location" /></div>
-
+        <div><label class="label">Location</label><input class="input" name="location" /></div>
         <div class="flex gap-2">
-
           <button class="btn-primary flex-1" type="submit">Save</button>
-
           <button class="btn-ghost hidden" type="button" id="inst-cancel">Cancel</button>
-
         </div>
-
       </form>
-
     </div>
-
-    <div class="glass-card rounded-2xl overflow-hidden lg:col-span-2">
-
-      <div class="px-6 py-4 border-b border-surface-200">
-
+    <div class="page-card rounded-2xl overflow-hidden lg:col-span-2">
+      <div class="page-card-header">
         <h3 class="font-display font-bold text-surface-800">Institutions</h3>
-
-        <p class="text-xs text-surface-500">Universities, companies & government departments</p>
-
+        <p class="text-xs text-surface-500 mt-0.5">Universities, companies & government departments</p>
       </div>
-
       <div class="overflow-x-auto">
-
         <table class="data w-full text-sm">
-
           <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Users</th><th class="text-right">Actions</th></tr></thead>
-
           <tbody id="inst-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
-
         </table>
-
       </div>
-
     </div>
-
   </div>
-
 </section>
 
-
-
-<!-- ============ AI MODEL ============ -->
-
-<section id="panel-ai" class="admin-panel hidden reveal">
-
+<!-- AI MODEL -->
+<section id="panel-ai" class="admin-panel hidden">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <!-- Engine controls -->
-
-    <div class="glass-card rounded-2xl p-6 space-y-6">
-
+    <div class="page-card rounded-2xl p-6 space-y-6">
       <div class="flex items-center gap-3">
-
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center text-xl text-white shadow-lg shadow-violet-500/30">🧠</div>
-
-        <div>
-
-          <h3 class="font-display font-bold text-surface-800">AI Engine Control</h3>
-
-          <p class="text-xs text-surface-500">Configure the brain of the platform</p>
-
+        <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
         </div>
-
+        <div>
+          <h3 class="font-display font-bold text-surface-800">AI Engine Control</h3>
+          <p class="text-xs text-surface-500">Configure the risk scoring engine</p>
+        </div>
       </div>
-
-
-
-      <!-- Risk engine toggle -->
 
       <div class="flex items-center justify-between p-4 rounded-xl bg-surface-50 border border-surface-200">
-
         <div>
-
           <p class="font-semibold text-surface-800 text-sm">Risk Engine</p>
-
           <p class="text-xs text-surface-500">Enable area risk scoring</p>
-
         </div>
-
         <button id="toggle-risk" class="toggle" data-on="false"><span class="toggle-dot"></span></button>
-
       </div>
 
-
-
-      <!-- AI model selector -->
-
       <div>
-
         <label class="label">AI Model</label>
-
         <div class="grid grid-cols-2 gap-3">
-
-          <button class="model-option" data-model="rule_based">
-
-            <span class="text-lg">📐</span>
-
-            <span class="font-semibold text-sm">Rule-Based</span>
-
+          <button class="model-option" data-model="rule_based" type="button">
+            <div class="model-option-icon bg-primary-50 text-primary-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+            </div>
+            <span class="font-semibold text-sm text-surface-800">Rule-Based</span>
             <span class="text-[10px] text-surface-500">Fast · deterministic</span>
-
           </button>
-
-          <button class="model-option" data-model="ml_advanced">
-
-            <span class="text-lg">🤖</span>
-
-            <span class="font-semibold text-sm">ML Advanced</span>
-
+          <button class="model-option" data-model="ml_advanced" type="button">
+            <div class="model-option-icon bg-violet-50 text-violet-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm0-12.75h.008v.008H12V8.25z"/></svg>
+            </div>
+            <span class="font-semibold text-sm text-surface-800">ML Advanced</span>
             <span class="text-[10px] text-surface-500">Experimental</span>
-
           </button>
-
         </div>
-
       </div>
-
-
-
-      <!-- Sentiment mode -->
 
       <div>
-
         <label class="label">Sentiment Analysis</label>
-
-        <select id="sentiment-mode" class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer">
-
+        <select id="sentiment-mode" class="select cursor-pointer">
           <option value="lexicon">Lexicon-based (default)</option>
-
           <option value="advanced">Advanced (experimental)</option>
-
         </select>
-
       </div>
-
-
 
       <button id="save-ai" class="btn-primary w-full">Save AI Configuration</button>
-
     </div>
-
-
-
-    <!-- Weights + performance -->
 
     <div class="space-y-6">
-
-      <div class="glass-card rounded-2xl p-6">
-
+      <div class="page-card rounded-2xl p-6">
         <h3 class="font-display font-bold text-surface-800 mb-1">Risk Formula Weights</h3>
-
         <p class="text-xs text-surface-500 mb-4">Tune how the engine weighs each factor (auto-normalized)</p>
-
         <div class="space-y-4">
-
           <div>
-
             <div class="flex justify-between text-sm mb-1"><span class="font-medium text-surface-700">Severity</span><span id="w-sev-val" class="font-bold text-primary-600">0.5</span></div>
-
             <input type="range" id="w-sev" min="0" max="1" step="0.05" value="0.5" class="range" />
-
           </div>
-
           <div>
-
             <div class="flex justify-between text-sm mb-1"><span class="font-medium text-surface-700">Density</span><span id="w-den-val" class="font-bold text-primary-600">0.3</span></div>
-
             <input type="range" id="w-den" min="0" max="1" step="0.05" value="0.3" class="range" />
-
           </div>
-
           <div>
-
             <div class="flex justify-between text-sm mb-1"><span class="font-medium text-surface-700">Sentiment</span><span id="w-sen-val" class="font-bold text-primary-600">0.2</span></div>
-
             <input type="range" id="w-sen" min="0" max="1" step="0.05" value="0.2" class="range" />
-
           </div>
-
         </div>
-
         <div class="flex gap-2 mt-5">
-
           <button id="save-weights" class="btn-primary flex-1">Apply Weights</button>
-
-          <button id="recompute-btn" class="btn-ghost magnetic-btn ripple">↻ Recompute</button>
-
+          <button id="recompute-btn" class="btn-ghost">Recompute</button>
         </div>
-
       </div>
 
-
-
-      <div class="glass-card rounded-2xl p-6">
-
+      <div class="page-card rounded-2xl p-6">
         <h3 class="font-display font-bold text-surface-800 mb-4">Model Performance</h3>
-
-        <pre id="model-info" class="text-xs bg-surface-900 text-emerald-300 rounded-xl p-4 overflow-x-auto">Loading…</pre>
-
+        <pre id="model-info" class="text-xs bg-surface-900 text-emerald-300 rounded-xl p-4 overflow-x-auto font-mono">Loading…</pre>
       </div>
-
     </div>
-
   </div>
-
 </section>
 
-
-
-<!-- ============ SYSTEM MONITORING ============ -->
-
-<section id="panel-system" class="admin-panel hidden reveal">
-
+<!-- MONITORING -->
+<section id="panel-system" class="admin-panel hidden">
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-
-    <div class="glass-card rounded-2xl p-5">
-
-      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🔌</span><span id="svc-api" class="status-chip">—</span></div>
-
-      <p class="text-sm font-semibold text-surface-800">API Service</p>
-
-    </div>
-
-    <div class="glass-card rounded-2xl p-5">
-
-      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🗄️</span><span id="svc-db" class="status-chip">—</span></div>
-
-      <p class="text-sm font-semibold text-surface-800">Database</p>
-
-    </div>
-
-    <div class="glass-card rounded-2xl p-5">
-
-      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🧠</span><span id="svc-risk" class="status-chip">—</span></div>
-
-      <p class="text-sm font-semibold text-surface-800">Risk Engine</p>
-
-    </div>
-
-    <div class="glass-card rounded-2xl p-5">
-
-      <div class="flex items-center justify-between mb-2"><span class="text-2xl">👥</span><span id="sys-logins" class="text-lg font-display font-bold text-surface-800">—</span></div>
-
-      <p class="text-sm font-semibold text-surface-800">Logins (24h)</p>
-
-    </div>
-
-  </div>
-
-
-
-  <div class="glass-card rounded-2xl p-6">
-
-    <div class="flex items-center justify-between mb-4">
-
-      <h3 class="font-display font-bold text-surface-800">Platform Statistics</h3>
-
-      <button id="refresh-system" class="btn-ghost text-xs">↻ Refresh</button>
-
-    </div>
-
-    <div id="system-counts" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-
-    <p class="text-xs text-surface-400 mt-4" id="server-time"></p>
-
-  </div>
-
-</section>
-
-
-
-<!-- ============ AUDIT LOGS ============ -->
-
-<section id="panel-audit" class="admin-panel hidden reveal">
-
-  <div class="glass-card rounded-2xl overflow-hidden">
-
-    <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between gap-4">
-
-      <div>
-
-        <h3 class="font-display font-bold text-surface-800">Audit Trail</h3>
-
-        <p class="text-xs text-surface-500">Every privileged action is recorded</p>
-
-      </div>
-
-      <input id="audit-filter" class="input max-w-xs" placeholder="Filter by action (e.g. user.login)…" />
-
-    </div>
-
-    <div class="overflow-x-auto max-h-[600px]">
-
-      <table class="data w-full text-sm">
-
-        <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
-
-        <tbody id="audit-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
-
-      </table>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-
-<!-- ============ SECURITY ============ -->
-
-<section id="panel-security" class="admin-panel hidden reveal">
-
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <div class="glass-card rounded-2xl p-6 space-y-6">
-
-      <div class="flex items-center gap-3">
-
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-400 to-red-600 flex items-center justify-center text-xl text-white shadow-lg shadow-rose-500/30">🔐</div>
-
-        <div>
-
-          <h3 class="font-display font-bold text-surface-800">Security Control</h3>
-
-          <p class="text-xs text-surface-500">Access rules & API protection</p>
-
+    <div class="svc-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="svc-icon bg-primary-50 text-primary-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008H12v-.008z"/></svg>
         </div>
-
+        <span id="svc-api" class="status-chip">—</span>
       </div>
+      <p class="text-sm font-semibold text-surface-800">API Service</p>
+    </div>
+    <div class="svc-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="svc-icon bg-emerald-50 text-emerald-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.375c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375"/></svg>
+        </div>
+        <span id="svc-db" class="status-chip">—</span>
+      </div>
+      <p class="text-sm font-semibold text-surface-800">Database</p>
+    </div>
+    <div class="svc-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="svc-icon bg-violet-50 text-violet-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+        </div>
+        <span id="svc-risk" class="status-chip">—</span>
+      </div>
+      <p class="text-sm font-semibold text-surface-800">Risk Engine</p>
+    </div>
+    <div class="svc-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="svc-icon bg-amber-50 text-amber-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+        </div>
+        <span id="sys-logins" class="text-lg font-display font-bold text-surface-800">—</span>
+      </div>
+      <p class="text-sm font-semibold text-surface-800">Logins (24h)</p>
+    </div>
+  </div>
 
+  <div class="page-card rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display font-bold text-surface-800">Platform Statistics</h3>
+      <button id="refresh-system" class="btn-ghost text-xs">Refresh</button>
+    </div>
+    <div id="system-counts" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    <p class="text-xs text-surface-400 mt-4" id="server-time"></p>
+  </div>
+</section>
 
+<!-- AUDIT -->
+<section id="panel-audit" class="admin-panel hidden">
+  <div class="page-card rounded-2xl overflow-hidden">
+    <div class="page-card-header flex items-center justify-between gap-4">
+      <div>
+        <h3 class="font-display font-bold text-surface-800">Audit Trail</h3>
+        <p class="text-xs text-surface-500 mt-0.5">Every privileged action is recorded</p>
+      </div>
+      <input id="audit-filter" class="input max-w-xs" placeholder="Filter by action…" />
+    </div>
+    <div class="overflow-x-auto max-h-[600px]">
+      <table class="data w-full text-sm">
+        <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
+        <tbody id="audit-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="panel-security" class="admin-panel hidden">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="page-card rounded-2xl p-6 space-y-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+        </div>
+        <div>
+          <h3 class="font-display font-bold text-surface-800">Security Control</h3>
+          <p class="text-xs text-surface-500">Access rules & API protection</p>
+        </div>
+      </div>
 
       <div class="flex items-center justify-between p-4 rounded-xl bg-surface-50 border border-surface-200">
-
         <div>
-
           <p class="font-semibold text-surface-800 text-sm">Public Registration</p>
-
           <p class="text-xs text-surface-500">Allow self sign-up (as Public User)</p>
-
         </div>
-
         <button id="toggle-registration" class="toggle" data-on="false"><span class="toggle-dot"></span></button>
-
       </div>
 
-
-
       <div>
-
         <label class="label">Rate Limit — Max Requests</label>
-
-        <input type="number" id="rl-max" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" min="1" max="1000" />
-
+        <input type="number" id="rl-max" class="input" min="1" max="1000" />
         <p class="text-xs text-surface-400 mt-1">Requests allowed per window on auth endpoints</p>
-
       </div>
-
       <div>
-
         <label class="label">Rate Limit — Window (seconds)</label>
-
-        <input type="number" id="rl-window" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" min="1" max="3600" />
-
+        <input type="number" id="rl-window" class="input" min="1" max="3600" />
       </div>
-
       <div>
-
         <label class="label">JWT Token Expiry (minutes)</label>
-
-        <input type="number" id="jwt-exp" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" min="5" max="10080" />
-
+        <input type="number" id="jwt-exp" class="input" min="5" max="10080" />
         <p class="text-xs text-surface-400 mt-1">Applied to newly issued tokens after restart</p>
-
       </div>
-
-
 
       <button id="save-security" class="btn-primary w-full">Save Security Settings</button>
-
     </div>
 
-
-
-    <div class="glass-card rounded-2xl p-6">
-
+    <div class="page-card rounded-2xl p-6">
       <h3 class="font-display font-bold text-surface-800 mb-1">Role Permission Matrix</h3>
-
       <p class="text-xs text-surface-500 mb-4">Server-enforced capabilities by role</p>
-
       <div id="perm-matrix" class="space-y-2 max-h-[460px] overflow-y-auto pr-1"></div>
-
     </div>
-
   </div>
-
 </section>
 
-
-
-<!-- ============ BROADCAST ============ -->
-
-<section id="panel-broadcast" class="admin-panel hidden reveal">
-
+<!-- BROADCAST -->
+<section id="panel-broadcast" class="admin-panel hidden">
   <div class="max-w-2xl mx-auto">
-
-    <div class="glass-card rounded-2xl p-8 border-t-4 border-t-rose-500">
-
+    <div class="page-card broadcast-card rounded-2xl p-8">
       <div class="flex items-center gap-3 mb-6">
-
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-2xl text-white shadow-lg shadow-rose-500/40 animate-pulse">📡</div>
-
-        <div>
-
-          <h3 class="font-display font-bold text-xl text-surface-800">Emergency Broadcast</h3>
-
-          <p class="text-sm text-surface-500">Override AI and alert users directly</p>
-
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-rose-500/30">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
         </div>
-
+        <div>
+          <h3 class="font-display font-bold text-xl text-surface-800">Emergency Broadcast</h3>
+          <p class="text-sm text-surface-500">Override AI and alert users directly</p>
+        </div>
       </div>
-
-
 
       <form id="broadcast-form" class="space-y-5">
-
         <div>
-
           <label class="label">Message</label>
-
-          <textarea id="bc-message" class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" rows="4" placeholder="e.g. Severe flooding in South District — avoid all routes through the area." required></textarea>
-
+          <textarea id="bc-message" class="textarea" rows="4" placeholder="e.g. Severe flooding in South District — avoid all routes through the area." required></textarea>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
-
           <div>
-
             <label class="label">Severity</label>
-
-            <select id="bc-severity" class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer">
-
-              <option value="CRITICAL">🔴 Critical</option>
-
-              <option value="HIGH">🟠 High</option>
-
-              <option value="MEDIUM">🟡 Medium</option>
-
-              <option value="LOW">⚪ Low</option>
-
+            <select id="bc-severity" class="select cursor-pointer">
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
             </select>
-
           </div>
-
           <div>
-
             <label class="label">Audience</label>
-
-            <select id="bc-target" class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer">
-
+            <select id="bc-target" class="select cursor-pointer">
               <option value="ALL">Everyone</option>
-
               <option value="PUBLIC_USER">Public Users</option>
-
               <option value="INSTITUTION_ADMIN">Institution Admins</option>
-
               <option value="TRANSPORT_OPERATOR">Transport Operators</option>
-
               <option value="GOVERNMENT_AUTHORITY">Government Authorities</option>
-
               <option value="SYSTEM_ANALYST">System Analysts</option>
-
             </select>
-
           </div>
-
         </div>
-
-        <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold rounded-xl hover:from-rose-600 hover:to-red-700 transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 active:scale-95 magnetic-btn ripple liquid-btn">
-
-          🚨 Send Emergency Broadcast
-
-        </button>
-
+        <button type="submit" class="emergency-btn">Send Emergency Broadcast</button>
       </form>
-
     </div>
-
   </div>
-
 </section>
 
-
-
-<!-- ===== Modals ===== -->
-
-<div id="modal-backdrop" class="hidden fixed inset-0 bg-surface-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300">
-
-  <!-- User modal -->
-
+<!-- Modals -->
+<div id="modal-backdrop" class="hidden fixed inset-0 bg-surface-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
   <div id="user-modal" class="modal-box hidden">
-
     <h3 id="user-modal-title" class="font-display font-bold text-lg text-surface-800 mb-4">New User</h3>
-
     <form id="user-form" class="space-y-3">
-
       <input type="hidden" name="id" />
-
-      <div><label class="label">Full Name</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" name="name" required /></div>
-
-      <div><label class="label">Email</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" type="email" name="email" required /></div>
-
-      <div id="user-pw-wrap"><label class="label">Password</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" type="password" name="password" /></div>
-
+      <div><label class="label">Full Name</label><input class="input" name="name" required /></div>
+      <div><label class="label">Email</label><input class="input" type="email" name="email" required /></div>
+      <div id="user-pw-wrap"><label class="label">Password</label><input class="input" type="password" name="password" /></div>
       <div>
-
         <label class="label">Role</label>
-
-        <select class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="role" id="user-role-select"></select>
-
+        <select class="select cursor-pointer" name="role" id="user-role-select"></select>
       </div>
-
       <div>
-
         <label class="label">Institution (optional)</label>
-
-        <select class="select glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer" name="institution_id" id="user-inst-select"><option value="">— None —</option></select>
-
+        <select class="select cursor-pointer" name="institution_id" id="user-inst-select"><option value="">— None —</option></select>
       </div>
-
       <div class="flex justify-end gap-2 pt-2">
-
         <button type="button" class="btn-ghost modal-close">Cancel</button>
-
-        <button type="submit" class="btn-primary magnetic-btn ripple">Save</button>
-
+        <button type="submit" class="btn-primary">Save</button>
       </div>
-
     </form>
-
   </div>
-
-
-
-  <!-- Password reset modal -->
 
   <div id="pw-modal" class="modal-box hidden">
-
     <h3 class="font-display font-bold text-lg text-surface-800 mb-1">Reset Password</h3>
-
     <p id="pw-modal-user" class="text-sm text-surface-500 mb-4"></p>
-
     <form id="pw-form" class="space-y-3">
-
       <input type="hidden" name="id" />
-
-      <div><label class="label">New Password</label><input class="input glass-card rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" type="password" name="password" required /></div>
-
+      <div><label class="label">New Password</label><input class="input" type="password" name="password" required /></div>
       <p class="text-xs text-surface-400">Min 8 characters with a letter and a number.</p>
-
       <div class="flex justify-end gap-2 pt-2">
-
         <button type="button" class="btn-ghost modal-close">Cancel</button>
-
-        <button type="submit" class="btn-primary magnetic-btn ripple">Reset Password</button>
-
+        <button type="submit" class="btn-primary">Reset Password</button>
       </div>
-
     </form>
-
   </div>
-
 </div>
-
-
-
-<style>
-
-  .admin-tab { padding:.6rem 1rem; border-radius:.75rem; font-size:.85rem; font-weight:600; color:#64748b; transition:all .3s cubic-bezier(0.4,0,0.2,1); white-space:nowrap; position:relative; overflow:hidden; cursor:pointer; }
-
-  .admin-tab:hover { background:rgba(37,99,235,.06); color:#2563eb; transform:translateY(-1px); }
-
-  .admin-tab.active { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; box-shadow:0 4px 20px -2px rgba(37,99,235,.5), 0 0 0 1px rgba(255,255,255,.2) inset; transform:translateY(-1px); }
-
-  .toggle { width:52px; height:28px; border-radius:9999px; background:#cbd5e1; position:relative; transition:all .3s cubic-bezier(0.4,0,0.2,1); flex-shrink:0; cursor:pointer; box-shadow:inset 0 2px 4px rgba(0,0,0,.1); }
-
-  .toggle[data-on="true"] { background:linear-gradient(135deg,#3b82f6,#2563eb); box-shadow:0 0 15px rgba(37,99,235,.4), inset 0 2px 4px rgba(0,0,0,.1); }
-
-  .toggle-dot { position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:all .3s cubic-bezier(0.4,0,0.2,1); box-shadow:0 2px 5px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.05); }
-
-  .toggle[data-on="true"] .toggle-dot { transform:translateX(24px); box-shadow:0 2px 8px rgba(37,99,235,.3); }
-
-  .model-option { display:flex; flex-direction:column; align-items:center; gap:.25rem; padding:1.25rem; border:2px solid #e2e8f0; border-radius:1rem; transition:all .3s cubic-bezier(0.4,0,0.2,1); background:rgba(255,255,255,.9); cursor:pointer; position:relative; overflow:hidden; }
-
-  .model-option:hover { border-color:#93c5fd; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(37,99,235,.15); }
-
-  .model-option.active { border-color:#2563eb; background:linear-gradient(135deg,#eff6ff,#dbeafe); box-shadow:0 0 0 3px rgba(37,99,235,.15), 0 8px 25px -5px rgba(37,99,235,.2); transform:translateY(-2px); }
-
-  .range { width:100%; accent-color:#2563eb; height:8px; border-radius:999px; cursor:pointer; background:linear-gradient(to right, #e2e8f0, #e2e8f0); }
-
-  .range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#2563eb); cursor:pointer; box-shadow:0 2px 10px rgba(37,99,235,.4); transition:transform .2s; }
-
-  .range::-webkit-slider-thumb:hover { transform:scale(1.2); }
-
-  .status-chip { padding:.25rem .75rem; border-radius:9999px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.025em; transition:all .2s; }
-
-  .status-chip.ok { background:#ecfdf5; color:#059669; }
-
-  .status-chip.bad { background:#fef2f2; color:#dc2626; }
-
-  .modal-box { background:rgba(255,255,255,.95); backdrop-filter:blur(20px); border-radius:1.25rem; box-shadow:0 25px 50px -12px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.5) inset; width:100%; max-width:28rem; padding:1.5rem; border:1px solid rgba(255,255,255,.4); animation:modalEnter .3s cubic-bezier(0.4,0,0.2,1); }
-
-  @keyframes modalEnter { from { opacity:0; transform:scale(.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
-
-  .stat-tile { text-align:center; padding:1.25rem; border-radius:1rem; background:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.5); backdrop-filter:blur(10px); transition:all .3s cubic-bezier(0.4,0,0.2,1); cursor:pointer; }
-
-  .stat-tile:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,.08); }
-
-</style>
-
 {% endblock %}
-
-
 
 {% block page_script %}
-
 <script src="/static/js/admin.js"></script>
-
 {% endblock %}
-

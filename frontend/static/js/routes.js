@@ -270,7 +270,7 @@
 
         btn.disabled = false;
 
-        btn.innerHTML = '<span class="text-base leading-none">📍</span>';
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>';
 
       },
 
@@ -278,7 +278,7 @@
 
         btn.disabled = false;
 
-        btn.innerHTML = '<span class="text-base leading-none">📍</span>';
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>';
 
         const msgs = {
 
@@ -386,7 +386,7 @@
 
     if (!savedRoutes.length) {
 
-      body.innerHTML = '<tr><td colspan="4" class="text-center py-8"><div class="w-16 h-16 mx-auto mb-3 rounded-full bg-surface-100 flex items-center justify-center text-2xl">🗺️</div><p class="text-surface-400 text-sm">No routes generated yet.</p></td></tr>';
+      body.innerHTML = '<tr><td colspan="4" class="text-center py-8"><div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-surface-100 text-surface-400 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg></div><p class="text-surface-400 text-sm">No routes generated yet.</p></td></tr>';
 
       return;
 
