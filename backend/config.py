@@ -44,3 +44,9 @@ class Config:
     # Set RATELIMIT_ENABLED=false to disable the in-memory rate limiter
     # (used by the test suite).
     RATELIMIT_ENABLED = os.environ.get("RATELIMIT_ENABLED", "true").lower() == "true"
+
+    # Safety Assistant (OpenAI). Set OPENAI_API_KEY to enable real AI replies.
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+    OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+    OPENAI_CHAT_MODEL = os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+    CHAT_AI_ENABLED = os.environ.get("CHAT_AI_ENABLED", "true").lower() == "true"

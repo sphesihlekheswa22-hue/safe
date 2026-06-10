@@ -38,3 +38,19 @@ def test_alerts_scoped_by_role(client, public_token):
     # Public user must not see analyst/admin-only alerts; only ALL or PUBLIC_USER.
     for a in res.get_json()["alerts"]:
         assert a["target_role"] in ("ALL", "PUBLIC_USER")
+
+
+def test_chat_requires_auth(client):
+    res = client.post("/api/chat/message", json={"message": "Hello"})
+    assert res.status_code == 401
+
+
+def test_chat_message_without_ai_key(client, public_token):
+    res = client.post(
+        "/api/chat/message",
+        json={"message": "What alerts are active?"},
+        headers=auth(public_token),
+    )
+    assert res.status_code == 200
+    data = res.get_json()
+    assert "reply" in data and len(data["reply"]) > 0

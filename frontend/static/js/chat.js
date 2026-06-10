@@ -81,10 +81,10 @@
   appendMessage(
     "bot",
     formatReply(
-      "Hi! I'm your **SafeRoute Safety Assistant**. Ask about area risk, active alerts, incidents, or safe routes — I use live platform data."
+      "Hi! I'm your **SafeRoute Safety Assistant** for **South Africa**. I answer using **live database data** and current **SAST** time — ask about Umlazi, Durban CBD, UKZN, alerts, incidents, or safe routes."
     )
   );
-  setSuggestions(["Is Downtown safe?", "Active alerts", "Recent incidents", "Safest areas"]);
+  setSuggestions(["Is Umlazi safe?", "Active alerts", "Route from Durban Station to UKZN", "Highest risk areas"]);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

@@ -11,3 +11,4 @@ email-validator==2.2.0
 gunicorn==22.0.0
 pytest==8.2.2
 requests==2.32.3
+tzdata==2024.1

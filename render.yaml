@@ -16,6 +16,12 @@ services:
         value: production
       - key: SEED_SKIP_ROUTES
         value: "true"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_API_BASE
+        value: https://openrouter.ai/api/v1
+      - key: OPENAI_CHAT_MODEL
+        value: openai/gpt-4o-mini
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET_KEY

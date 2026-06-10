@@ -171,6 +171,20 @@ Do **not** use `--workers 2` on the free plan — it causes memory pressure and 
 
 **Bad Gateway?** Usually the start command is wrong or `DATABASE_URL` is missing. Confirm `DATABASE_URL` (Neon) is set in Environment, then redeploy.
 
+### Safety Assistant (real AI)
+
+Set `OPENAI_API_KEY` in `.env` (local) or Render **Environment**. The chat uses a **real LLM** grounded in live DB data (risk areas, incidents, alerts, routes) with **South Africa / SAST** time. Without a key, it falls back to built-in rules.
+
+Works with **OpenAI** or **OpenRouter** (OpenAI-compatible API):
+
+| Variable | OpenAI | OpenRouter |
+|----------|--------|------------|
+| `OPENAI_API_KEY` | `sk-...` | Your OpenRouter key |
+| `OPENAI_API_BASE` | *(omit)* | `https://openrouter.ai/api/v1` |
+| `OPENAI_CHAT_MODEL` | `gpt-4o-mini` | `openai/gpt-4o-mini` |
+
+**Never commit API keys to git.** Add them only in `.env` (local) or Render Environment.
+
 ---
 
 ## 🧪 Tests
