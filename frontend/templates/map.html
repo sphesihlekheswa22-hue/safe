@@ -2,105 +2,392 @@
 
 {% block title %}Safety Map · SafeRoute AI{% endblock %}
 
-
-
 {% block extra_head %}
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="" />
 <style>
-
-  #safety-map { height: 520px; border-radius: 1rem; z-index: 0; }
-
+  /* ── Map ── */
+  #safety-map { height: 560px; border-radius: 1.25rem; z-index: 0; }
   .leaflet-popup-content { font-size: 13px; line-height: 1.4; margin: 10px 14px; }
+  .leaflet-popup-content-wrapper { border-radius: 0.75rem; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
 
+  /* ── Custom Legend ── */
+  .map-legend {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 500;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    font-size: 12px;
+    min-width: 140px;
+  }
+  .map-legend h4 { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 0.6rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-pulse { animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* ── Stats Cards ── */
+  .stat-card {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+  .stat-icon { width: 40px; height: 40px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 0.75rem; }
+  .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin-top: 0.4rem; }
+  .stat-delta { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: auto; }
+
+  /* ── Table ── */
+  .data tbody tr { transition: background 0.15s ease; }
+  .data tbody tr:hover { background: rgba(99,102,241,0.04); }
+  .data tbody tr:last-child td { border-bottom: none; }
+  .area-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.5rem;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .score-ring {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    position: relative;
+  }
+  .score-ring::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 3px solid currentColor; opacity: 0.2;
+  }
+  .score-ring::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 3px solid transparent; border-top-color: currentColor;
+    transform: rotate(-45deg);
+  }
+
+  /* ── Filters ── */
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.4rem 0.9rem; border-radius: 0.6rem;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent; transition: all 0.2s ease;
+    background: rgba(255,255,255,0.6);
+  }
+  .filter-chip:hover { background: rgba(255,255,255,0.9); }
+  .filter-chip.active { border-color: currentColor; background: rgba(255,255,255,0.95); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  /* ── Loading Skeleton ── */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 0.5rem;
+  }
+
+  /* ── Live Indicator ── */
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
+    animation: live-pulse 1.5s infinite; display: inline-block; margin-right: 0.4rem;
+  }
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  }
+
+  /* ── Glass morphism overrides ── */
+  .glass-card { background: rgba(255,255,255,0.65) !important; backdrop-filter: blur(20px) saturate(1.2); }
 </style>
-
 {% endblock %}
-
-
 
 {% block content %}
 
-<div class="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-
-  <div>
-
-    <h1 class="text-2xl font-display font-bold text-surface-800">Safety Map</h1>
-
-    <p class="text-sm text-surface-500 mt-1">Live risk zones, incidents, and alerts across South Africa</p>
-
+<!-- ═══ Hero Header ═══ -->
+<div class="mb-6">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="live-dot"></span>
+        <span class="text-[11px] font-bold uppercase tracking-widest text-emerald-600">Live Feed</span>
+      </div>
+      <h1 class="text-3xl font-display font-bold text-surface-800 tracking-tight">Safety Map</h1>
+      <p class="text-sm text-surface-500 mt-1.5 max-w-md">Real-time risk zones, verified incidents, and AI-powered alerts across South Africa.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="refresh-btn" class="filter-chip text-surface-600 border-surface-200" onclick="refreshMap()">
+        <i class="fas fa-rotate-right text-[10px]"></i> Refresh
+      </button>
+      <button id="locate-btn" class="filter-chip text-indigo-600 border-indigo-200 bg-indigo-50/50" onclick="locateUser()">
+        <i class="fas fa-location-crosshairs text-[10px]"></i> My Location
+      </button>
+    </div>
   </div>
-
-  <div class="flex flex-wrap gap-3 text-xs">
-
-    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Low</span>
-
-    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Medium</span>
-
-    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> High</span>
-
-    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-950 text-white border border-red-800"><span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Critical</span>
-
-    <span class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface-100 text-surface-600 border border-surface-200"><span class="w-2.5 h-2.5 rounded-full bg-surface-500"></span> Incident</span>
-
-  </div>
-
 </div>
 
+<!-- ═══ Stats Bar ═══ -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i class="fas fa-shield-halved"></i></div>
+    <div class="flex items-baseline gap-2">
+      <span class="stat-value text-emerald-700" id="stat-safe">--</span>
+      <span class="stat-delta bg-emerald-100 text-emerald-700" id="stat-safe-delta">+3</span>
+    </div>
+    <div class="stat-label">Safe Zones</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-amber-50 text-amber-600"><i class="fas fa-triangle-exclamation"></i></div>
+    <div class="flex items-baseline gap-2">
+      <span class="stat-value text-amber-700" id="stat-med">--</span>
+      <span class="stat-delta bg-amber-100 text-amber-700" id="stat-med-delta">-2</span>
+    </div>
+    <div class="stat-label">Medium Risk</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-rose-50 text-rose-600"><i class="fas fa-tower-broadcast"></i></div>
+    <div class="flex items-baseline gap-2">
+      <span class="stat-value text-rose-700" id="stat-high">--</span>
+      <span class="stat-delta bg-rose-100 text-rose-700" id="stat-high-delta">+1</span>
+    </div>
+    <div class="stat-label">High Risk</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i class="fas fa-bolt"></i></div>
+    <div class="flex items-baseline gap-2">
+      <span class="stat-value text-indigo-700" id="stat-total">--</span>
+      <span class="stat-delta bg-indigo-100 text-indigo-700" id="stat-total-delta">Live</span>
+    </div>
+    <div class="stat-label">Active Alerts</div>
+  </div>
+</div>
 
-
-<div class="glass-card rounded-2xl p-4 mb-6 relative">
+<!-- ═══ Map Card ═══ -->
+<div class="glass-card rounded-2xl p-4 mb-6 relative overflow-hidden">
+  <!-- Map Filters Overlay -->
+  <div class="absolute top-6 left-6 z-[500] flex flex-wrap gap-2">
+    <button class="filter-chip active text-surface-700" data-filter="all" onclick="setFilter(this,'all')">
+      <i class="fas fa-layer-group text-[10px]"></i> All
+    </button>
+    <button class="filter-chip text-emerald-700" data-filter="low" onclick="setFilter(this,'low')">
+      <i class="fas fa-circle text-[6px] text-emerald-500"></i> Low
+    </button>
+    <button class="filter-chip text-amber-700" data-filter="medium" onclick="setFilter(this,'medium')">
+      <i class="fas fa-circle text-[6px] text-amber-500"></i> Medium
+    </button>
+    <button class="filter-chip text-rose-700" data-filter="high" onclick="setFilter(this,'high')">
+      <i class="fas fa-circle text-[6px] text-rose-500"></i> High
+    </button>
+    <button class="filter-chip text-red-800" data-filter="critical" onclick="setFilter(this,'critical')">
+      <i class="fas fa-circle text-[6px] text-red-600"></i> Critical
+    </button>
+    <button class="filter-chip text-surface-600" data-filter="incident" onclick="setFilter(this,'incident')">
+      <i class="fas fa-location-dot text-[10px]"></i> Incidents
+    </button>
+  </div>
 
   <div id="safety-map" class="w-full bg-surface-100"></div>
 
-  <p id="map-status" class="text-xs text-surface-400 mt-2 text-center">Loading map data…</p>
+  <!-- Custom Legend -->
+  <div class="map-legend">
+    <h4>Risk Levels</h4>
+    <div class="legend-item"><span class="legend-dot bg-emerald-500"></span> Low Risk</div>
+    <div class="legend-item"><span class="legend-dot bg-amber-500"></span> Medium Risk</div>
+    <div class="legend-item"><span class="legend-dot bg-rose-500"></span> High Risk</div>
+    <div class="legend-item"><span class="legend-dot bg-red-600 legend-pulse"></span> Critical</div>
+    <div class="legend-item"><span class="legend-dot bg-surface-500"></span> Incident</div>
+  </div>
 
+  <!-- Status Bar -->
+  <div class="flex items-center justify-between mt-3 px-1">
+    <p id="map-status" class="text-xs text-surface-400 flex items-center gap-2">
+      <span class="inline-block w-1.5 h-1.5 rounded-full bg-surface-300 animate-pulse"></span>
+      Loading map data…
+    </p>
+    <p class="text-[11px] text-surface-400 font-medium" id="last-updated">Updated just now</p>
+  </div>
 </div>
 
-
-
+<!-- ═══ Area Details Table ═══ -->
 <div class="glass-card rounded-2xl overflow-hidden">
-
-  <div class="px-6 py-4 border-b border-surface-200">
-
-    <h2 class="font-display font-bold text-surface-800">Area details</h2>
-
+  <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between">
+    <div>
+      <h2 class="font-display font-bold text-surface-800 text-lg">Area Details</h2>
+      <p class="text-xs text-surface-400 mt-0.5">Detailed breakdown of risk scores by region</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <input type="text" id="area-search" placeholder="Search areas…" 
+        class="text-xs px-3 py-1.5 rounded-lg border border-surface-200 bg-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 w-40 transition-all"
+        oninput="filterAreas(this.value)">
+      <button class="filter-chip text-surface-500" onclick="exportTable()">
+        <i class="fas fa-download text-[10px]"></i> Export
+      </button>
+    </div>
   </div>
-
   <div class="overflow-x-auto">
-
     <table class="data w-full text-sm">
-
       <thead>
-
-        <tr><th>Area</th><th>Score</th><th>Level</th><th>Last updated</th></tr>
-
+        <tr>
+          <th class="text-left pl-6">Area</th>
+          <th class="text-center">Score</th>
+          <th class="text-center">Level</th>
+          <th class="text-center">Trend</th>
+          <th class="text-right pr-6">Last updated</th>
+        </tr>
       </thead>
-
       <tbody id="map-areas-body">
-
-        <tr><td colspan="4" class="text-surface-400 py-6 text-center">Loading…</td></tr>
-
+        <tr>
+          <td colspan="5" class="text-surface-400 py-10 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-8 h-8 border-2 border-surface-200 border-t-indigo-500 rounded-full animate-spin"></div>
+              <span class="text-sm">Loading area data…</span>
+            </div>
+          </td>
+        </tr>
       </tbody>
-
     </table>
-
   </div>
-
+  <!-- Pagination -->
+  <div class="px-6 py-3 border-t border-surface-200 flex items-center justify-between">
+    <span class="text-[11px] text-surface-400 font-medium" id="table-info">Showing 0 of 0 areas</span>
+    <div class="flex items-center gap-1">
+      <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px]" onclick="prevPage()">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span class="text-xs text-surface-500 font-semibold px-2" id="page-num">1</span>
+      <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px]" onclick="nextPage()">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
 </div>
 
 {% endblock %}
-
-
 
 {% block page_script %}
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin=""></script>
 <script src="/static/js/leaflet-map.js"></script>
-
 <script src="/static/js/map.js"></script>
 
-{% endblock %}
+<script>
+// ── Enhanced UI Helpers ──
 
+function setFilter(btn, filter) {
+  document.querySelectorAll('.filter-chip[data-filter]').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  // Dispatch to your existing map.js
+  if (window.filterMapMarkers) window.filterMapMarkers(filter);
+}
+
+function refreshMap() {
+  const btn = document.getElementById('refresh-btn');
+  const icon = btn.querySelector('i');
+  icon.classList.add('fa-spin');
+  btn.disabled = true;
+
+  if (window.loadMapData) {
+    window.loadMapData().then(() => {
+      icon.classList.remove('fa-spin');
+      btn.disabled = false;
+      updateLastUpdated();
+    }).catch(() => {
+      icon.classList.remove('fa-spin');
+      btn.disabled = false;
+    });
+  } else {
+    setTimeout(() => { icon.classList.remove('fa-spin'); btn.disabled = false; }, 800);
+  }
+}
+
+function locateUser() {
+  const btn = document.getElementById('locate-btn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i> Locating…';
+
+  if (!navigator.geolocation) {
+    btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      if (window.map && window.map.setView) {
+        window.map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+        L.marker([pos.coords.latitude, pos.coords.longitude], {
+          icon: L.divIcon({
+            className: 'user-location-marker',
+            html: '<div style="width:16px;height:16px;background:#6366f1;border:3px solid white;border-radius:50%;box-shadow:0 2px 12px rgba(99,102,241,0.5);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          })
+        }).addTo(window.map).bindPopup('<b>You are here</b>').openPopup();
+      }
+      btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location';
+    },
+    () => { btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location'; },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+}
+
+function updateLastUpdated() {
+  const el = document.getElementById('last-updated');
+  if (el) el.textContent = 'Updated just now';
+}
+
+function filterAreas(query) {
+  if (window.filterTableAreas) window.filterTableAreas(query);
+}
+
+function exportTable() {
+  if (window.exportAreaData) {
+    window.exportAreaData();
+  } else {
+    // Fallback: trigger CSV download
+    const table = document.querySelector('.data tbody');
+    if (!table) return;
+    let csv = 'Area,Score,Level,Last Updated\n';
+    table.querySelectorAll('tr').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 4) {
+        csv += Array.from(cells).map(c => '"' + c.textContent.trim().replace(/"/g, '""') + '"').join(',') + '\n';
+      }
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'safety-areas-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+function prevPage() { if (window.changePage) window.changePage(-1); }
+function nextPage() { if (window.changePage) window.changePage(1); }
+
+// Auto-update timestamp every minute
+setInterval(() => {
+  const el = document.getElementById('last-updated');
+  if (el && el.dataset.timestamp) {
+    const diff = Math.floor((Date.now() - parseInt(el.dataset.timestamp)) / 60000);
+    el.textContent = diff < 1 ? 'Updated just now' : `Updated ${diff}m ago`;
+  }
+}, 60000);
+</script>
+{% endblock %}
