@@ -20,6 +20,17 @@ GAZETTEER: dict[str, tuple[float, float, float]] = {
     "chatsworth": (30.8974, -29.9187, 3.5),
     "phoenix": (30.9812, -29.7012, 3.0),
     "durban harbour": (31.0362, -29.8682, 2.0),
+    # Pretoria / Tshwane
+    "pretoria": (28.1881, -25.7461, 8.0),
+    "pretoria cbd": (28.1881, -25.7461, 3.0),
+    "soshanguve": (28.1114, -25.5129, 4.0),
+    "tut": (28.1897, -25.5392, 3.0),
+    "tut soshanguve": (28.1897, -25.5392, 2.5),
+    "tut soshanguve campus": (28.1897, -25.5392, 2.0),
+    "soshanguve campus": (28.1897, -25.5392, 2.0),
+    "mabopane": (28.0497, -25.4958, 3.0),
+    "atteridgeville": (28.0628, -25.7736, 2.5),
+    "centurion": (28.1878, -25.8603, 3.0),
     # Johannesburg metro
     "johannesburg": (28.0473, -26.2041, 10.0),
     "johannesburg cbd": (28.0436, -26.2023, 3.0),

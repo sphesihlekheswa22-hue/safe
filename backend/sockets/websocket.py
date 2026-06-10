@@ -19,7 +19,7 @@ bp = Blueprint("realtime", __name__)
 
 # Gunicorn sync workers kill silent connections; keepalives + short sessions avoid
 # WORKER TIMEOUT on Render. EventSource auto-reconnects when a session ends.
-_SSE_TICKS = int(os.environ.get("REALTIME_SSE_TICKS", "12"))  # ~2 min per session
+_SSE_TICKS = int(os.environ.get("REALTIME_SSE_TICKS", "6"))  # ~1 min per session
 _SSE_INTERVAL_SEC = int(os.environ.get("REALTIME_SSE_INTERVAL_SEC", "10"))
 
 

@@ -22,8 +22,8 @@ class Route(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, *, include_geojson=True):
+        data = {
             "id": self.id,
             "start_location": self.start_location,
             "end_location": self.end_location,
@@ -32,7 +32,9 @@ class Route(db.Model):
             "end_lat": self.end_lat,
             "end_lng": self.end_lng,
             "risk_score": round(self.risk_score, 2),
-            "geojson": self.geojson,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
         }
+        if include_geojson:
+            data["geojson"] = self.geojson
+        return data

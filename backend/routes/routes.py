@@ -51,7 +51,16 @@ def geocode_reverse():
 @require_permission("route:read")
 def list_routes():
     routes = route_repo.list_recent()
-    return jsonify(routes=[r.to_dict() for r in routes])
+    return jsonify(routes=[r.to_dict(include_geojson=False) for r in routes])
+
+
+@bp.get("/<int:route_id>")
+@require_permission("route:read")
+def get_route(route_id):
+    route = route_repo.get(route_id)
+    if route is None:
+        return jsonify(error="Route not found."), 404
+    return jsonify(route=route.to_dict(include_geojson=True))
 
 
 @bp.post("/generate")

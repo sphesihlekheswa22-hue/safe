@@ -53,5 +53,5 @@ def summary():
         risk_areas=[a.to_dict() for a in risk_areas[:10]],
         active_alerts=[a.to_dict() for a in active_alerts],
         recent_events=[e.to_dict() for e in recent_events],
-        suggested_routes=[r.to_dict() for r in suggested_routes],
+        suggested_routes=[r.to_dict(include_geojson=False) for r in suggested_routes],
     )

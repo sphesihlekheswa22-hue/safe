@@ -36,6 +36,13 @@ window.Realtime = (function () {
   }
 
   function connect(onAlerts) {
+    // SSE ties up gunicorn sync workers on Render and causes WORKER TIMEOUT; poll instead.
+    const host = location.hostname || "";
+    if (host.includes("onrender.com") || host.includes("render.com")) {
+      startPolling(onAlerts);
+      return;
+    }
+
     if (typeof EventSource === "undefined") {
       startPolling(onAlerts);
       return;

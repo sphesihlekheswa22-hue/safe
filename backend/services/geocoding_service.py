@@ -17,6 +17,7 @@ SA_BOUNDS = {"min_lat": -35.0, "max_lat": -22.0, "min_lon": 16.0, "max_lon": 33.
 # Nominatim viewbox: left, top, right, bottom (lon/lat)
 SA_VIEWBOX = "16.0,-22.0,33.0,-35.0"
 _last_request_at = 0.0
+_nominatim_paused_until = 0.0
 _search_cache: dict[str, tuple[float, list[dict]]] = {}
 CACHE_TTL_SEC = 300
 
@@ -29,9 +30,18 @@ def _throttle():
     """Nominatim allows max 1 request per second."""
     global _last_request_at
     elapsed = time.time() - _last_request_at
-    if elapsed < 1.05:
-        time.sleep(1.05 - elapsed)
+    if elapsed < 1.1:
+        time.sleep(1.1 - elapsed)
     _last_request_at = time.time()
+
+
+def _nominatim_available() -> bool:
+    return time.time() >= _nominatim_paused_until
+
+
+def _pause_nominatim(seconds: float = 120.0) -> None:
+    global _nominatim_paused_until
+    _nominatim_paused_until = time.time() + seconds
 
 
 def _headers() -> dict:
@@ -145,6 +155,13 @@ def _nominatim_search(query: str, limit: int = 8) -> list[dict]:
                 "source": "nominatim",
             })
         return results
+    except requests.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code == 429:
+            _pause_nominatim(180.0)
+            logger.warning("Nominatim rate-limited; using local gazetteer for 3 min")
+        else:
+            logger.warning("Nominatim search failed for %r: %s", query, exc)
+        return []
     except Exception as exc:
         logger.warning("Nominatim search failed for %r: %s", query, exc)
         return []
@@ -162,10 +179,12 @@ def search(query: str, limit: int = 8) -> list[dict]:
         return cached[1][:limit]
 
     local = _gazetteer_suggestions(q, limit=limit)
-    remote = _nominatim_search(q, limit=limit)
-
-    if not remote and "south africa" not in cache_key:
-        remote = _nominatim_search(f"{q}, South Africa", limit=limit)
+    remote: list[dict] = []
+    # Skip Nominatim for short queries or when rate-limited; local gazetteer covers cities.
+    if len(q) >= 4 and _nominatim_available() and len(local) < limit:
+        remote = _nominatim_search(q, limit=limit)
+        if not remote and "south africa" not in cache_key:
+            remote = _nominatim_search(f"{q}, South Africa", limit=limit)
 
     merged = _merge_results(local, remote)[:limit]
     _search_cache[cache_key] = (time.time(), merged)
@@ -225,6 +244,16 @@ def reverse(lat: float, lng: float) -> dict:
         }
     except GeocodeError:
         raise
+    except requests.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code == 429:
+            _pause_nominatim(180.0)
+        logger.warning("Reverse geocode failed: %s", exc)
+        return {
+            "name": f"{lat:.5f}, {lng:.5f}",
+            "display_name": f"{lat:.5f}, {lng:.5f}",
+            "lat": lat,
+            "lng": lng,
+        }
     except Exception as exc:
         logger.warning("Reverse geocode failed: %s", exc)
         return {

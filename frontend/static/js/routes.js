@@ -202,7 +202,7 @@
       clearCoords(prefix);
       const q = input.value.trim();
       clearTimeout(timer);
-      if (q.length < 2) {
+      if (q.length < 3) {
         list.classList.remove("visible");
         list.innerHTML = "";
         return;
@@ -219,14 +219,14 @@
           list.innerHTML = `<li class="suggestion-divider" role="presentation">Search unavailable — ${esc(err.message || "try again")}</li>`;
           list.classList.add("visible");
         }
-      }, 280);
+      }, 450);
     });
 
     input.addEventListener("focus", () => {
       const q = input.value.trim();
-      if (q.length >= 2 && list._items && list._items.length) {
+      if (q.length >= 3 && list._items && list._items.length) {
         list.classList.add("visible");
-      } else if (q.length >= 2) {
+      } else if (q.length >= 3) {
         input.dispatchEvent(new Event("input"));
       }
     });
@@ -388,15 +388,35 @@
   }
 
   function previewRoute(id) {
-    const r = savedRoutes.find((x) => x.id === id);
-    if (!r || !r.geojson) return;
-    lastRouteEndpoints = r;
-    showResultPanel();
-    document.getElementById("route-explanation").textContent = `Saved route: ${r.start_location} → ${r.end_location}`;
-    setRiskBadge(document.getElementById("route-risk"), r.risk_score, null);
-    setRouteStats(r);
-    showRoute(r.geojson, r.risk_score, null, false, r);
-    document.getElementById("route-alternatives").classList.add("hidden");
+    const cached = savedRoutes.find((x) => x.id === id);
+    if (!cached) return;
+
+    const show = (r) => {
+      if (!r || !r.geojson) {
+        flash("Route map data unavailable.", "warning");
+        return;
+      }
+      lastRouteEndpoints = r;
+      showResultPanel();
+      document.getElementById("route-explanation").textContent = `Saved route: ${r.start_location} → ${r.end_location}`;
+      setRiskBadge(document.getElementById("route-risk"), r.risk_score, null);
+      setRouteStats(r);
+      showRoute(r.geojson, r.risk_score, null, false, r);
+      document.getElementById("route-alternatives").classList.add("hidden");
+    };
+
+    if (cached.geojson) {
+      show(cached);
+      return;
+    }
+
+    SR.get("/api/routes/" + id)
+      .then(({ route }) => {
+        const idx = savedRoutes.findIndex((x) => x.id === id);
+        if (idx >= 0) savedRoutes[idx] = route;
+        show(route);
+      })
+      .catch((err) => flash(err.message, "error"));
   }
 
   async function loadRoutes() {
