@@ -1,67 +1,380 @@
 {% extends 'base.html' %}
 {% block title %}My Profile · SafeRoute AI{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="" />
+<style>
+  :root {
+    --p-primary: #2563eb;
+    --p-success: #10b981;
+    --p-warning: #f59e0b;
+    --p-danger: #ef4444;
+    --p-muted: #64748b;
+    --p-shadow-lg: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.04);
+    --p-shadow-xl: 0 20px 25px -5px rgba(15,23,42,0.1), 0 8px 10px -6px rgba(15,23,42,0.04);
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin-once {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .animate-fade-up { animation: fadeSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+
+  .profile-hero {
+    position: relative;
+    padding: 1.5rem 0 0.5rem;
+  }
+  .profile-hero::before {
+    content: '';
+    position: absolute;
+    top: -20px; left: -40px; right: -40px;
+    height: 200px;
+    background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(37,99,235,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(139,92,246,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .profile-hero-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(37,99,235,0.03));
+    border: 1px solid rgba(37,99,235,0.12);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--p-primary);
+  }
+  .profile-hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .profile-hero p { color: var(--p-muted); max-width: 420px; }
+
+  .p-card {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(24px) saturate(1.3);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 1.25rem;
+    box-shadow: var(--p-shadow-lg), 0 0 0 1px rgba(15,23,42,0.03);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+  }
+  .p-card:hover { box-shadow: var(--p-shadow-xl), 0 0 0 1px rgba(15,23,42,0.04); }
+  .p-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(226,232,240,0.6);
+    background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(248,250,252,0.85));
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .p-card-header h2 {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .p-card-header p { font-size: 0.6875rem; color: var(--p-muted); margin-top: 0.15rem; }
+  .p-card-header .tag {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    padding: 0.25rem 0.6rem;
+    background: rgba(148,163,184,0.08);
+    border-radius: 0.375rem;
+  }
+
+  .p-field-label {
+    display: flex; align-items: center; gap: 0.35rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #475569;
+    margin-bottom: 0.5rem;
+  }
+  .p-field-label i { color: #94a3b8; font-size: 0.6rem; }
+  .p-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #0f172a;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: inset 0 1px 2px rgba(15,23,42,0.02);
+  }
+  .p-input::placeholder { color: #94a3b8; }
+  .p-input:hover { border-color: #cbd5e1; }
+  .p-input:focus {
+    outline: none;
+    border-color: var(--p-primary);
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.08), inset 0 1px 2px rgba(15,23,42,0.02);
+  }
+  .p-input:read-only {
+    background: rgba(248,250,252,0.9);
+    color: #64748b;
+    cursor: default;
+  }
+  .p-hint { font-size: 0.6875rem; color: #94a3b8; margin-top: 0.35rem; }
+
+  .p-submit {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    border-radius: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 4px 16px -2px rgba(37,99,235,0.35), 0 0 0 1px rgba(37,99,235,0.1);
+  }
+  .p-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgba(37,99,235,0.4), 0 0 0 1px rgba(37,99,235,0.15);
+  }
+  .p-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+  .p-submit .spinner {
+    display: inline-block;
+    width: 0.875rem; height: 0.875rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin-once 0.8s linear infinite;
+    margin-right: 0.5rem;
+  }
+
+  .profile-avatar {
+    width: 5rem; height: 5rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px -4px rgba(37,99,235,0.35);
+    letter-spacing: -0.02em;
+  }
+  .role-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: rgba(37,99,235,0.08);
+    color: #1d4ed8;
+    border: 1px solid rgba(37,99,235,0.15);
+  }
+
+  .stat-card {
+    text-align: center;
+    padding: 1.25rem 1rem;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(226,232,240,0.5);
+    border-radius: 0.875rem;
+    transition: all 0.2s ease;
+  }
+  .stat-card:hover {
+    background: rgba(255,255,255,0.95);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+  }
+  .stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+  }
+  .stat-icon {
+    width: 2.25rem; height: 2.25rem;
+    border-radius: 0.625rem;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.75rem;
+    font-size: 0.75rem;
+  }
+  .stat-icon.routes { background: rgba(37,99,235,0.1); color: #2563eb; }
+  .stat-icon.events { background: rgba(245,158,11,0.1); color: #d97706; }
+
+  @media (max-width: 640px) {
+    .profile-hero h1 { font-size: 1.5rem; }
+    .p-card-header { padding: 1rem; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-2xl mx-auto">
-  <div class="mb-8">
-    <h1 class="text-2xl font-display font-bold text-surface-800">My Profile</h1>
-    <p class="text-sm text-surface-500 mt-1">Manage your account and view your safety activity</p>
+
+<div class="profile-hero mb-6">
+  <div class="profile-hero-badge animate-fade-up">
+    <i class="fas fa-circle text-[6px]"></i> Account
+  </div>
+  <h1 class="mt-3 animate-fade-up delay-1">My Profile</h1>
+  <p class="mt-1.5 text-sm animate-fade-up delay-2">Manage your account details, password, and view your safety activity.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+  <!-- Left: account + password -->
+  <div class="lg:col-span-7 space-y-6">
+
+    <div class="p-card animate-fade-up delay-2">
+      <div class="p-card-header">
+        <div>
+          <h2><i class="fas fa-user text-primary-500 mr-1.5 text-xs"></i>Account Details</h2>
+          <p>Update your display name and view role</p>
+        </div>
+        <span class="tag">Profile</span>
+      </div>
+      <div class="p-6">
+        <form id="profile-form" class="space-y-4">
+          <div>
+            <label class="p-field-label" for="profile-name">
+              <i class="fas fa-id-card"></i> Full name
+            </label>
+            <input class="p-input" name="name" id="profile-name" required placeholder="Your name" />
+          </div>
+          <div>
+            <label class="p-field-label" for="profile-email">
+              <i class="fas fa-envelope"></i> Email
+            </label>
+            <input class="p-input" id="profile-email" readonly />
+            <p class="p-hint">Email cannot be changed here.</p>
+          </div>
+          <div>
+            <label class="p-field-label" for="profile-role">
+              <i class="fas fa-shield-halved"></i> Role
+            </label>
+            <input class="p-input" id="profile-role" readonly />
+          </div>
+          <button type="submit" class="p-submit" id="profile-save-btn">
+            <i class="fas fa-check mr-1.5"></i> Save profile
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="p-card animate-fade-up delay-3">
+      <div class="p-card-header">
+        <div>
+          <h2><i class="fas fa-lock text-amber-500 mr-1.5 text-xs"></i>Change Password</h2>
+          <p>Keep your account secure</p>
+        </div>
+        <span class="tag">Security</span>
+      </div>
+      <div class="p-6">
+        <form id="password-form" class="space-y-4">
+          <div>
+            <label class="p-field-label" for="current-password">
+              <i class="fas fa-key"></i> Current password
+            </label>
+            <input class="p-input" type="password" id="current-password" name="current_password" required autocomplete="current-password" />
+          </div>
+          <div>
+            <label class="p-field-label" for="new-password">
+              <i class="fas fa-lock"></i> New password
+            </label>
+            <input class="p-input" type="password" id="new-password" name="new_password" required autocomplete="new-password" />
+            <p class="p-hint">Min 8 characters with a letter and a number.</p>
+          </div>
+          <button type="submit" class="p-submit" id="password-save-btn">
+            <i class="fas fa-shield-halved mr-1.5"></i> Update password
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 
-  <div class="glass-card rounded-2xl p-6 mb-6">
-    <h2 class="font-display font-bold text-surface-800 mb-4">Account details</h2>
-    <form id="profile-form" class="space-y-4">
-      <div>
-        <label class="label">Full name</label>
-        <input class="input" name="name" id="profile-name" required />
-      </div>
-      <div>
-        <label class="label">Email</label>
-        <input class="input" id="profile-email" readonly class="bg-surface-50" />
-        <p class="text-xs text-surface-400 mt-1">Email cannot be changed here.</p>
-      </div>
-      <div>
-        <label class="label">Role</label>
-        <input class="input" id="profile-role" readonly class="bg-surface-50" />
-      </div>
-      <button type="submit" class="btn-primary">Save profile</button>
-    </form>
-  </div>
+  <!-- Right: summary + activity -->
+  <div class="lg:col-span-5 space-y-6">
 
-  <div class="glass-card rounded-2xl p-6 mb-6">
-    <h2 class="font-display font-bold text-surface-800 mb-4">Change password</h2>
-    <form id="password-form" class="space-y-4">
-      <div>
-        <label class="label">Current password</label>
-        <input class="input" type="password" name="current_password" required autocomplete="current-password" />
+    <div class="p-card animate-fade-up delay-2">
+      <div class="p-card-header">
+        <div>
+          <h2><i class="fas fa-circle-user text-violet-500 mr-1.5 text-xs"></i>Overview</h2>
+          <p>Signed-in account summary</p>
+        </div>
       </div>
-      <div>
-        <label class="label">New password</label>
-        <input class="input" type="password" name="new_password" required autocomplete="new-password" />
-        <p class="text-xs text-surface-400 mt-1">Min 8 characters with a letter and a number.</p>
+      <div class="p-6 flex flex-col items-center text-center">
+        <div class="profile-avatar" id="profile-avatar" aria-hidden="true">—</div>
+        <p id="profile-display-name" class="mt-4 text-lg font-bold text-surface-800">—</p>
+        <p id="profile-display-email" class="text-sm text-surface-400 mt-0.5">—</p>
+        <span id="profile-role-badge" class="role-badge mt-3">—</span>
       </div>
-      <button type="submit" class="btn-primary">Update password</button>
-    </form>
-  </div>
+    </div>
 
-  <div class="glass-card rounded-2xl p-6">
-    <h2 class="font-display font-bold text-surface-800 mb-4">Recent activity</h2>
-    <div class="grid grid-cols-2 gap-4">
-      <div class="overview-card text-center">
-        <p class="text-xs text-surface-500 uppercase tracking-wide mb-1">Routes saved</p>
-        <p id="profile-routes" class="text-2xl font-display font-bold text-surface-800">—</p>
+    <div class="p-card animate-fade-up delay-3">
+      <div class="p-card-header">
+        <div>
+          <h2><i class="fas fa-chart-simple text-emerald-500 mr-1.5 text-xs"></i>Recent Activity</h2>
+          <p>Your usage across SafeRoute AI</p>
+        </div>
+        <span class="tag">Stats</span>
       </div>
-      <div class="overview-card text-center">
-        <p class="text-xs text-surface-500 uppercase tracking-wide mb-1">Active alerts</p>
-        <p id="profile-events" class="text-2xl font-display font-bold text-surface-800">—</p>
+      <div class="p-6 grid grid-cols-2 gap-4">
+        <div class="stat-card">
+          <div class="stat-icon routes"><i class="fas fa-route"></i></div>
+          <div class="stat-value" id="profile-routes">—</div>
+          <div class="stat-label">Routes Saved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon events"><i class="fas fa-triangle-exclamation"></i></div>
+          <div class="stat-value" id="profile-events">—</div>
+          <div class="stat-label">Events Logged</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-card animate-fade-up delay-3">
+      <div class="p-card-header">
+        <div>
+          <h2><i class="fas fa-lightbulb text-amber-500 mr-1.5 text-xs"></i>Quick Links</h2>
+          <p>Jump back into the app</p>
+        </div>
+      </div>
+      <div class="p-6 space-y-2">
+        <a href="/routes" class="flex items-center gap-3 p-3 rounded-xl border border-surface-200/60 hover:bg-primary-50/50 hover:border-primary-200 transition-all text-sm font-semibold text-surface-700">
+          <i class="fas fa-wand-magic-sparkles text-primary-500 w-4 text-center"></i> Plan a safe route
+        </a>
+        <a href="/dashboard" class="flex items-center gap-3 p-3 rounded-xl border border-surface-200/60 hover:bg-primary-50/50 hover:border-primary-200 transition-all text-sm font-semibold text-surface-700">
+          <i class="fas fa-gauge-high text-emerald-500 w-4 text-center"></i> Open dashboard
+        </a>
+        <a href="/map" class="flex items-center gap-3 p-3 rounded-xl border border-surface-200/60 hover:bg-primary-50/50 hover:border-primary-200 transition-all text-sm font-semibold text-surface-700">
+          <i class="fas fa-map-location-dot text-amber-500 w-4 text-center"></i> View live map
+        </a>
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  .overview-card { padding:1rem; border-radius:.75rem; background:rgba(255,255,255,.8); border:1px solid #e2e8f0; }
-</style>
 {% endblock %}
 
 {% block page_script %}
