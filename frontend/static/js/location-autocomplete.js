@@ -3,6 +3,7 @@
   "use strict";
 
   const MY_CITY_KEY = "sr-my-city";
+  const USER_LOC_KEY = "sr-user-loc";
 
   const POI_ICONS = {
     police: "fa-shield-halved",
@@ -12,19 +13,18 @@
     landmark: "fa-landmark",
   };
 
+  let warmedNear = null;
+  let warmPromise = null;
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;",
     }[c]));
   }
 
-  function resolveNearCoords(options) {
-    const opts = options || {};
-    if (opts.nearLat != null && opts.nearLng != null) {
-      return { lat: opts.nearLat, lng: opts.nearLng };
-    }
+  function readStoredCoords(key) {
     try {
-      const raw = sessionStorage.getItem(MY_CITY_KEY);
+      const raw = sessionStorage.getItem(key);
       if (!raw) return null;
       const data = JSON.parse(raw);
       if (data && data.lat != null && data.lng != null) {
@@ -34,6 +34,55 @@
       /* ignore */
     }
     return null;
+  }
+
+  function resolveNearCoords(options) {
+    const opts = options || {};
+    if (opts.nearLat != null && opts.nearLng != null) {
+      return { lat: opts.nearLat, lng: opts.nearLng };
+    }
+    if (warmedNear) return warmedNear;
+    const fromCity = readStoredCoords(MY_CITY_KEY);
+    if (fromCity) return fromCity;
+    return readStoredCoords(USER_LOC_KEY);
+  }
+
+  function warmUserLocation() {
+    if (warmedNear) return Promise.resolve(warmedNear);
+    if (warmPromise) return warmPromise;
+
+    const existing = resolveNearCoords({});
+    if (existing) {
+      warmedNear = existing;
+      return Promise.resolve(existing);
+    }
+
+    if (!navigator.geolocation) {
+      return Promise.resolve(null);
+    }
+
+    warmPromise = new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          warmedNear = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          try {
+            sessionStorage.setItem(USER_LOC_KEY, JSON.stringify(warmedNear));
+          } catch {
+            /* ignore */
+          }
+          resolve(warmedNear);
+        },
+        () => resolve(null),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      );
+    }).finally(() => {
+      warmPromise = null;
+    });
+
+    return warmPromise;
   }
 
   async function fetchLocationSuggestions(q, limit, near) {
@@ -61,7 +110,7 @@
   }
 
   function showSuggestionsLoading(list) {
-    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching places…</li>`;
+    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching nearby places…</li>`;
     list.classList.add("visible");
     list._items = [];
   }
@@ -114,6 +163,7 @@
     const limit = opts.limit || 10;
 
     inputEl.setAttribute("autocomplete", "off");
+    warmUserLocation();
 
     let timer = null;
     let requestId = 0;
@@ -141,6 +191,7 @@
         const id = ++requestId;
         showSuggestionsLoading(listEl);
         try {
+          await warmUserLocation();
           const near = resolveNearCoords(opts);
           const { results } = await fetchLocationSuggestions(q, limit, near);
           if (id !== requestId) return;
@@ -155,6 +206,7 @@
     });
 
     inputEl.addEventListener("focus", () => {
+      warmUserLocation();
       const q = inputEl.value.trim();
       if (q.length >= minChars && listEl._items && listEl._items.length) {
         listEl.classList.add("visible");
@@ -202,4 +254,5 @@
   window.fetchLocationSuggestions = fetchLocationSuggestions;
   window.setupLocationAutocomplete = setupLocationAutocomplete;
   window.resolveNearCoords = resolveNearCoords;
+  window.warmUserLocation = warmUserLocation;
 })();

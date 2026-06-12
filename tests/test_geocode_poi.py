@@ -65,3 +65,40 @@ def test_is_poi_keyword():
     assert poi_service.is_poi_keyword("poli")
     assert poi_service.is_poi_keyword("hosp")
     assert not poi_service.is_poi_keyword("hat")
+
+
+def test_geocode_nearby_first_then_broad():
+    """From Hatfield, nearby police appear before distant ones."""
+    results = geocoding_service.search(
+        "poli",
+        limit=8,
+        near_lat=-25.7543,
+        near_lng=28.2314,
+    )
+    assert len(results) >= 2
+    assert results[0]["name"] == "Hatfield SAPS"
+    assert results[0]["distance_km"] <= 25
+    assert all("distance_km" in r for r in results)
+
+
+def test_geocode_jhb_user_gets_local_poli_first():
+    """From Sandton, JHB police should rank above Pretoria police."""
+    results = geocoding_service.search(
+        "poli",
+        limit=5,
+        near_lat=-26.1076,
+        near_lng=28.0587,
+    )
+    assert results[0]["name"] == "Sandton SAPS"
+
+
+def test_geocode_hatfield_suburb_near_user_first():
+    results = geocoding_service.search(
+        "hat",
+        limit=5,
+        near_lat=-25.7543,
+        near_lng=28.2314,
+    )
+    assert len(results) >= 1
+    assert "Hatfield" in results[0]["name"]
+    assert results[0]["distance_km"] is not None

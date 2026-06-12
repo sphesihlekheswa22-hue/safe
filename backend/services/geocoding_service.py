@@ -9,6 +9,7 @@ import requests
 
 from services import gazetteer
 from services import poi_service
+from services.geo_service import haversine_km
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ _last_request_at = 0.0
 _nominatim_paused_until = 0.0
 _search_cache: dict[str, tuple[float, list[dict]]] = {}
 CACHE_TTL_SEC = 300
+LOCAL_RADIUS_KM = 25.0
 
 
 class GeocodeError(Exception):
@@ -127,7 +129,48 @@ def _merge_results(*groups: list[dict]) -> list[dict]:
     return merged
 
 
-def _gazetteer_suggestions(query: str, limit: int = 8) -> list[dict]:
+def _proximity_ranked_merge(
+    *groups: list[dict],
+    near_lat: float | None = None,
+    near_lng: float | None = None,
+    limit: int = 8,
+    local_radius_km: float = LOCAL_RADIUS_KM,
+) -> list[dict]:
+    """Prefer results near the user, then broaden to farther matches."""
+    seen: set[str] = set()
+    near_tier: list[tuple[float, dict]] = []
+    far_tier: list[tuple[float, dict]] = []
+    flat: list[dict] = []
+
+    for group in groups:
+        for item in group:
+            key = _result_key(item["lat"], item["lng"])
+            if key in seen:
+                continue
+            seen.add(key)
+            if near_lat is not None and near_lng is not None:
+                dist = haversine_km(near_lat, near_lng, item["lat"], item["lng"])
+                annotated = dict(item)
+                annotated["distance_km"] = round(dist, 1)
+                bucket = near_tier if dist <= local_radius_km else far_tier
+                bucket.append((dist, annotated))
+            else:
+                flat.append(item)
+
+    if near_lat is None or near_lng is None:
+        return flat[:limit]
+
+    near_tier.sort(key=lambda x: x[0])
+    far_tier.sort(key=lambda x: x[0])
+    return [item for _, item in near_tier + far_tier][:limit]
+
+
+def _gazetteer_suggestions(
+    query: str,
+    limit: int = 8,
+    near_lat: float | None = None,
+    near_lng: float | None = None,
+) -> list[dict]:
     """Instant local matches for known SA places (works offline / when Nominatim is slow)."""
     q = _normalize(query)
     if len(q) < 2:
@@ -140,6 +183,14 @@ def _gazetteer_suggestions(query: str, limit: int = 8) -> list[dict]:
             scored.append((priority, key, coords))
 
     scored.sort(key=lambda x: (x[0], len(x[1])))
+    if near_lat is not None and near_lng is not None:
+        scored.sort(
+            key=lambda x: (
+                haversine_km(near_lat, near_lng, x[2][1], x[2][0]),
+                x[0],
+                len(x[1]),
+            )
+        )
     results: list[dict] = []
     for _, key, (lon, lat, _radius) in scored[:limit]:
         title = _title_key(key)
@@ -235,21 +286,33 @@ def search(
     if cached and (time.time() - cached[0]) < CACHE_TTL_SEC:
         return cached[1][:limit]
 
-    pois = poi_service.search_pois(q, limit=limit, near_lat=near_lat, near_lng=near_lng)
-    local = _gazetteer_suggestions(q, limit=limit)
+    has_near = near_lat is not None and near_lng is not None
+    fetch_limit = max(limit * 4, 24) if has_near else limit
+
+    pois = poi_service.search_pois(
+        q, limit=fetch_limit, near_lat=near_lat, near_lng=near_lng
+    )
+    local = _gazetteer_suggestions(
+        q, limit=fetch_limit, near_lat=near_lat, near_lng=near_lng
+    )
     remote: list[dict] = []
     combined_local = len(pois) + len(local)
     # Skip Nominatim for short queries or when rate-limited; local data covers most cases.
-    if len(q) >= 4 and _nominatim_available() and combined_local < limit:
-        remote = _nominatim_search(q, limit=limit)
+    if len(q) >= 4 and _nominatim_available() and combined_local < fetch_limit:
+        remote = _nominatim_search(q, limit=fetch_limit)
         if not remote and "south africa" not in cache_key:
-            remote = _nominatim_search(f"{q}, South Africa", limit=limit)
-    if combined_local < limit and poi_service.is_poi_keyword(q) and _nominatim_available():
+            remote = _nominatim_search(f"{q}, South Africa", limit=fetch_limit)
+    if combined_local < fetch_limit and poi_service.is_poi_keyword(q) and _nominatim_available():
         expanded = _expanded_nominatim_query(q)
         if expanded:
-            remote = _merge_results(remote, _nominatim_search(expanded, limit=limit))
+            remote = _merge_results(remote, _nominatim_search(expanded, limit=fetch_limit))
 
-    merged = _merge_results(pois, local, remote)[:limit]
+    merged = _proximity_ranked_merge(
+        pois, local, remote,
+        near_lat=near_lat,
+        near_lng=near_lng,
+        limit=limit,
+    )
     _search_cache[cache_key] = (time.time(), merged)
     return merged
 

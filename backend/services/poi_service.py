@@ -120,8 +120,7 @@ def search_pois(
     scored.sort(key=lambda x: (x[0], x[1], x[2]["name"]))
 
     has_near = near_lat is not None and near_lng is not None
-    # Pure category keywords (e.g. "poli", "hosp") → nearest first when location known.
-    if is_poi_keyword(q) and has_near:
+    if has_near:
         scored.sort(key=lambda x: (x[1], x[0], x[2]["name"]))
     results: list[dict] = []
     for score, dist, poi in scored[:limit]:
