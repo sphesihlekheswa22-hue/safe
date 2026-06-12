@@ -212,6 +212,7 @@
     <div class="legend-item"><span class="legend-dot bg-amber-500"></span> Medium Risk</div>
     <div class="legend-item"><span class="legend-dot bg-rose-500"></span> High Risk</div>
     <div class="legend-item"><span class="legend-dot bg-red-600 legend-pulse"></span> Critical</div>
+    <div class="legend-item"><span class="legend-dot bg-blue-500"></span> Your Location</div>
     <div class="legend-item"><span class="legend-dot bg-surface-500"></span> Incident</div>
   </div>
 
@@ -320,28 +321,31 @@ function refreshMap() {
 function locateUser() {
   const btn = document.getElementById('locate-btn');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i> Locating…';
+  btn.disabled = true;
+
+  const done = () => {
+    btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location';
+    btn.disabled = false;
+  };
+
+  if (window.centerOnMyLocation) {
+    window.centerOnMyLocation().finally(done);
+    return;
+  }
 
   if (!navigator.geolocation) {
-    btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location';
+    done();
     return;
   }
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       if (window.map && window.map.setView) {
         window.map.setView([pos.coords.latitude, pos.coords.longitude], 14);
-        L.marker([pos.coords.latitude, pos.coords.longitude], {
-          icon: L.divIcon({
-            className: 'user-location-marker',
-            html: '<div style="width:16px;height:16px;background:#6366f1;border:3px solid white;border-radius:50%;box-shadow:0 2px 12px rgba(99,102,241,0.5);"></div>',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          })
-        }).addTo(window.map).bindPopup('<b>You are here</b>').openPopup();
       }
-      btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location';
+      done();
     },
-    () => { btn.innerHTML = '<i class="fas fa-location-crosshairs text-[10px]"></i> My Location'; },
-    { enableHighAccuracy: true, timeout: 8000 }
+    done,
+    { enableHighAccuracy: true, timeout: 15000 }
   );
 }
 

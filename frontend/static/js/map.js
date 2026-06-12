@@ -5,14 +5,84 @@
 
   let map = null;
   let overlayLayers = [];
+  let userMarkerLayer = null;
   let lastData = null;
   let allAreas = [];
   let filteredAreas = [];
   let currentFilter = "all";
   let currentPage = 1;
+  let centerMode = "default";
+  let userLocation = null;
   const PAGE_SIZE = 10;
 
   window.map = null;
+
+  const geoPromise = getUserLocation();
+
+  function getUserLocation() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve(null);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        }),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 45000 }
+      );
+    });
+  }
+
+  function showUserMarker(lat, lng) {
+    if (!map || typeof L === "undefined") return;
+    if (userMarkerLayer) {
+      userMarkerLayer.remove();
+      userMarkerLayer = null;
+    }
+    userMarkerLayer = L.layerGroup();
+    L.circle([lat, lng], {
+      radius: Math.min(Math.max(80, (userLocation?.accuracy || 120)), 400),
+      color: "#2563eb",
+      fillColor: "#2563eb",
+      fillOpacity: 0.12,
+      weight: 2,
+    }).addTo(userMarkerLayer);
+    L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: "",
+        html: '<div style="width:16px;height:16px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 12px rgba(37,99,235,0.45);"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      }),
+    })
+      .bindPopup("<b>You are here</b>")
+      .addTo(userMarkerLayer);
+    userMarkerLayer.addTo(map);
+  }
+
+  async function resolveMapCenter(data) {
+    const params = new URLSearchParams(location.search);
+    const qLat = parseFloat(params.get("lat"));
+    const qLng = parseFloat(params.get("lng"));
+    if (!Number.isNaN(qLat) && !Number.isNaN(qLng)) {
+      centerMode = "query";
+      return { lat: qLat, lng: qLng, zoom: 14 };
+    }
+
+    userLocation = await geoPromise;
+    if (userLocation) {
+      centerMode = "user";
+      return { lat: userLocation.lat, lng: userLocation.lng, zoom: 14 };
+    }
+
+    centerMode = "default";
+    const fallback = data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 11 };
+    return { lat: fallback.lat, lng: fallback.lng, zoom: fallback.zoom || 11 };
+  }
 
   function levelBadge(level) {
     const cls = { LOW: "badge-low", MEDIUM: "badge-medium", HIGH: "badge-high", CRITICAL: "badge-critical" };
@@ -125,33 +195,41 @@
     ];
 
     const incidents = (view.incidents || []).filter((i) => i.latitude != null && i.longitude != null);
-    if (incidents.length > 1 && typeof L !== "undefined") {
-      const bounds = L.latLngBounds(incidents.map((i) => [i.latitude, i.longitude]));
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
-    } else if (currentFilter === "all" && (data.risk_areas || []).length) {
-      const withCoords = (data.risk_areas || []).filter((a) => a.latitude != null && a.longitude != null);
-      if (withCoords.length > 1) {
-        const bounds = L.latLngBounds(withCoords.map((a) => [a.latitude, a.longitude]));
+    if (centerMode === "default") {
+      if (incidents.length > 1 && typeof L !== "undefined") {
+        const bounds = L.latLngBounds(incidents.map((i) => [i.latitude, i.longitude]));
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+      } else if (currentFilter === "all" && (data.risk_areas || []).length) {
+        const withCoords = (data.risk_areas || []).filter((a) => a.latitude != null && a.longitude != null);
+        if (withCoords.length > 1) {
+          const bounds = L.latLngBounds(withCoords.map((a) => [a.latitude, a.longitude]));
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+        }
       }
     }
   }
 
   function focusFromQuery() {
-    if (!map) return;
+    if (!map || centerMode !== "query") return;
     const params = new URLSearchParams(location.search);
     const lat = parseFloat(params.get("lat"));
     const lng = parseFloat(params.get("lng"));
-    if (!isNaN(lat) && !isNaN(lng)) {
+    if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
       map.setView([lat, lng], 14);
     }
   }
 
-  function renderMap(data) {
-    const center = data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 11 };
+  function renderMap(data, center) {
+    const mapCenter = center || data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 11 };
     if (!map) {
-      map = SRMap.createBaseMap("safety-map", center, center.zoom);
+      map = SRMap.createBaseMap("safety-map", mapCenter, mapCenter.zoom || 11);
       window.map = map;
+    } else if (centerMode === "user" || centerMode === "query") {
+      map.setView([mapCenter.lat, mapCenter.lng], mapCenter.zoom || 14);
+    }
+
+    if (centerMode === "user" && userLocation) {
+      showUserMarker(userLocation.lat, userLocation.lng);
     }
 
     renderOverlays(data);
@@ -161,7 +239,10 @@
     const nInc = (data.incidents || []).length;
     const nHigh = (data.incidents || []).filter((e) => Number(e.severity) >= 4).length;
     if (status) {
-      status.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
+      const locateNote = centerMode === "user"
+        ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span> Centered on your location · '
+        : '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ';
+      status.innerHTML = `${locateNote}${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
     }
 
     updateStats(data);
@@ -171,8 +252,9 @@
   async function load() {
     try {
       const data = await SR.get("/api/ai/map-data");
+      const center = await resolveMapCenter(data);
       lastData = data;
-      renderMap(data);
+      renderMap(data, center);
       allAreas = data.risk_areas || [];
       const search = document.getElementById("area-search");
       applyAreaSearch(search ? search.value : "");
@@ -186,6 +268,27 @@
   }
 
   window.loadMapData = load;
+  window.centerOnMyLocation = async () => {
+    const loc = await getUserLocation();
+    if (!loc) {
+      if (window.flash) flash("Could not get your location. Check browser permissions.", "error");
+      return false;
+    }
+    userLocation = loc;
+    centerMode = "user";
+    if (map) {
+      map.setView([loc.lat, loc.lng], 14);
+      showUserMarker(loc.lat, loc.lng);
+      const status = document.getElementById("map-status");
+      if (status && lastData) {
+        const nAreas = (lastData.risk_areas || []).length;
+        const nInc = (lastData.incidents || []).length;
+        const nHigh = (lastData.incidents || []).filter((e) => Number(e.severity) >= 4).length;
+        status.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span> Centered on your location · ${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
+      }
+    }
+    return true;
+  };
   window.filterMapMarkers = (filter) => {
     currentFilter = filter;
     if (lastData) renderOverlays(lastData);
