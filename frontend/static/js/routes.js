@@ -131,51 +131,6 @@
     return payload;
   }
 
-  function renderSuggestionList(list, items, input, prefix) {
-    if (!items.length) {
-      list.innerHTML = `<li class="suggestion-divider" role="presentation">No addresses found — try a street name or suburb</li>`;
-      list.classList.add("visible");
-      list._items = [];
-      return;
-    }
-    list.innerHTML = items.map((r, i) => `
-      <li role="option" data-idx="${i}" tabindex="0">
-        <i class="fas fa-location-dot"></i>
-        <div>
-          <div class="font-medium">${esc(r.name)}</div>
-          <div class="sub">${esc(r.display_name)}</div>
-        </div>
-      </li>`).join("");
-    list.classList.add("visible");
-    list._items = items;
-    list.querySelectorAll("li[role='option']").forEach((li) => {
-      li.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        selectSuggestion(list, input, prefix, parseInt(li.dataset.idx, 10));
-      });
-    });
-  }
-
-  function selectSuggestion(list, input, prefix, idx) {
-    const r = list._items[idx];
-    if (!r) return;
-    input.value = r.name;
-    setCoords(prefix, r.lat, r.lng);
-    input.dataset.selectedLabel = r.name;
-    list.classList.remove("visible");
-    list.innerHTML = "";
-  }
-
-  function showSuggestionsLoading(list) {
-    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching addresses…</li>`;
-    list.classList.add("visible");
-    list._items = [];
-  }
-
-  async function fetchSuggestions(q) {
-    return SR.get("/api/routes/geocode?q=" + encodeURIComponent(q) + "&limit=10");
-  }
-
   async function resolveField(prefix) {
     const input = document.getElementById(prefix + "-location");
     const lat = parseCoord(document.getElementById(prefix + "-lat").value);
@@ -185,15 +140,13 @@
     const q = input.value.trim();
     if (q.length < 2) return false;
 
-    const { results } = await fetchSuggestions(q);
+    const { results } = await fetchLocationSuggestions(q);
     if (!results.length) return false;
 
-    selectSuggestion(
-      document.getElementById(prefix + "-suggestions"),
-      input,
-      prefix,
-      0
-    );
+    const r = results[0];
+    input.value = r.name;
+    setCoords(prefix, r.lat, r.lng);
+    input.dataset.selectedLabel = r.name;
     return true;
   }
 
@@ -203,74 +156,6 @@
     if (!startOk) throw new Error("Could not find the origin. Select an address from the suggestions.");
     if (!endOk) throw new Error("Could not find the destination. Select an address from the suggestions.");
     return getPayload();
-  }
-
-  function setupAutocomplete(inputId, listId, prefix) {
-    const input = document.getElementById(inputId);
-    const list = document.getElementById(listId);
-    let timer = null;
-    let requestId = 0;
-
-    input.addEventListener("input", () => {
-      delete input.dataset.selectedLabel;
-      clearCoords(prefix);
-      const q = input.value.trim();
-      clearTimeout(timer);
-      if (q.length < 3) {
-        list.classList.remove("visible");
-        list.innerHTML = "";
-        return;
-      }
-      timer = setTimeout(async () => {
-        const id = ++requestId;
-        showSuggestionsLoading(list);
-        try {
-          const { results } = await fetchSuggestions(q);
-          if (id !== requestId) return;
-          renderSuggestionList(list, results, input, prefix);
-        } catch (err) {
-          if (id !== requestId) return;
-          list.innerHTML = `<li class="suggestion-divider" role="presentation">Search unavailable — ${esc(err.message || "try again")}</li>`;
-          list.classList.add("visible");
-        }
-      }, 450);
-    });
-
-    input.addEventListener("focus", () => {
-      const q = input.value.trim();
-      if (q.length >= 3 && list._items && list._items.length) {
-        list.classList.add("visible");
-      } else if (q.length >= 3) {
-        input.dispatchEvent(new Event("input"));
-      }
-    });
-
-    input.addEventListener("keydown", (e) => {
-      if (!list.classList.contains("visible") || !list._items || !list._items.length) return;
-      const options = [...list.querySelectorAll("li[role='option']")];
-      let active = options.findIndex((li) => li.classList.contains("is-active"));
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        active = Math.min(options.length - 1, active + 1);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        active = Math.max(0, active - 1);
-      } else if (e.key === "Enter" && active >= 0) {
-        e.preventDefault();
-        selectSuggestion(list, input, prefix, active);
-        return;
-      } else if (e.key === "Escape") {
-        list.classList.remove("visible");
-        return;
-      } else {
-        return;
-      }
-      options.forEach((li, i) => li.classList.toggle("is-active", i === active));
-    });
-
-    input.addEventListener("blur", () => setTimeout(() => {
-      list.classList.remove("visible");
-    }, 180));
   }
 
   async function loadMapOverlay() {
@@ -513,8 +398,22 @@
     btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Find Safest Route';
   }
 
-  setupAutocomplete("start-location", "start-suggestions", "start");
-  setupAutocomplete("end-location", "end-suggestions", "end");
+  setupLocationAutocomplete(
+    document.getElementById("start-location"),
+    document.getElementById("start-suggestions"),
+    {
+      onInputChange: () => clearCoords("start"),
+      onSelect: (r) => setCoords("start", r.lat, r.lng),
+    }
+  );
+  setupLocationAutocomplete(
+    document.getElementById("end-location"),
+    document.getElementById("end-suggestions"),
+    {
+      onInputChange: () => clearCoords("end"),
+      onSelect: (r) => setCoords("end", r.lat, r.lng),
+    }
+  );
 
   document.addEventListener("sr:user-ready", (ev) => {
     canDelete = DELETE_ROLES.includes(ev.detail.role);

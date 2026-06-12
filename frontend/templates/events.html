@@ -39,6 +39,49 @@
     border-radius: 0.75rem; background: #f1f5f9; color: #94a3b8;
     display: flex; align-items: center; justify-content: center;
   }
+  .location-autocomplete { position: relative; }
+  .geo-suggestions {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+    z-index: 60;
+    max-height: 260px; overflow-y: auto;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(226,232,240,0.8);
+    border-radius: 0.875rem;
+    box-shadow: 0 16px 48px -8px rgba(15,23,42,0.15);
+    padding: 0.375rem;
+    list-style: none; margin: 0;
+    opacity: 0; transform: translateY(-8px) scale(0.98);
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .geo-suggestions.visible {
+    opacity: 1; transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .geo-suggestions li {
+    padding: 0.65rem 0.875rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.12s ease;
+    display: flex; align-items: center; gap: 0.6rem;
+    color: #334155;
+  }
+  .geo-suggestions li i { color: #94a3b8; font-size: 0.6875rem; width: 1rem; text-align: center; }
+  .geo-suggestions li:hover { background: #eff6ff; color: #2563eb; }
+  .geo-suggestions li.is-active { background: #eff6ff; color: #2563eb; }
+  .geo-suggestions li:hover i { color: #2563eb; }
+  .geo-suggestions li .sub { color: #94a3b8; font-size: 0.6875rem; margin-top: 1px; }
+  .geo-suggestions .suggestion-divider {
+    padding: 0.25rem 0.875rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    cursor: default;
+  }
 </style>
 {% endblock %}
 
@@ -63,7 +106,10 @@
         </div>
         <div>
           <label class="field-label">Location / Area</label>
-          <input class="field-input" name="location" required placeholder="e.g. Church Square, Pretoria CBD" />
+          <div class="location-autocomplete">
+            <input id="event-location" class="field-input" name="location" required autocomplete="off" placeholder="e.g. Church Square, Pretoria CBD" />
+            <ul id="event-location-suggestions" class="geo-suggestions" role="listbox"></ul>
+          </div>
         </div>
         <div>
           <label class="field-label">Severity (1–5)</label>
@@ -151,8 +197,13 @@
 
   document.addEventListener("sr:user-ready", (ev) => {
     canWrite = WRITE_ROLES.includes(ev.detail.role);
-    if (canWrite) document.getElementById("create-card").classList.remove("hidden");
-    else document.getElementById("events-col").classList.add("lg:col-span-3");
+    if (canWrite) {
+      document.getElementById("create-card").classList.remove("hidden");
+      setupLocationAutocomplete(
+        document.getElementById("event-location"),
+        document.getElementById("event-location-suggestions")
+      );
+    } else document.getElementById("events-col").classList.add("lg:col-span-3");
     load();
     setInterval(() => load(document.getElementById("filter").value.trim()), 30000);
   });
