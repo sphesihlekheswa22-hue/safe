@@ -80,12 +80,15 @@
     requestAnimationFrame(() => {
       routeMap.invalidateSize({ animate: false });
       setTimeout(() => routeMap.invalidateSize({ animate: false }), 320);
+      setTimeout(() => routeMap.invalidateSize({ animate: false }), 600);
     });
   }
 
   function showResultPanel() {
     const panel = document.getElementById("route-result");
+    const placeholder = document.getElementById("route-map-placeholder");
     if (!panel) return;
+    if (placeholder) placeholder.classList.add("hidden");
     panel.classList.remove("hidden");
     requestAnimationFrame(() => {
       panel.classList.add("visible");
