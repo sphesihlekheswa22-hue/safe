@@ -354,7 +354,7 @@
     overflow: hidden;
   }
   .route-map-stage {
-    padding: 0 1.5rem 1.5rem;
+    padding: 0 1.5rem 1.25rem;
   }
   .route-map-stage .map-wrapper {
     border-radius: 1.25rem;
@@ -434,8 +434,8 @@
 
   /* ── Map ── */
   #route-leaflet-map {
-    height: min(78vh, 820px);
-    min-height: 420px;
+    height: min(88vh, 960px);
+    min-height: 520px;
     border-radius: 1.25rem;
     z-index: 0;
     border: 2px solid rgba(37,99,235,0.15);
@@ -698,7 +698,7 @@
     .route-hero h1 { font-size: 1.5rem; }
     .r-card-header { padding: 1rem; }
     .r-table thead th, .r-table tbody td { padding: 0.625rem 0.875rem; }
-    #route-leaflet-map { height: 55vh; min-height: 320px; }
+    #route-leaflet-map { height: 68vh; min-height: 400px; }
     .route-map-stage { padding: 0 1rem 1rem; }
   }
 </style>
@@ -718,7 +718,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
   <!-- ═══ LEFT: ROUTE FORM ═══ -->
-  <div class="lg:col-span-4 space-y-6">
+  <div class="lg:col-span-3 space-y-6">
     <div class="r-card animate-fade-up delay-2">
       <div class="r-card-header">
         <div>
@@ -816,7 +816,7 @@
   </div>
 
   <!-- ═══ CENTER: ROUTE MAP + HISTORY ═══ -->
-  <div class="lg:col-span-8 space-y-6">
+  <div class="lg:col-span-9 space-y-6">
 
     <!-- Map stage — full width of center column -->
     <div id="route-result" class="hidden route-result-card animate-fade-up">
@@ -825,26 +825,7 @@
         <span id="route-risk" class="risk-badge">—</span>
       </div>
 
-      <div class="p-5 lg:p-6">
-        <div class="r-stats-bar">
-          <div class="r-stat">
-            <div class="r-stat-value" id="stat-distance">—</div>
-            <div class="r-stat-label">Distance</div>
-          </div>
-          <div class="r-stat">
-            <div class="r-stat-value" id="stat-duration">—</div>
-            <div class="r-stat-label">Duration</div>
-          </div>
-          <div class="r-stat">
-            <div class="r-stat-value" id="stat-score">—</div>
-            <div class="r-stat-label">Safety Score</div>
-          </div>
-        </div>
-
-        <p id="route-explanation" class="r-explanation mb-4"></p>
-      </div>
-
-      <div class="route-map-stage">
+      <div class="route-map-stage pt-4">
         <div class="map-wrapper">
           <div id="route-leaflet-map" class="w-full bg-surface-50"></div>
           <div class="map-overlay-title">
@@ -868,6 +849,25 @@
         </div>
       </div>
 
+      <div class="p-5 lg:p-6">
+        <div class="r-stats-bar">
+          <div class="r-stat">
+            <div class="r-stat-value" id="stat-distance">—</div>
+            <div class="r-stat-label">Distance</div>
+          </div>
+          <div class="r-stat">
+            <div class="r-stat-value" id="stat-duration">—</div>
+            <div class="r-stat-label">Duration</div>
+          </div>
+          <div class="r-stat">
+            <div class="r-stat-value" id="stat-score">—</div>
+            <div class="r-stat-label">Safety Score</div>
+          </div>
+        </div>
+
+        <p id="route-explanation" class="r-explanation mb-0"></p>
+      </div>
+
       <div class="px-5 lg:px-6 pb-5 lg:pb-6">
         <div id="route-alternatives" class="r-alt-list hidden">
           <div class="flex items-center justify-between mb-2">
@@ -879,7 +879,7 @@
     </div>
 
     <!-- Empty state before first route -->
-    <div id="route-map-placeholder" class="r-card animate-fade-up delay-3 hidden lg:flex flex-col items-center justify-center text-center p-12 min-h-[420px] border-2 border-dashed border-surface-200/80 bg-white/40">
+    <div id="route-map-placeholder" class="r-card animate-fade-up delay-3 hidden lg:flex flex-col items-center justify-center text-center p-12 min-h-[520px] border-2 border-dashed border-surface-200/80 bg-white/40">
       <div class="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mb-4">
         <i class="fas fa-map-location-dot text-2xl text-primary-400"></i>
       </div>
