@@ -80,7 +80,7 @@
     </div>
     <div>
       <h1 class="text-2xl font-display font-bold text-surface-800 tracking-tight">System Admin</h1>
-      <p class="text-sm text-surface-500">Users, institutions, AI engine, security & monitoring</p>
+      <p class="text-sm text-surface-500">Users, AI engine, security & monitoring</p>
     </div>
   </div>
   <div id="system-pill" class="status-pill">
@@ -93,10 +93,6 @@
   <button class="admin-tab active" data-tab="users">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
     Users
-  </button>
-  <button class="admin-tab" data-tab="institutions">
-    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
-    Institutions
   </button>
   <button class="admin-tab" data-tab="ai">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
@@ -132,46 +128,9 @@
     </div>
     <div class="overflow-x-auto">
       <table class="data w-full text-sm">
-        <thead><tr><th>User</th><th>Role</th><th>Institution</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
-        <tbody id="users-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+        <thead><tr><th>User</th><th>Role</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+        <tbody id="users-body"><tr><td colspan="4" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
       </table>
-    </div>
-  </div>
-</section>
-
-<!-- INSTITUTIONS -->
-<section id="panel-institutions" class="admin-panel hidden">
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="page-card rounded-2xl p-6">
-      <h3 class="font-display font-bold text-surface-800 mb-4" id="inst-form-title">Add Institution</h3>
-      <form id="inst-form" class="space-y-4">
-        <input type="hidden" name="id" />
-        <div><label class="label">Name</label><input class="input" name="name" required /></div>
-        <div>
-          <label class="label">Type</label>
-          <select class="select cursor-pointer" name="type">
-            <option>TRANSPORT</option><option>HEALTHCARE</option><option>GOVERNMENT</option>
-            <option>EDUCATION</option><option>NGO</option><option>GENERIC</option>
-          </select>
-        </div>
-        <div><label class="label">Location</label><input class="input" name="location" /></div>
-        <div class="flex gap-2">
-          <button class="btn-primary flex-1" type="submit">Save</button>
-          <button class="btn-ghost hidden" type="button" id="inst-cancel">Cancel</button>
-        </div>
-      </form>
-    </div>
-    <div class="page-card rounded-2xl overflow-hidden lg:col-span-2">
-      <div class="page-card-header">
-        <h3 class="font-display font-bold text-surface-800">Institutions</h3>
-        <p class="text-xs text-surface-500 mt-0.5">Universities, companies & government departments</p>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="data w-full text-sm">
-          <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Users</th><th class="text-right">Actions</th></tr></thead>
-          <tbody id="inst-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
-        </table>
-      </div>
     </div>
   </div>
 </section>
@@ -413,10 +372,6 @@
             <select id="bc-target" class="select cursor-pointer">
               <option value="ALL">Everyone</option>
               <option value="PUBLIC_USER">Public Users</option>
-              <option value="INSTITUTION_ADMIN">Institution Admins</option>
-              <option value="TRANSPORT_OPERATOR">Transport Operators</option>
-              <option value="GOVERNMENT_AUTHORITY">Government Authorities</option>
-              <option value="SYSTEM_ANALYST">System Analysts</option>
             </select>
           </div>
         </div>
@@ -438,10 +393,6 @@
       <div>
         <label class="label">Role</label>
         <select class="select cursor-pointer" name="role" id="user-role-select"></select>
-      </div>
-      <div>
-        <label class="label">Institution (optional)</label>
-        <select class="select cursor-pointer" name="institution_id" id="user-inst-select"><option value="">— None —</option></select>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" class="btn-ghost modal-close">Cancel</button>

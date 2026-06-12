@@ -4,7 +4,7 @@ An intelligent **community risk prediction & service-continuity platform**.
 
 SafeRoute AI tracks community events and risk signals, generates area-based risk
 scores with a transparent scoring engine, recommends safe routes, and broadcasts
-role-targeted alerts to citizens and institutions — all behind a strict,
+role-targeted notifications to citizens — all behind a strict,
 server-enforced Role-Based Access Control (RBAC) system.
 
 > Stack: **Flask · SQLAlchemy · PostgreSQL · Flask-JWT-Extended** on the backend,
@@ -20,11 +20,10 @@ server-enforced Role-Based Access Control (RBAC) system.
   `SYSTEM_ADMIN` can assign roles.
 - **Risk engine** — `risk = severity·0.5 + density·0.3 + sentiment·0.2`
   (each component normalized to 0–100), recomputed whenever events change.
-- **Full CRUD** for events, alerts, routes, institutions and users.
+- **Full CRUD** for events, routes, and users.
 - **Safe-route generation** returning GeoJSON + an aggregate corridor risk score.
-- **Role-based dashboards** — KPI cards, area risk levels, live alert feed,
-  event feed and safe-route suggestions, all loaded from the API (no mock data).
-- **Analytics** with charts, an **audit log**, and a **realtime (SSE)** alert feed.
+- **Dashboard** — KPI cards, area risk levels, event feed and safe-route suggestions, all loaded from the API.
+- **Admin panel** with user management, AI model controls, audit log, and emergency broadcast.
 - **Tests**, **Dockerfile**, **docker-compose**, and reference **SQL schema**.
 
 ---
@@ -33,12 +32,8 @@ server-enforced Role-Based Access Control (RBAC) system.
 
 | Role | Capabilities (summary) |
 |------|------------------------|
-| `PUBLIC_USER` | View dashboard, events, alerts (broadcast/own role), generate routes |
-| `INSTITUTION_ADMIN` | + create events/alerts, view institutions |
-| `TRANSPORT_OPERATOR` | + create events, manage routes |
-| `GOVERNMENT_AUTHORITY` | + create alerts, recompute risk, view analytics |
-| `SYSTEM_ANALYST` | + full analytics, recompute risk, see all alerts |
-| `SYSTEM_ADMIN` | Everything + **exclusive** user & role management |
+| `PUBLIC_USER` | View dashboard, events, maps, generate routes, report incidents |
+| `SYSTEM_ADMIN` | Everything public can do + user management, route delete, AI recompute, reports, emergency broadcast |
 
 The full capability matrix lives in [`docs/rbac_matrix.md`](docs/rbac_matrix.md).
 
@@ -111,8 +106,7 @@ createdb saferoute     # or: psql -U postgres -c "CREATE DATABASE saferoute;"
 ```bash
 python scripts/setup_db.py
 ```
-This creates all tables and inserts demo institutions, users, events, alerts and
-routes (idempotent — safe to re-run).
+This creates all tables and inserts demo users, events and routes (idempotent — safe to re-run).
 
 ### 4. Run
 ```bash
@@ -125,10 +119,6 @@ Open **http://localhost:5000** and sign in.
 |------|-------|----------|
 | System Admin | `admin@saferoute.ai` | `Admin#12345` |
 | Public User | `public@saferoute.ai` | `Passw0rd!` |
-| Institution Admin | `institution@saferoute.ai` | `Passw0rd!` |
-| Transport Operator | `transport@saferoute.ai` | `Passw0rd!` |
-| Government Authority | `gov@saferoute.ai` | `Passw0rd!` |
-| System Analyst | `analyst@saferoute.ai` | `Passw0rd!` |
 
 ---
 
@@ -202,7 +192,7 @@ general API surface.
 flask --app run init-db                 # create tables
 flask --app run seed                    # seed demo data
 flask --app run create-admin --email me@x.com --password "S3cretPass1" --name "Me"
-flask --app run set-role --email user@x.com --role SYSTEM_ANALYST
+flask --app run set-role --email user@x.com --role SYSTEM_ADMIN
 flask --app run list-users
 ```
 

@@ -24,9 +24,9 @@ def test_dashboard_summary(client, public_token):
     assert "active_alerts" not in data
 
 
-def test_analytics_requires_role(client, public_token, analyst_token):
+def test_analytics_requires_role(client, public_token, admin_token):
     assert client.get("/api/reports/analytics", headers=auth(public_token)).status_code == 403
-    assert client.get("/api/reports/analytics", headers=auth(analyst_token)).status_code == 200
+    assert client.get("/api/reports/analytics", headers=auth(admin_token)).status_code == 200
 
 
 def test_login_page_served(client):

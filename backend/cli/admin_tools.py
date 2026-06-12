@@ -2,7 +2,7 @@
 
 Usage (from project root, with the venv active):
     flask --app run create-admin --email me@x.com --password "S3cret!!" --name "Me"
-    flask --app run set-role --email user@x.com --role SYSTEM_ANALYST
+    flask --app run set-role --email user@x.com --role SYSTEM_ADMIN
     flask --app run list-users
 """
 import click

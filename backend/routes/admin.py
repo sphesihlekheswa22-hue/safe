@@ -10,7 +10,6 @@ from sqlalchemy import text
 
 from extensions import db
 from models.user import User
-from models.institution import Institution
 from models.audit_log import AuditLog
 from models.event import Event
 from models.route import Route
@@ -30,7 +29,7 @@ bp = Blueprint("admin", __name__)
 @require_permission("user:manage")
 def list_users():
     users = user_repo.list_all()
-    return jsonify(users=[u.to_dict(include_institution=True) for u in users])
+    return jsonify(users=[u.to_dict() for u in users])
 
 
 @bp.get("/roles")
@@ -53,15 +52,6 @@ def assign_role(user_id):
         body["valid_roles"] = Role.all()
         return jsonify(body), 400
 
-    inst_id = payload.get("institution_id")
-    if inst_id not in (None, "", 0):
-        inst = Institution.query.get(inst_id)
-        if inst is None:
-            return jsonify(error="Institution not found."), 400
-        user.institution_id = inst.id
-    elif inst_id in ("", 0, None) and "institution_id" in (request.get_json(silent=True) or {}):
-        user.institution_id = None
-
     old_role = user.role
     user.role = payload["role"]
     user_repo.save()
@@ -69,7 +59,7 @@ def assign_role(user_id):
         current_user(), "user.role_changed", target=user.email,
         detail=f"{old_role} -> {user.role}",
     )
-    return jsonify(message="Role updated.", user=user.to_dict(include_institution=True))
+    return jsonify(message="Role updated.", user=user.to_dict())
 
 
 @bp.put("/users/<int:user_id>/status")
@@ -113,8 +103,7 @@ def delete_user(user_id):
 @bp.post("/users")
 @require_permission("user:manage")
 def create_user():
-    """Admin-created accounts. Unlike public registration, the admin chooses
-    the role and (optionally) the institution here."""
+    """Admin-created accounts. Unlike public registration, the admin chooses the role."""
     data = request.get_json(silent=True) or {}
     name = clean_str(data.get("name"), 120)
     email = normalize_email(data.get("email"))
@@ -132,22 +121,16 @@ def create_user():
     if User.query.filter_by(email=email).first():
         return jsonify(error="An account with that email already exists."), 409
 
-    institution_id = data.get("institution_id")
-    if institution_id in ("", 0, None):
-        institution_id = None
-    elif Institution.query.get(institution_id) is None:
-        return jsonify(error="Institution not found."), 400
-
     user = User(
         name=name, email=email, role=role,
-        password_hash=hash_password(password), institution_id=institution_id,
+        password_hash=hash_password(password),
     )
     db.session.add(user)
     db.session.commit()
     notification_service.record_audit(
         current_user(), "user.created", target=email, detail=f"role={role}"
     )
-    return jsonify(message="User created.", user=user.to_dict(include_institution=True)), 201
+    return jsonify(message="User created.", user=user.to_dict()), 201
 
 
 @bp.put("/users/<int:user_id>/password")
@@ -208,7 +191,6 @@ def system_status():
         counts={
             "users": User.query.count(),
             "active_users": User.query.filter_by(is_active=True).count(),
-            "institutions": Institution.query.count(),
             "events": Event.query.count(),
             "routes": Route.query.count(),
             "risk_areas": RiskArea.query.count(),

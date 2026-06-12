@@ -456,12 +456,12 @@
     updateTrend(3, (kpis.total_events || 0) > 0 ? "up" : "flat", String(kpis.total_events || 0));
 
     const safeRoutes = document.getElementById("safe-routes-count");
-    const institutions = document.getElementById("institutions-count");
+    const monitoredAreas = document.getElementById("monitored-areas-count");
     const community = document.getElementById("community-count");
     const health = document.getElementById("health-count");
 
     if (safeRoutes) animateNumber(safeRoutes, kpis.safe_routes != null ? kpis.safe_routes : kpis.total_routes || 0);
-    if (institutions) animateNumber(institutions, kpis.monitored_areas || 0);
+    if (monitoredAreas) animateNumber(monitoredAreas, kpis.monitored_areas || 0);
     if (community) animateNumber(community, kpis.total_events || 0);
     if (health) {
       const score = kpis.safety_score != null ? kpis.safety_score : Math.max(0, Math.min(100, 100 - avg));

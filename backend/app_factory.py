@@ -83,11 +83,13 @@ def create_app(config_class=Config):
                 if dirty:
                     db.session.commit()
             else:
-                from cli.seed import needs_gauteng_migration, refresh_sa_events, _migrate_legacy_institutions
+                from cli.seed import needs_gauteng_migration, needs_role_migration, refresh_sa_events, migrate_role_simplification
 
                 tables = set(inspect(db.engine).get_table_names())
+                if needs_role_migration():
+                    stats = migrate_role_simplification()
+                    get_logger(__name__).info("Auto-migrated legacy roles/institutions: %s", stats)
                 if "events" in tables and needs_gauteng_migration():
-                    _migrate_legacy_institutions()
                     count = refresh_sa_events()
                     get_logger(__name__).info(
                         "Auto-migrated legacy data to Gauteng catalog (%s incidents).", count
@@ -186,22 +188,6 @@ def _register_pages(app):
     @app.get("/admin")
     def admin_page():
         return render_template("admin.html", heading="Admin Panel")
-
-    @app.get("/analytics")
-    def analytics_page():
-        return render_template("analytics.html", heading="Analytics")
-
-    @app.get("/institution")
-    def institution_page():
-        return render_template("institution.html", heading="Institution Safety")
-
-    @app.get("/transport")
-    def transport_page():
-        return render_template("transport.html", heading="Transport Operations")
-
-    @app.get("/government")
-    def government_page():
-        return render_template("government.html", heading="City Safety Command")
 
     @app.get("/healthz")
     def healthz():

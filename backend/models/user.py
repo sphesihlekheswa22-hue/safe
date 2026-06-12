@@ -16,27 +16,15 @@ class User(db.Model):
     # Role is server-controlled only. Default for self-registration.
     role = db.Column(db.String(40), nullable=False, default=Role.PUBLIC_USER)
 
-    institution_id = db.Column(
-        db.Integer, db.ForeignKey("institutions.id"), nullable=True
-    )
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    institution = db.relationship("Institution", back_populates="users")
-
-    def to_dict(self, include_institution=False):
-        data = {
+    def to_dict(self):
+        return {
             "id": self.id,
             "name": self.name,
             "email": self.email,
             "role": self.role,
-            "institution_id": self.institution_id,
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
         }
-        if include_institution and self.institution is not None:
-            data["institution"] = {
-                "id": self.institution.id,
-                "name": self.institution.name,
-            }
-        return data

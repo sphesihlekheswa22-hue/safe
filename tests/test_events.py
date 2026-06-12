@@ -2,8 +2,8 @@
 from conftest import auth
 
 
-def test_analyst_can_create_event_and_recompute_risk(client, analyst_token):
-    res = client.post("/api/events", headers=auth(analyst_token), json={
+def test_admin_can_create_event_and_recompute_risk(client, admin_token):
+    res = client.post("/api/events", headers=auth(admin_token), json={
         "title": "Violent robbery downtown", "location": "TestArea",
         "severity": 5, "description": "danger violent attack unsafe",
     })
@@ -11,22 +11,22 @@ def test_analyst_can_create_event_and_recompute_risk(client, analyst_token):
     event_id = res.get_json()["event"]["id"]
 
     # Risk area should now exist for TestArea with a high score.
-    areas = client.get("/api/ai/risk-areas", headers=auth(analyst_token)).get_json()["risk_areas"]
+    areas = client.get("/api/ai/risk-areas", headers=auth(admin_token)).get_json()["risk_areas"]
     test_area = next((a for a in areas if a["area_name"] == "TestArea"), None)
     assert test_area is not None
     assert test_area["risk_score"] > 50
 
     # Cleanup.
-    assert client.delete(f"/api/events/{event_id}", headers=auth(analyst_token)).status_code == 200
+    assert client.delete(f"/api/events/{event_id}", headers=auth(admin_token)).status_code == 200
 
 
-def test_event_validation(client, analyst_token):
-    res = client.post("/api/events", headers=auth(analyst_token), json={"title": "no location"})
+def test_event_validation(client, public_token):
+    res = client.post("/api/events", headers=auth(public_token), json={"title": "no location"})
     assert res.status_code == 400
 
 
-def test_severity_bounds(client, analyst_token):
-    res = client.post("/api/events", headers=auth(analyst_token), json={
+def test_severity_bounds(client, public_token):
+    res = client.post("/api/events", headers=auth(public_token), json={
         "title": "bad", "location": "X", "severity": 9,
     })
     assert res.status_code == 400

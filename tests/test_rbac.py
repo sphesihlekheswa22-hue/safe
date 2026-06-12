@@ -25,18 +25,17 @@ def test_public_can_create_event(client, public_token):
     assert body["event"]["source"] == "community"
 
 
-def test_only_admin_assigns_roles(client, public_token, analyst_token):
-    for token in (public_token, analyst_token):
-        res = client.put("/api/admin/users/1/role", headers=auth(token), json={"role": "SYSTEM_ADMIN"})
-        assert res.status_code == 403
+def test_only_admin_assigns_roles(client, public_token):
+    res = client.put("/api/admin/users/1/role", headers=auth(public_token), json={"role": "SYSTEM_ADMIN"})
+    assert res.status_code == 403
 
 
 def test_admin_assigns_role(client, admin_token):
     users = client.get("/api/admin/users", headers=auth(admin_token)).get_json()["users"]
     target = next(u for u in users if u["email"] == "public@saferoute.ai")
     res = client.put(f"/api/admin/users/{target['id']}/role",
-                     headers=auth(admin_token), json={"role": "SYSTEM_ANALYST"})
+                     headers=auth(admin_token), json={"role": "SYSTEM_ADMIN"})
     assert res.status_code == 200
-    assert res.get_json()["user"]["role"] == "SYSTEM_ANALYST"
+    assert res.get_json()["user"]["role"] == "SYSTEM_ADMIN"
     client.put(f"/api/admin/users/{target['id']}/role",
                headers=auth(admin_token), json={"role": "PUBLIC_USER"})

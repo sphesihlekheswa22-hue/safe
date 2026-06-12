@@ -99,7 +99,7 @@ def login():
     return jsonify(
         message="Login successful.",
         access_token=token,
-        user=user.to_dict(include_institution=True),
+        user=user.to_dict(),
     )
 
 
@@ -109,7 +109,7 @@ def me():
     user = current_user()
     if user is None:
         return jsonify(error="User not found."), 404
-    return jsonify(user=user.to_dict(include_institution=True))
+    return jsonify(user=user.to_dict())
 
 
 @bp.put("/profile")
@@ -126,7 +126,7 @@ def update_profile():
 
     user.name = name
     db.session.commit()
-    return jsonify(message="Profile updated.", user=user.to_dict(include_institution=True))
+    return jsonify(message="Profile updated.", user=user.to_dict())
 
 
 @bp.put("/password")

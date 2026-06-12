@@ -62,10 +62,5 @@ def public_token(client):
     return _login(client, "public@saferoute.ai", "Passw0rd!")
 
 
-@pytest.fixture()
-def analyst_token(client):
-    return _login(client, "analyst@saferoute.ai", "Passw0rd!")
-
-
 def auth(token):
     return {"Authorization": "Bearer " + token}

@@ -43,14 +43,14 @@ def score(area_name):
 
 
 @bp.post("/recompute")
-@require_roles(Role.SYSTEM_ANALYST, Role.GOVERNMENT_AUTHORITY, Role.SYSTEM_ADMIN)
+@require_roles(Role.SYSTEM_ADMIN)
 def recompute():
     results = risk_engine.recompute_all_areas()
     return jsonify(message="Risk areas recomputed.", risk_areas=results)
 
 
 @bp.post("/score")
-@require_roles(Role.SYSTEM_ANALYST, Role.GOVERNMENT_AUTHORITY, Role.SYSTEM_ADMIN)
+@require_roles(Role.SYSTEM_ADMIN)
 def score_adhoc():
     """Score an ad-hoc scenario without persisting it.
 

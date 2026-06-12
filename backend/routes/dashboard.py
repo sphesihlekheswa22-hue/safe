@@ -98,7 +98,7 @@ def summary():
         safety_score = max(0, min(100, int(round(100 - float(avg_risk)))))
 
         return jsonify(
-            user=user.to_dict(include_institution=True),
+            user=user.to_dict(),
             kpis={
                 "total_events": total_events,
                 "total_routes": total_routes,

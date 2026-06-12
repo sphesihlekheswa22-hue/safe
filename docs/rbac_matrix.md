@@ -5,22 +5,19 @@ protected request. Clients cannot set or change their own role.
 
 Legend: ✅ allowed · — denied (HTTP 403)
 
-| Capability | PUBLIC_USER | INSTITUTION_ADMIN | TRANSPORT_OPERATOR | GOVERNMENT_AUTHORITY | SYSTEM_ANALYST | SYSTEM_ADMIN |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| View dashboard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Read events | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create/edit/delete events | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Read alerts | ✅ (ALL/own) | ✅ | ✅ | ✅ | ✅ (all) | ✅ (all) |
-| Create/delete alerts | — | ✅ | — | ✅ | ✅ | ✅ |
-| Generate route | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Delete route | — | — | ✅ | — | ✅ | ✅ |
-| Read risk areas | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Recompute risk | — | — | — | ✅ | ✅ | ✅ |
-| View analytics / reports | — | — | — | ✅ | ✅ | ✅ |
-| Read institutions | — | ✅ | — | ✅ | — | ✅ |
-| Create/delete institutions | — | — | — | — | — | ✅ |
-| **Manage users & assign roles** | — | — | — | — | — | ✅ |
-| View audit log | — | — | — | — | — | ✅ |
+| Capability | PUBLIC_USER | SYSTEM_ADMIN |
+|---|:--:|:--:|
+| View dashboard | ✅ | ✅ |
+| Read/create/edit/delete events | ✅ | ✅ |
+| Generate route | ✅ | ✅ |
+| Delete route | — | ✅ |
+| Read risk areas | ✅ | ✅ |
+| Recompute risk | — | ✅ |
+| View analytics / reports | — | ✅ |
+| Use AI chat | ✅ | ✅ |
+| **Manage users & assign roles** | — | ✅ |
+| View audit log | — | ✅ |
+| Emergency broadcast | — | ✅ |
 
 ## Enforcement
 

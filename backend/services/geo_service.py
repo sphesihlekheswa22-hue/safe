@@ -110,15 +110,6 @@ def ensure_geo_columns() -> None:
             if col not in cols:
                 alters.append(f"ALTER TABLE routes ADD COLUMN {col} FLOAT")
 
-    if "institutions" in inspector.get_table_names():
-        cols = {c["name"] for c in inspector.get_columns("institutions")}
-        for col, typ in (
-            ("latitude", "FLOAT"), ("longitude", "FLOAT"), ("radius_km", "FLOAT DEFAULT 8.0"),
-            ("staff_count", "INTEGER DEFAULT 0"), ("student_count", "INTEGER DEFAULT 0"),
-        ):
-            if col not in cols:
-                alters.append(f"ALTER TABLE institutions ADD COLUMN {col} {typ}")
-
     if not alters:
         return
 

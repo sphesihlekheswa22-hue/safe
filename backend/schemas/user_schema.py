@@ -33,4 +33,4 @@ def validate_role_assignment(data: dict) -> dict:
     role = (data.get("role") or "").upper()
     if not Role.is_valid(role):
         raise ValidationError("Invalid role.", "role")
-    return {"role": role, "institution_id": data.get("institution_id")}
+    return {"role": role}

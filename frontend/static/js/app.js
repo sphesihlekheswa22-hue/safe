@@ -98,10 +98,6 @@
     if (roleEl) {
       const roleColors = {
         'SYSTEM_ADMIN': 'text-amber-600',
-        'SYSTEM_ANALYST': 'text-violet-600',
-        'GOVERNMENT_AUTHORITY': 'text-blue-600',
-        'TRANSPORT_OPERATOR': 'text-emerald-600',
-        'INSTITUTION_ADMIN': 'text-indigo-600',
         'PUBLIC_USER': 'text-surface-500'
       };
       roleEl.textContent = (user.role || 'USER').replace(/_/g, ' ');
@@ -120,8 +116,8 @@
 
     // Update breadcrumb if element exists
     const breadcrumb = document.getElementById('breadcrumb');
-    if (breadcrumb && user.institution) {
-      breadcrumb.textContent = `${user.institution.name} / ${document.getElementById('page-heading')?.textContent || 'Dashboard'}`;
+    if (breadcrumb) {
+      breadcrumb.textContent = document.getElementById('page-heading')?.textContent || 'Dashboard';
     }
   }
 

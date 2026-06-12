@@ -1,13 +1,14 @@
-"""Seed the database with demo institutions, users, events and routes.
+"""Seed the database with demo users, events and routes.
 
-Idempotent for users/institutions. Events are refreshed from the Gauteng catalog
+Idempotent for users. Events are refreshed from the Gauteng catalog
 via ``refresh_sa_events()`` (also available as ``flask refresh-events``).
 """
 import os
 
+from sqlalchemy import inspect, or_, text
+
 from extensions import db
 from models.user import User
-from models.institution import Institution
 from models.route import Route
 from models.event import Event
 from models.risk import RiskArea
@@ -19,6 +20,20 @@ from data.sa_events import REAL_SA_EVENTS
 
 
 DEMO_PASSWORD = "Passw0rd!"
+
+LEGACY_ROLES = (
+    "INSTITUTION_ADMIN",
+    "TRANSPORT_OPERATOR",
+    "GOVERNMENT_AUTHORITY",
+    "SYSTEM_ANALYST",
+)
+
+DEMO_PORTAL_EMAILS = (
+    "institution@saferoute.ai",
+    "transport@saferoute.ai",
+    "gov@saferoute.ai",
+    "analyst@saferoute.ai",
+)
 
 LEGACY_DEMO_LOCATIONS = [
     "Downtown", "North District", "South District", "East Side", "West Side",
@@ -49,19 +64,7 @@ LEGACY_NON_GAUTENG_LOCATIONS = [
 ]
 
 
-def _get_or_create_institution(name, type_, location, **extra):
-    inst = Institution.query.filter_by(name=name).first()
-    if inst is None:
-        inst = Institution(name=name, type=type_, location=location)
-        db.session.add(inst)
-        db.session.flush()
-    for key, val in extra.items():
-        if val is not None and hasattr(inst, key):
-            setattr(inst, key, val)
-    return inst
-
-
-def _get_or_create_user(name, email, password, role, institution_id=None):
+def _get_or_create_user(name, email, password, role):
     user = User.query.filter_by(email=email).first()
     if user is None:
         user = User(
@@ -69,7 +72,6 @@ def _get_or_create_user(name, email, password, role, institution_id=None):
             email=email,
             password_hash=hash_password(password),
             role=role,
-            institution_id=institution_id,
         )
         db.session.add(user)
     return user
@@ -94,13 +96,73 @@ def _purge_non_gauteng_routes() -> int:
 
 def needs_gauteng_migration() -> bool:
     """True when legacy non-Gauteng incidents are still in the database."""
-    from sqlalchemy import or_
-
     patterns = [f"%{m}%" for m in ("durban", "umlazi", "ukzn", "cape town", "khayelitsha", "pinetown")]
     return (
         Event.query.filter(or_(*[Event.location.ilike(p) for p in patterns])).limit(1).count() > 0
         or Event.query.filter(Event.location.in_(LEGACY_NON_GAUTENG_LOCATIONS)).limit(1).count() > 0
     )
+
+
+def needs_role_migration() -> bool:
+    """True when legacy roles or institution schema remain in the database."""
+    inspector = inspect(db.engine)
+    tables = set(inspector.get_table_names())
+    if "institutions" in tables:
+        return True
+    if User.query.filter(User.role.in_(LEGACY_ROLES)).limit(1).count() > 0:
+        return True
+    if "users" in tables:
+        cols = {c["name"] for c in inspector.get_columns("users")}
+        if "institution_id" in cols:
+            return True
+    return any(User.query.filter_by(email=email).limit(1).count() > 0 for email in DEMO_PORTAL_EMAILS)
+
+
+def migrate_role_simplification() -> dict:
+    """Remove legacy roles, demo portal users, and institution schema."""
+    users_deleted = 0
+    roles_updated = 0
+
+    for email in DEMO_PORTAL_EMAILS:
+        user = User.query.filter_by(email=email).first()
+        if user:
+            db.session.delete(user)
+            users_deleted += 1
+
+    for user in User.query.filter(User.role.in_(LEGACY_ROLES)).all():
+        user.role = Role.PUBLIC_USER
+        roles_updated += 1
+
+    db.session.commit()
+
+    inspector = inspect(db.engine)
+    tables = set(inspector.get_table_names())
+    institutions_dropped = False
+    institution_column_dropped = False
+
+    with db.engine.begin() as conn:
+        if "institutions" in tables:
+            try:
+                conn.execute(text("DROP TABLE IF EXISTS institutions"))
+                institutions_dropped = True
+            except Exception:
+                pass
+
+        if "users" in tables:
+            cols = {c["name"] for c in inspector.get_columns("users")}
+            if "institution_id" in cols:
+                try:
+                    conn.execute(text("ALTER TABLE users DROP COLUMN institution_id"))
+                    institution_column_dropped = True
+                except Exception:
+                    pass
+
+    return {
+        "users_deleted": users_deleted,
+        "roles_updated": roles_updated,
+        "institutions_dropped": institutions_dropped,
+        "institution_column_dropped": institution_column_dropped,
+    }
 
 
 def refresh_sa_events() -> int:
@@ -123,7 +185,6 @@ def migrate_gauteng_data(*, reseed_routes: bool = True) -> dict:
         routes_removed = Route.query.delete(synchronize_session=False)
     db.session.commit()
 
-    _migrate_legacy_institutions()
     event_count = refresh_sa_events()
 
     routes_created = 0
@@ -156,113 +217,18 @@ def migrate_gauteng_data(*, reseed_routes: bool = True) -> dict:
     }
 
 
-def _migrate_legacy_institutions():
-    """Upgrade old demo institution rows to Gauteng / Pretoria data."""
-    legacy_map = {
-        "Central General Hospital": {
-            "name": "UP Health Sciences",
-            "type": "EDUCATION",
-            "location": "Hatfield",
-            "latitude": -25.7543,
-            "longitude": 28.2314,
-            "radius_km": 10.0,
-            "staff_count": 420,
-            "student_count": 4800,
-        },
-        "UKZN Health Sciences": {
-            "name": "UP Health Sciences",
-            "type": "EDUCATION",
-            "location": "Hatfield",
-            "latitude": -25.7543,
-            "longitude": 28.2314,
-            "radius_km": 10.0,
-            "staff_count": 420,
-            "student_count": 4800,
-        },
-        "Metro City Transit": {
-            "name": "Tshwane Metro Transit",
-            "type": "TRANSPORT",
-            "location": "Pretoria CBD",
-            "latitude": -25.7461,
-            "longitude": 28.1881,
-            "radius_km": 25.0,
-            "staff_count": 85,
-        },
-        "eThekwini Metro Transit": {
-            "name": "Tshwane Metro Transit",
-            "type": "TRANSPORT",
-            "location": "Pretoria CBD",
-            "latitude": -25.7461,
-            "longitude": 28.1881,
-            "radius_km": 25.0,
-            "staff_count": 85,
-        },
-        "City Emergency Management": {
-            "name": "Gauteng Emergency Management",
-            "type": "GOVERNMENT",
-            "location": "Pretoria CBD",
-            "latitude": -25.7461,
-            "longitude": 28.1881,
-            "radius_km": 12.0,
-        },
-        "KZN Emergency Management": {
-            "name": "Gauteng Emergency Management",
-            "type": "GOVERNMENT",
-            "location": "Pretoria CBD",
-            "latitude": -25.7461,
-            "longitude": 28.1881,
-            "radius_km": 12.0,
-        },
-    }
-    for old_name, fields in legacy_map.items():
-        inst = Institution.query.filter_by(name=old_name).first()
-        if inst:
-            for key, val in fields.items():
-                setattr(inst, key, val)
-    db.session.commit()
-
-
 def run_seed(refresh_events=True):
     db.create_all()
-    _migrate_legacy_institutions()
 
-    tshwane_transit = _get_or_create_institution(
-        "Tshwane Metro Transit", "TRANSPORT", "Pretoria CBD",
-        latitude=-25.7461, longitude=28.1881, radius_km=25.0,
-        staff_count=85, student_count=0,
-    )
-    up_health = _get_or_create_institution(
-        "UP Health Sciences", "EDUCATION", "Hatfield",
-        latitude=-25.7543, longitude=28.2314, radius_km=10.0,
-        staff_count=420, student_count=4800,
-    )
-    gauteng_gov = _get_or_create_institution(
-        "Gauteng Emergency Management", "GOVERNMENT", "Pretoria CBD",
-        latitude=-25.7461, longitude=28.1881, radius_km=12.0,
-    )
-    db.session.commit()
+    if needs_role_migration():
+        stats = migrate_role_simplification()
+        print(f"  Role simplification migration: {stats}")
 
     admin_email = os.environ.get("SEED_ADMIN_EMAIL", "admin@saferoute.ai")
     admin_pw = os.environ.get("SEED_ADMIN_PASSWORD", "Admin#12345")
     admin_name = os.environ.get("SEED_ADMIN_NAME", "System Administrator")
     _get_or_create_user(admin_name, admin_email, admin_pw, Role.SYSTEM_ADMIN)
-
     _get_or_create_user("Paula Public", "public@saferoute.ai", DEMO_PASSWORD, Role.PUBLIC_USER)
-    _get_or_create_user(
-        "Ian Institution", "institution@saferoute.ai", DEMO_PASSWORD,
-        Role.INSTITUTION_ADMIN, up_health.id,
-    )
-    _get_or_create_user(
-        "Tom Transit", "transport@saferoute.ai", DEMO_PASSWORD,
-        Role.TRANSPORT_OPERATOR, tshwane_transit.id,
-    )
-    _get_or_create_user(
-        "Gloria Gov", "gov@saferoute.ai", DEMO_PASSWORD,
-        Role.GOVERNMENT_AUTHORITY, gauteng_gov.id,
-    )
-    _get_or_create_user(
-        "Alan Analyst", "analyst@saferoute.ai", DEMO_PASSWORD, Role.SYSTEM_ANALYST
-    )
     db.session.commit()
 
     if refresh_events:
@@ -290,8 +256,7 @@ def run_seed(refresh_events=True):
 
     print("Seed complete.")
     print(f"  Admin login:   {admin_email} / {admin_pw}")
-    print(f"  Demo users:    public@ / institution@ / transport@ / analyst@saferoute.ai")
-    print(f"  Demo password: {DEMO_PASSWORD}")
+    print(f"  Demo user:     public@saferoute.ai / {DEMO_PASSWORD}")
 
 
 if __name__ == "__main__":
@@ -311,5 +276,8 @@ if __name__ == "__main__":
         if len(sys.argv) > 1 and sys.argv[1] == "migrate-gauteng":
             stats = migrate_gauteng_data()
             print("Gauteng migration complete:", stats)
+        elif len(sys.argv) > 1 and sys.argv[1] == "migrate-roles":
+            stats = migrate_role_simplification()
+            print("Role simplification complete:", stats)
         else:
             run_seed()

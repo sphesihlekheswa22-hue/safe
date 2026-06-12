@@ -14,8 +14,6 @@
 
   let roles = [];
 
-  let institutions = [];
-
   const loaded = {};
 
 
@@ -48,7 +46,7 @@
 
     const map = {
 
-      users: loadUsers, institutions: loadInstitutions, ai: loadAI,
+      users: loadUsers, ai: loadAI,
 
       system: loadSystem, audit: loadAudit, security: loadSecurity,
 
@@ -108,8 +106,6 @@
 
           <td><span class="badge badge-blue">${esc(fmtRole(u.role))}</span></td>
 
-          <td class="text-surface-500">${u.institution ? esc(u.institution.name) : "—"}</td>
-
           <td>${u.is_active ? '<span class="badge badge-low">Active</span>' : '<span class="badge badge-high">Blocked</span>'}</td>
 
           <td class="text-right whitespace-nowrap">
@@ -124,7 +120,7 @@
 
           </td>
 
-        </tr>`).join("") : '<tr><td colspan="5" class="text-surface-400 py-6 text-center">No users.</td></tr>';
+        </tr>`).join("") : '<tr><td colspan="4" class="text-surface-400 py-6 text-center">No users.</td></tr>';
 
       wireUserButtons();
 
@@ -164,13 +160,9 @@
 
 
 
-  function fillRoleInstSelects() {
+  function fillRoleSelect() {
 
     $("user-role-select").innerHTML = roles.map((r) => `<option value="${r}">${fmtRole(r)}</option>`).join("");
-
-    const opts = '<option value="">— None —</option>' + institutions.map((i) => `<option value="${i.id}">${esc(i.name)}</option>`).join("");
-
-    $("user-inst-select").innerHTML = opts;
 
   }
 
@@ -178,7 +170,7 @@
 
   function openUserModal(user) {
 
-    fillRoleInstSelects();
+    fillRoleSelect();
 
     const f = $("user-form");
 
@@ -194,9 +186,7 @@
 
     f.role.value = isEdit ? user.role : "PUBLIC_USER";
 
-    f.institution_id.value = isEdit && user.institution ? user.institution.id : "";
-
-    // On edit, name/email become read-only (role/institution are the editable bits here)
+    // On edit, name/email become read-only (role is the editable bit here)
 
     f.name.readOnly = isEdit; f.email.readOnly = isEdit;
 
@@ -226,7 +216,7 @@
 
       if (id) {
 
-        await SR.put(`/api/admin/users/${id}/role`, { role: f.role.value, institution_id: f.institution_id.value || null });
+        await SR.put(`/api/admin/users/${id}/role`, { role: f.role.value });
 
         flash("User updated.", "success");
 
@@ -236,7 +226,7 @@
 
           name: f.name.value, email: f.email.value, password: f.password.value,
 
-          role: f.role.value, institution_id: f.institution_id.value || null,
+          role: f.role.value,
 
         });
 
@@ -271,106 +261,6 @@
     try { await SR.put(`/api/admin/users/${f.id.value}/password`, { password: f.password.value }); flash("Password reset.", "success"); closeModal(); }
 
     catch (err) { flash(err.message, "error"); }
-
-  });
-
-
-
-  // ========================================================= INSTITUTIONS
-
-  async function loadInstitutions() {
-
-    try {
-
-      const { institutions: list } = await SR.get("/api/institutions");
-
-      institutions = list;
-
-      $("inst-body").innerHTML = list.length ? list.map((i) => `
-
-        <tr>
-
-          <td class="font-semibold text-surface-800">${esc(i.name)}</td>
-
-          <td><span class="badge badge-gray">${esc(i.type)}</span></td>
-
-          <td class="text-surface-500">${esc(i.location || "—")}</td>
-
-          <td>${i.user_count}</td>
-
-          <td class="text-right">
-
-            <button class="btn-ghost" data-edit='${JSON.stringify(i).replace(/'/g, "&#39;")}'>Edit</button>
-
-            <button class="btn-danger" data-del="${i.id}">Delete</button>
-
-          </td>
-
-        </tr>`).join("") : '<tr><td colspan="5" class="text-surface-400 py-6 text-center">No institutions.</td></tr>';
-
-      $("inst-body").querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => editInst(JSON.parse(b.dataset.edit))));
-
-      $("inst-body").querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", async () => {
-
-        if (!confirm("Delete this institution?")) return;
-
-        try { await SR.del("/api/institutions/" + b.dataset.del); flash("Institution deleted.", "success"); loadInstitutions(); }
-
-        catch (e) { flash(e.message, "error"); }
-
-      }));
-
-    } catch (e) { flash(e.message, "error"); }
-
-  }
-
-
-
-  function editInst(i) {
-
-    const f = $("inst-form");
-
-    f.id.value = i.id; f.name.value = i.name; f.type.value = i.type; f.location.value = i.location || "";
-
-    $("inst-form-title").textContent = "Edit Institution";
-
-    $("inst-cancel").classList.remove("hidden");
-
-    f.name.focus();
-
-  }
-
-  $("inst-cancel").addEventListener("click", () => resetInstForm());
-
-  function resetInstForm() {
-
-    $("inst-form").reset(); $("inst-form").id.value = "";
-
-    $("inst-form-title").textContent = "Add Institution";
-
-    $("inst-cancel").classList.add("hidden");
-
-  }
-
-
-
-  $("inst-form").addEventListener("submit", async (e) => {
-
-    e.preventDefault();
-
-    const f = e.target;
-
-    const body = { name: f.name.value, type: f.type.value, location: f.location.value };
-
-    try {
-
-      if (f.id.value) { await SR.put("/api/institutions/" + f.id.value, body); flash("Institution updated.", "success"); }
-
-      else { await SR.post("/api/institutions", body); flash("Institution created.", "success"); }
-
-      resetInstForm(); loadInstitutions();
-
-    } catch (err) { flash(err.message, "error"); }
 
   });
 
@@ -518,7 +408,7 @@
 
       $("sys-logins").textContent = s.recent_logins_24h;
 
-      const labels = { users: "Users", active_users: "Active", institutions: "Institutions", events: "Events", routes: "Routes", risk_areas: "Risk Areas" };
+      const labels = { users: "Users", active_users: "Active", events: "Events", routes: "Routes", risk_areas: "Risk Areas" };
 
       $("system-counts").innerHTML = Object.entries(s.counts).map(([k, v]) =>
 
@@ -678,11 +568,7 @@
 
   document.addEventListener("sr:user-ready", () => {
 
-    // Users tab is active by default; institutions also needed for user modal selects.
-
     loadUsers(); loaded.users = true;
-
-    loadInstitutions(); loaded.institutions = true;
 
   });
 

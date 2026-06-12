@@ -14,22 +14,11 @@ class Role:
     """Canonical role names. Use these constants everywhere."""
 
     PUBLIC_USER = "PUBLIC_USER"
-    INSTITUTION_ADMIN = "INSTITUTION_ADMIN"
-    TRANSPORT_OPERATOR = "TRANSPORT_OPERATOR"
-    GOVERNMENT_AUTHORITY = "GOVERNMENT_AUTHORITY"
-    SYSTEM_ANALYST = "SYSTEM_ANALYST"
     SYSTEM_ADMIN = "SYSTEM_ADMIN"
 
     @classmethod
     def all(cls):
-        return [
-            cls.PUBLIC_USER,
-            cls.INSTITUTION_ADMIN,
-            cls.TRANSPORT_OPERATOR,
-            cls.GOVERNMENT_AUTHORITY,
-            cls.SYSTEM_ANALYST,
-            cls.SYSTEM_ADMIN,
-        ]
+        return [cls.PUBLIC_USER, cls.SYSTEM_ADMIN]
 
     @classmethod
     def is_valid(cls, role: str) -> bool:

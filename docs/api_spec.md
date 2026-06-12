@@ -14,58 +14,49 @@ Responses are JSON. Errors use `{ "error": "..." }` with an appropriate status
 | POST | `/logout` | any | Stateless logout (client discards token). |
 
 ## Dashboard — `/api/dashboard`
-| GET | `/summary` | any | KPIs, risk areas, alerts, recent events, safe routes (role-scoped). |
+| GET | `/summary` | any | KPIs, risk areas, recent events, safe routes, analytics block. |
 
 ## Events — `/api/events`
 | GET | `` | any | List events (`?location=` filter). |
 | GET | `/<id>` | any | Single event. |
-| POST | `` | write* | Create event (recomputes risk). |
-| PUT | `/<id>` | write* | Update event. |
-| DELETE | `/<id>` | write* | Delete event. |
-
-`write*` = INSTITUTION_ADMIN, TRANSPORT_OPERATOR, GOVERNMENT_AUTHORITY, SYSTEM_ANALYST, SYSTEM_ADMIN.
+| POST | `` | any | Create event (recomputes risk). |
+| PUT | `/<id>` | any | Update event. |
+| DELETE | `/<id>` | any | Delete event. |
 
 ## Routes — `/api/routes`
 | GET | `` | any | List saved routes. |
 | POST | `/generate` | any | Generate a route → GeoJSON + risk score. |
-| DELETE | `/<id>` | TRANSPORT_OPERATOR, SYSTEM_ANALYST, SYSTEM_ADMIN | Delete route. |
-
-## Alerts — `/api/alerts`
-| GET | `` | any | List alerts (scoped to ALL/own role; analysts+admins see all). |
-| POST | `` | INSTITUTION_ADMIN, GOVERNMENT_AUTHORITY, SYSTEM_ANALYST, SYSTEM_ADMIN | Create + dispatch alert. |
-| DELETE | `/<id>` | same as POST | Delete alert. |
+| DELETE | `/<id>` | SYSTEM_ADMIN | Delete route. |
 
 ## AI / Risk — `/api/ai`
 | GET | `/risk-areas` | any | Persisted risk areas. |
+| GET | `/map-data` | any | Bundled map data (areas + incidents). |
 | GET | `/score/<area>` | any | Live computed score for an area. |
-| POST | `/recompute` | SYSTEM_ANALYST, GOVERNMENT_AUTHORITY, SYSTEM_ADMIN | Recompute all areas. |
-| POST | `/score` | same | Ad-hoc score for arbitrary inputs. |
-
-## Institutions — `/api/institutions`
-| GET | `` | SYSTEM_ADMIN, INSTITUTION_ADMIN, GOVERNMENT_AUTHORITY | List. |
-| GET | `/<id>` | same | Single. |
-| POST | `` | SYSTEM_ADMIN | Create. |
-| DELETE | `/<id>` | SYSTEM_ADMIN | Delete. |
+| POST | `/recompute` | SYSTEM_ADMIN | Recompute all areas. |
+| POST | `/score` | SYSTEM_ADMIN | Ad-hoc score for arbitrary inputs. |
 
 ## Admin — `/api/admin` (SYSTEM_ADMIN only)
 | GET | `/users` | List users. |
-| GET | `/roles` | Valid role names. |
-| PUT | `/users/<id>/role` | Assign role (+ optional institution). |
+| GET | `/roles` | Valid role names (`PUBLIC_USER`, `SYSTEM_ADMIN`). |
+| PUT | `/users/<id>/role` | Assign role. |
 | PUT | `/users/<id>/status` | Enable/disable. |
 | DELETE | `/users/<id>` | Delete user. |
+| POST | `/users` | Create user with chosen role. |
 | GET | `/audit` | Audit log. |
+| GET | `/system` | System health + counts. |
+| POST | `/broadcast` | Emergency incident broadcast. |
 
-## Reports — `/api/reports` (SYSTEM_ANALYST, GOVERNMENT_AUTHORITY, SYSTEM_ADMIN)
+## Reports — `/api/reports` (SYSTEM_ADMIN only)
 | GET | `/analytics` | Totals, users-by-role, events-by-severity, top risk areas. |
 | GET | `/overview` | Totals only. |
 | GET | `/model-info` | AI model metadata. |
 
+## Chat — `/api/chat`
+| POST | `/message` | any | AI assistant (safety-focused). |
+
 ## Health — `/api/health`
 | GET | `` | public | Liveness. |
 | GET | `/ready` | public | Readiness (checks DB). |
-
-## Realtime — `/api/realtime`
-| GET | `/stream` | public | Server-Sent-Events feed of latest alerts. |
 
 ### Example
 ```bash

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const DELETE_ROLES = ["TRANSPORT_OPERATOR", "SYSTEM_ANALYST", "SYSTEM_ADMIN"];
+  const DELETE_ROLES = ["SYSTEM_ADMIN"];
   const PAGE_SIZE = 8;
 
   let canDelete = false;

@@ -1,7 +1,6 @@
 """Reporting service: aggregates data for analytics dashboards and exports."""
 from models.user import User
 from models.event import Event
-from models.institution import Institution
 from models.risk import RiskArea
 from utils.rbac import Role
 from utils.constants import MIN_SEVERITY, MAX_SEVERITY
@@ -10,7 +9,6 @@ from utils.constants import MIN_SEVERITY, MAX_SEVERITY
 def system_overview() -> dict:
     return {
         "users": User.query.count(),
-        "institutions": Institution.query.count(),
         "events": Event.query.count(),
         "high_severity_events": Event.query.filter(Event.severity >= 4).count(),
         "risk_areas": RiskArea.query.count(),
