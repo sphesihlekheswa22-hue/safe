@@ -75,11 +75,22 @@
     el.innerHTML = `<i class="fas fa-circle text-[6px]"></i> ${lbl} · ${Math.round(risk)}`;
   }
 
+  function refreshMapSize() {
+    if (!routeMap) return;
+    requestAnimationFrame(() => {
+      routeMap.invalidateSize({ animate: false });
+      setTimeout(() => routeMap.invalidateSize({ animate: false }), 320);
+    });
+  }
+
   function showResultPanel() {
     const panel = document.getElementById("route-result");
     if (!panel) return;
     panel.classList.remove("hidden");
-    requestAnimationFrame(() => panel.classList.add("visible"));
+    requestAnimationFrame(() => {
+      panel.classList.add("visible");
+      refreshMapSize();
+    });
   }
 
   function parseCoord(v) {
@@ -290,6 +301,7 @@
       start: ep && ep.start_lat != null ? { lat: ep.start_lat, lng: ep.start_lng, label: ep.start_location } : null,
       end: ep && ep.end_lat != null ? { lat: ep.end_lat, lng: ep.end_lng, label: ep.end_location } : null,
     }));
+    refreshMapSize();
   }
 
   function formatWhen(iso) {
@@ -397,12 +409,17 @@
         return;
       }
       lastRouteEndpoints = r;
+      document.getElementById("start-location").value = r.start_location || "";
+      document.getElementById("end-location").value = r.end_location || "";
+      if (r.start_lat != null) setCoords("start", r.start_lat, r.start_lng);
+      if (r.end_lat != null) setCoords("end", r.end_lat, r.end_lng);
       showResultPanel();
       document.getElementById("route-explanation").textContent = `Saved route: ${r.start_location} → ${r.end_location}`;
       setRiskBadge(document.getElementById("route-risk"), r.risk_score, null);
       setRouteStats(r);
       showRoute(r.geojson, r.risk_score, null, false, r);
       document.getElementById("route-alternatives").classList.add("hidden");
+      document.getElementById("route-result")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     };
 
     if (cached.geojson) {
@@ -457,6 +474,7 @@
       return;
     }
     altEl.classList.remove("hidden");
+    altEl.classList.add("r-alt-list");
     altEl.innerHTML = `
       <div class="flex items-center justify-between mb-2">
         <span class="text-[11px] font-bold uppercase tracking-wider text-surface-400">Alternative Routes</span>
@@ -520,6 +538,7 @@
       showResultPanel();
       showRoute(route.geojson, route.risk_score, route.risk_level, false, route);
       renderAlternatives(route.alternatives || [], route, badge);
+      document.getElementById("route-result")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
       if (route.incidents_on_route > 0 && (route.alternatives || []).some((a) => a.incidents_on_route === 0)) {
         flash("A detour avoiding nearby incidents is available — compare alternate routes below.", "info");

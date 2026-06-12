@@ -137,7 +137,7 @@
       L.marker([opts.end.lat, opts.end.lng], {
         icon: L.divIcon({
           className: "",
-          html: '<div style="background:#dc2626;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)"></div>',
+          html: '<div style="background:#10b981;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)"></div>',
           iconSize: [14, 14],
           iconAnchor: [7, 7],
         }),
