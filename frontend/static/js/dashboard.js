@@ -2,6 +2,18 @@
 (function () {
   "use strict";
 
+  let riskTrendChart = null;
+  let categoryChart = null;
+  let chartsReady = false;
+
+  const CATEGORY_COLORS = {
+    Theft: "#ef4444",
+    Assault: "#f59e0b",
+    Accident: "#3b82f6",
+    Vandalism: "#8b5cf6",
+    Other: "#94a3b8",
+  };
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   }
@@ -45,18 +57,6 @@
     if (level === "HIGH") return "#ef4444";
     if (level === "MEDIUM") return "#d97706";
     return "#059669";
-  }
-
-  function alertClass(sev) {
-    if (sev === "CRITICAL" || sev === "HIGH") return "alert-high";
-    if (sev === "MEDIUM") return "alert-medium";
-    return "alert-low";
-  }
-
-  function alertIcon(sev) {
-    if (sev === "CRITICAL" || sev === "HIGH") return "fa-bell";
-    if (sev === "MEDIUM") return "fa-circle-exclamation";
-    return "fa-circle-check";
   }
 
   function eventDotStyle(sev) {
@@ -108,6 +108,231 @@
     el.className = "kpi-trend " + (type === "up" ? "trend-up" : type === "down" ? "trend-down" : "trend-flat");
     const icon = type === "up" ? "fa-arrow-trend-up" : type === "down" ? "fa-arrow-trend-down" : "fa-minus";
     el.innerHTML = `<i class="fas ${icon} text-[8px]"></i> ${esc(label)}`;
+  }
+
+  function heatmapColor(count, maxCount) {
+    if (!maxCount) return "rgba(16,185,129,0.12)";
+    const ratio = count / maxCount;
+    if (ratio <= 0.15) return "rgba(16,185,129,0.15)";
+    if (ratio <= 0.35) return "rgba(16,185,129,0.35)";
+    if (ratio <= 0.55) return "rgba(245,158,11,0.35)";
+    if (ratio <= 0.75) return "rgba(245,158,11,0.6)";
+    return "rgba(239,68,68,0.5)";
+  }
+
+  function animateSafetyRing(score) {
+    const ring = document.getElementById("safety-ring-fill");
+    const valEl = document.getElementById("safety-score-val");
+    if (!ring || !valEl) return;
+
+    const circumference = 2 * Math.PI * 60;
+    const offset = circumference - (score / 100) * circumference;
+    let color = "#10b981";
+    if (score < 40) color = "#ef4444";
+    else if (score < 60) color = "#f59e0b";
+    else if (score < 80) color = "#3b82f6";
+
+    ring.style.stroke = color;
+    setTimeout(() => { ring.style.strokeDashoffset = offset; }, 300);
+
+    const duration = 1200;
+    const startTime = performance.now();
+    function update(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      valEl.textContent = Math.round(eased * score);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  function ensureCharts() {
+    if (chartsReady || typeof Chart === "undefined") return;
+
+    const trendCtx = document.getElementById("riskTrendChart");
+    if (trendCtx) {
+      riskTrendChart = new Chart(trendCtx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label: "Risk Score",
+            data: [],
+            borderColor: "#2563eb",
+            backgroundColor: "rgba(37,99,235,0.08)",
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: "#2563eb",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "#0f172a",
+              titleFont: { size: 12, weight: "bold" },
+              bodyFont: { size: 12 },
+              padding: 12,
+              cornerRadius: 8,
+              displayColors: false,
+            },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, color: "#94a3b8" } },
+            y: {
+              grid: { color: "rgba(226,232,240,0.5)", drawBorder: false },
+              ticks: { font: { size: 10 }, color: "#94a3b8" },
+              min: 0,
+              max: 100,
+            },
+          },
+          animation: { duration: 900, easing: "easeOutQuart" },
+        },
+      });
+    }
+
+    const catCtx = document.getElementById("categoryChart");
+    if (catCtx) {
+      categoryChart = new Chart(catCtx, {
+        type: "doughnut",
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: [],
+            borderWidth: 0,
+            hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "65%",
+          plugins: {
+            legend: {
+              position: "right",
+              labels: {
+                boxWidth: 10,
+                padding: 15,
+                font: { size: 11, weight: "600" },
+                color: "#475569",
+                usePointStyle: true,
+                pointStyle: "circle",
+              },
+            },
+            tooltip: {
+              backgroundColor: "#0f172a",
+              bodyFont: { size: 12 },
+              padding: 12,
+              cornerRadius: 8,
+            },
+          },
+          animation: { animateRotate: true, duration: 900, easing: "easeOutQuart" },
+        },
+      });
+    }
+
+    chartsReady = true;
+  }
+
+  function updateRiskTrendChart(trend) {
+    ensureCharts();
+    if (!riskTrendChart || !trend) return;
+    riskTrendChart.data.labels = trend.map((d) => d.label);
+    riskTrendChart.data.datasets[0].data = trend.map((d) => d.score);
+    riskTrendChart.update();
+  }
+
+  function updateCategoryChart(categories) {
+    ensureCharts();
+    if (!categoryChart || !categories) return;
+    const entries = Object.entries(categories).filter(([, count]) => count > 0);
+    if (!entries.length) {
+      categoryChart.data.labels = ["No incidents"];
+      categoryChart.data.datasets[0].data = [1];
+      categoryChart.data.datasets[0].backgroundColor = ["#e2e8f0"];
+    } else {
+      categoryChart.data.labels = entries.map(([label]) => label);
+      categoryChart.data.datasets[0].data = entries.map(([, count]) => count);
+      categoryChart.data.datasets[0].backgroundColor = entries.map(([label]) => CATEGORY_COLORS[label] || "#94a3b8");
+    }
+    categoryChart.update();
+  }
+
+  function renderHeatmap(cells) {
+    const container = document.getElementById("incident-heatmap");
+    if (!container) return;
+    if (!cells || !cells.length) {
+      container.innerHTML = `<p class="text-xs text-center py-4" style="color:#94a3b8">No incident activity yet</p>`;
+      return;
+    }
+    const maxCount = Math.max(...cells.map((c) => c.count), 1);
+    container.innerHTML = cells.map((cell) => `
+      <div class="heatmap-cell a-fade-in"
+           style="background:${heatmapColor(cell.count, maxCount)}"
+           data-day="${esc(cell.label)} · ${cell.count} incident${cell.count === 1 ? "" : "s"}"
+           title="${esc(cell.label)}: ${cell.count}"></div>`).join("");
+  }
+
+  function renderProgressRings(analytics) {
+    const container = document.getElementById("progress-rings");
+    if (!container || !analytics) return;
+
+    const rings = [
+      { label: "Covered", value: analytics.coverage_pct || 0, color: "#10b981" },
+      { label: "Incidents", value: analytics.incident_load_pct || 0, color: "#f59e0b" },
+      { label: "Safe Routes", value: analytics.route_safety_pct || 0, color: "#2563eb" },
+    ];
+
+    const circumference = 2 * Math.PI * 28;
+    container.innerHTML = rings.map((ring, i) => `
+      <div class="ring-item a-fade-in" style="animation-delay:${i * 0.08}s">
+        <svg width="70" height="70" viewBox="0 0 70 70" style="transform:rotate(-90deg)">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="#e2e8f0" stroke-width="6"/>
+          <circle class="progress-ring-fill" cx="35" cy="35" r="28" fill="none" stroke="${ring.color}" stroke-width="6"
+            stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+            data-target="${ring.value}" style="transition:stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1) ${i * 0.15}s"/>
+        </svg>
+        <div class="ring-item-label">${ring.label}</div>
+        <div style="font-size:0.75rem;font-weight:800;color:${ring.color};margin-top:2px">${ring.value}%</div>
+      </div>`).join("");
+
+    setTimeout(() => {
+      container.querySelectorAll(".progress-ring-fill").forEach((circle) => {
+        const val = parseFloat(circle.dataset.target) || 0;
+        circle.style.strokeDashoffset = circumference - (val / 100) * circumference;
+      });
+    }, 400);
+  }
+
+  function updateSafetyPanel(kpis, trend) {
+    const score = kpis.safety_score != null ? kpis.safety_score : Math.max(0, Math.min(100, 100 - Math.round(kpis.average_risk || 0)));
+    animateSafetyRing(score);
+
+    const updated = document.getElementById("safety-score-updated");
+    if (updated) updated.textContent = "Updated just now";
+
+    const trendEl = document.getElementById("safety-score-trend");
+    if (trendEl && trend && trend.length >= 2) {
+      const delta = trend[trend.length - 1].score - trend[trend.length - 2].score;
+      if (delta > 0) {
+        trendEl.className = "text-rose-600 font-bold flex items-center gap-1";
+        trendEl.innerHTML = `<i class="fas fa-arrow-trend-up text-[10px]"></i> Risk +${delta}`;
+      } else if (delta < 0) {
+        trendEl.className = "text-emerald-600 font-bold flex items-center gap-1";
+        trendEl.innerHTML = `<i class="fas fa-arrow-trend-down text-[10px]"></i> Risk ${delta}`;
+      } else {
+        trendEl.className = "text-surface-400 font-bold flex items-center gap-1";
+        trendEl.textContent = "Stable";
+      }
+    }
   }
 
   function renderRiskAreas(areas) {
@@ -235,29 +460,40 @@
     const community = document.getElementById("community-count");
     const health = document.getElementById("health-count");
 
-    if (safeRoutes) animateNumber(safeRoutes, kpis.total_routes || 0);
+    if (safeRoutes) animateNumber(safeRoutes, kpis.safe_routes != null ? kpis.safe_routes : kpis.total_routes || 0);
     if (institutions) animateNumber(institutions, kpis.monitored_areas || 0);
     if (community) animateNumber(community, kpis.total_events || 0);
     if (health) {
-      const score = Math.max(0, Math.min(100, 100 - avg));
+      const score = kpis.safety_score != null ? kpis.safety_score : Math.max(0, Math.min(100, 100 - avg));
       animateNumber(health, score, "%");
     }
+  }
+
+  function applyDashboardData(data) {
+    updateKPIs(data.kpis);
+    renderRiskAreas(data.risk_areas || []);
+    renderEvents(data.recent_events || []);
+    renderRoutes(data.suggested_routes || []);
+
+    const analytics = data.analytics || {};
+    updateRiskTrendChart(analytics.risk_trend);
+    updateCategoryChart(analytics.categories);
+    renderHeatmap(analytics.heatmap);
+    renderProgressRings(analytics);
+    updateSafetyPanel(data.kpis, analytics.risk_trend);
+
+    document.dispatchEvent(new CustomEvent("sr:events-updated", { detail: data.recent_events || [] }));
+
+    const sidebarRisk = document.getElementById("user-risk-score");
+    const sidebarEvents = document.getElementById("user-events");
+    if (sidebarRisk) sidebarRisk.textContent = Math.round(data.kpis.average_risk || 0);
+    if (sidebarEvents) sidebarEvents.textContent = data.kpis.total_events || 0;
   }
 
   async function load() {
     try {
       const data = await SR.get("/api/dashboard/summary");
-      updateKPIs(data.kpis);
-      renderRiskAreas(data.risk_areas || []);
-      renderEvents(data.recent_events || []);
-      renderRoutes(data.suggested_routes || []);
-
-      document.dispatchEvent(new CustomEvent("sr:events-updated", { detail: data.recent_events || [] }));
-
-      const sidebarRisk = document.getElementById("user-risk-score");
-      const sidebarEvents = document.getElementById("user-events");
-      if (sidebarRisk) sidebarRisk.textContent = Math.round(data.kpis.average_risk || 0);
-      if (sidebarEvents) sidebarEvents.textContent = data.kpis.total_events || 0;
+      applyDashboardData(data);
     } catch (e) {
       console.error("Dashboard load error:", e);
       if (window.flash) flash("Failed to load dashboard data", "error");
@@ -271,6 +507,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    ensureCharts();
     load();
     setInterval(load, 30000);
     if (window.Realtime) {
@@ -281,7 +518,8 @@
   document.addEventListener("sr:user-ready", (ev) => {
     const user = ev.detail || {};
     const greet = document.querySelector(".dash-hero-greet");
-    if (greet && user.full_name) greet.textContent = `Welcome back, ${user.full_name.split(" ")[0]}`;
+    const name = user.name || user.full_name;
+    if (greet && name) greet.textContent = `Welcome back, ${name.split(" ")[0]}`;
 
     const title = document.getElementById("dash-title");
     const subtitle = document.getElementById("dash-subtitle");
