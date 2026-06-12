@@ -80,6 +80,35 @@ def _short_name(item: dict) -> str:
     return label or item.get("display_name", "Unknown location")
 
 
+def _extract_city(item: dict) -> str | None:
+    """Best-effort city label from a Nominatim reverse-geocode payload."""
+    addr = item.get("address") or {}
+    for key in ("city", "town", "municipality", "county", "state"):
+        val = addr.get(key)
+        if val:
+            return str(val)
+    return None
+
+
+def _reverse_payload(item: dict | None, lat: float, lng: float) -> dict:
+    if item:
+        return {
+            "name": _short_name(item),
+            "display_name": item.get("display_name", ""),
+            "city": _extract_city(item),
+            "lat": lat,
+            "lng": lng,
+        }
+    label = f"{lat:.5f}, {lng:.5f}"
+    return {
+        "name": label,
+        "display_name": label,
+        "city": None,
+        "lat": lat,
+        "lng": lng,
+    }
+
+
 def _result_key(lat: float, lng: float) -> str:
     return f"{round(lat, 4)}:{round(lng, 4)}"
 
@@ -236,32 +265,17 @@ def reverse(lat: float, lng: float) -> dict:
         )
         resp.raise_for_status()
         item = resp.json()
-        return {
-            "name": _short_name(item),
-            "display_name": item.get("display_name", ""),
-            "lat": lat,
-            "lng": lng,
-        }
+        return _reverse_payload(item, lat, lng)
     except GeocodeError:
         raise
     except requests.HTTPError as exc:
         if exc.response is not None and exc.response.status_code == 429:
             _pause_nominatim(180.0)
         logger.warning("Reverse geocode failed: %s", exc)
-        return {
-            "name": f"{lat:.5f}, {lng:.5f}",
-            "display_name": f"{lat:.5f}, {lng:.5f}",
-            "lat": lat,
-            "lng": lng,
-        }
+        return _reverse_payload(None, lat, lng)
     except Exception as exc:
         logger.warning("Reverse geocode failed: %s", exc)
-        return {
-            "name": f"{lat:.5f}, {lng:.5f}",
-            "display_name": f"{lat:.5f}, {lng:.5f}",
-            "lat": lat,
-            "lng": lng,
-        }
+        return _reverse_payload(None, lat, lng)
 
 
 def resolve_location(

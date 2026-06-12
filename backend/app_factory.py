@@ -173,6 +173,10 @@ def _register_pages(app):
     def events_page():
         return render_template("events.html", heading="Events & Risk Signals")
 
+    @app.get("/my-city")
+    def my_city_page():
+        return render_template("my_city.html", heading="My City")
+
     @app.get("/routes")
     def routes_page():
         return render_template("routes.html", heading="Safe Routes")

@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify
 
 from models.event import Event
 from services import ingestion_service as ingestion, risk_engine
+from services.city_events_service import events_for_city, DEFAULT_RADIUS_KM
 from services.geo_service import sync_event_coords
 from schemas.event_schema import validate_create, validate_update
 from utils.validators import ValidationError
@@ -31,6 +32,42 @@ def list_events():
     location = request.args.get("location")
     events = event_repo.list_recent(limit=limit, location=location)
     return jsonify(events=[e.to_dict() for e in events])
+
+
+@bp.get("/my-city")
+@require_permission("event:read")
+def my_city_events():
+    """Events in or near the user's city (proximity + location name match)."""
+    city = (request.args.get("city") or "").strip()
+    lat_raw = request.args.get("lat")
+    lng_raw = request.args.get("lng")
+
+    lat = lng = None
+    if lat_raw not in (None, "") and lng_raw not in (None, ""):
+        try:
+            lat = float(lat_raw)
+            lng = float(lng_raw)
+        except (TypeError, ValueError):
+            return jsonify(error="lat and lng must be valid numbers."), 400
+
+    if not city and (lat is None or lng is None):
+        return jsonify(error="Provide city or both lat and lng."), 400
+
+    try:
+        radius = float(request.args.get("radius_km", DEFAULT_RADIUS_KM))
+        radius = max(1.0, min(100.0, radius))
+    except (TypeError, ValueError):
+        radius = DEFAULT_RADIUS_KM
+
+    events = events_for_city(city=city or None, lat=lat, lng=lng, radius_km=radius)
+    return jsonify(
+        city=city or None,
+        lat=lat,
+        lng=lng,
+        radius_km=radius,
+        count=len(events),
+        events=[e.to_dict() for e in events],
+    )
 
 
 @bp.get("/<int:event_id>")
