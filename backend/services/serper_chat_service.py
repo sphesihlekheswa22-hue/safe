@@ -88,11 +88,11 @@ _SCOPE_HINT = (
 
     "I can't look up people or general knowledge. Try:\n"
 
-    "• \"Is **Umlazi** safe today?\"\n"
+    "• \"Is **Soshanguve** safe today?\"\n"
 
-    "• \"**Active alerts** in Durban\"\n"
+    "• \"**Recent incidents** in Pretoria CBD\"\n"
 
-    "• \"**Safe route** from Durban Station to UKZN\""
+    "• \"**Safe route** from Pretoria Station to Hatfield\""
 
 )
 
@@ -278,7 +278,7 @@ def _format_db_section(message: str, ctx: dict) -> tuple[str, dict | None]:
 
             "I combine **live platform data** with **real-time web search** (SAST).\n\n"
 
-            "Ask about **Umlazi**, **Durban CBD**, **UKZN**, alerts, incidents, or safe routes.",
+            "Ask about **Soshanguve**, **Pretoria CBD**, **Hatfield**, incidents, or safe routes.",
 
             None,
 
@@ -440,7 +440,7 @@ def _suggestions(message: str, ctx: dict) -> list[str]:
 
         return ["Active alerts", "Recent incidents", "Find safe route"]
 
-    return ["Is Umlazi safe?", "Durban safety today", "Active alerts"]
+    return ["Is Soshanguve safe?", "Pretoria safety today", "Recent incidents"]
 
 
 
@@ -452,7 +452,7 @@ def _refuse() -> dict:
 
         "reply": _SCOPE_HINT,
 
-        "suggestions": ["Is Umlazi safe?", "Active alerts", "Route to UKZN"],
+        "suggestions": ["Is Soshanguve safe?", "Recent incidents", "Route to Hatfield"],
 
     }
 

@@ -287,7 +287,7 @@
 
   function ensureMap() {
     if (routeMap) return routeMap;
-    routeMap = SRMap.createBaseMap("route-leaflet-map", { lat: -29.8587, lng: 31.0218 }, 11);
+    routeMap = SRMap.createBaseMap("route-leaflet-map", { lat: -25.7461, lng: 28.1881 }, 11);
     loadMapOverlay();
     return routeMap;
   }

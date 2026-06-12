@@ -8,7 +8,7 @@ from services import route_optimizer
 
 def test_bearing_and_destination_roundtrip():
     lon, lat = 28.0473, -26.2041
-    br = bearing_deg(lat, lon, -29.8587, 31.0218)
+    br = bearing_deg(lat, lon, -25.7461, 28.1881)
     dest_lon, dest_lat = destination_point(lat, lon, br, 10.0)
     assert haversine_km(lat, lon, dest_lat, dest_lon) == pytest.approx(10.0, rel=0.02)
 
@@ -51,8 +51,8 @@ def test_bypass_via_points_offset_from_incident(app):
             title="Protest",
             location="CBD",
             severity=5,
-            latitude=-29.8587,
-            longitude=31.0218,
+            latitude=-25.7461,
+            longitude=28.1881,
         )
         start = (31.0, -29.9)
         end = (31.05, -29.82)

@@ -30,7 +30,7 @@
 
   function renderMap(data) {
 
-    const center = data.map_center || { lat: -29.8587, lng: 31.0218, zoom: 10 };
+    const center = data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 10 };
 
     if (!govMap) {
 

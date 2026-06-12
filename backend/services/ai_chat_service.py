@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 SA_TZ = ZoneInfo("Africa/Johannesburg")
 
-SYSTEM_PROMPT = """You are the SafeRoute AI Safety Assistant for South Africa (KwaZulu-Natal / Durban focus).
+SYSTEM_PROMPT = """You are the SafeRoute AI Safety Assistant for South Africa (Gauteng / Pretoria focus).
 
 SCOPE — you MUST follow these rules:
 1. ONLY answer questions about community safety, risk areas, incidents, alerts, safe routes, and how to use the SafeRoute AI platform.
@@ -65,7 +65,7 @@ def build_live_context(ctx: dict, user) -> dict:
     return {
         "context_as_of": now.strftime("%A %d %B %Y, %H:%M SAST"),
         "timezone": "Africa/Johannesburg",
-        "region_focus": "South Africa — eThekwini (Durban), KZN, major SA metros",
+        "region_focus": "South Africa — Gauteng (Pretoria / Tshwane), City of Tshwane metro",
         "user": profile,
         "city_average_risk": ctx.get("avg_risk"),
         "risk_areas": ctx.get("risk_areas", []),

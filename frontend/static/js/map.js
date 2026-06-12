@@ -148,7 +148,7 @@
   }
 
   function renderMap(data) {
-    const center = data.map_center || { lat: -29.8587, lng: 31.0218, zoom: 11 };
+    const center = data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 11 };
     if (!map) {
       map = SRMap.createBaseMap("safety-map", center, center.zoom);
       window.map = map;

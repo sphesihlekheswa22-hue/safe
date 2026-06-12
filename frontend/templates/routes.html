@@ -737,7 +737,7 @@
             </label>
             <div class="r-input-wrap">
               <input class="r-input" id="start-location" name="start_location" autocomplete="off"
-                placeholder="e.g. 123 Florida Rd, Durban" />
+                placeholder="e.g. 123 Church Street, Pretoria" />
               <button type="button" id="btn-my-location" class="r-loc-btn" title="Use my current location"
                 aria-label="Use my current location">
                 <i class="fas fa-crosshairs"></i>
@@ -761,7 +761,7 @@
               <i class="fas fa-flag-checkered"></i> Destination
             </label>
             <input class="r-input" id="end-location" name="end_location" required autocomplete="off"
-              placeholder="e.g. UKZN Westville campus" />
+              placeholder="e.g. UP Hatfield campus" />
             <input type="hidden" id="end-lat" name="end_lat" />
             <input type="hidden" id="end-lng" name="end_lng" />
             <ul id="end-suggestions" class="geo-suggestions" role="listbox"></ul>
@@ -1017,14 +1017,14 @@ function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1)
           }
           btn.classList.remove('pulse-ring');
           input.classList.remove('is-loading');
-          input.placeholder = 'e.g. 123 Florida Rd, Durban';
+          input.placeholder = 'e.g. 123 Church Street, Pretoria';
         },
         () => {
           btn.classList.remove('pulse-ring');
           input.classList.remove('is-loading');
           input.placeholder = 'Location access denied';
           flash('Could not get your location.', 'error');
-          setTimeout(() => { input.placeholder = 'e.g. 123 Florida Rd, Durban'; }, 2000);
+          setTimeout(() => { input.placeholder = 'e.g. 123 Church Street, Pretoria'; }, 2000);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
       );

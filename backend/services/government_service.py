@@ -12,7 +12,7 @@ from services import gazetteer
 from utils.rbac import Role
 
 UNREST_KEYWORDS = ("protest", "unrest", "riot", "violence", "block", "closure", "emergency", "evacuation")
-CITY_NAME = "eThekwini / Durban Metro"
+CITY_NAME = "City of Tshwane / Pretoria Metro"
 
 
 def require_government(user):
@@ -243,7 +243,7 @@ def map_payload(user) -> dict:
     areas = RiskArea.query.order_by(RiskArea.risk_score.desc()).all()
     events = Event.query.order_by(Event.created_at.desc()).limit(50).all()
     return {
-        "map_center": {"lng": 31.0218, "lat": -29.8587, "zoom": 10},
+        "map_center": {"lng": 28.1881, "lat": -25.7461, "zoom": 10},
         "cities": gazetteer.CITY_MARKERS,
         "risk_areas": [a.to_dict() for a in areas],
         "incidents": [e.to_dict() for e in events],

@@ -221,7 +221,7 @@ def safe_commute_routes(inst: Institution) -> list[dict]:
     loc = inst.location or inst.name
     origins = []
     if "ukzn" in loc.lower() or "westville" in loc.lower():
-        origins = ["Durban Station", "Pinetown", "Umlazi"]
+        origins = ["Pretoria Station", "Hatfield", "Soshanguve"]
     elif "durban" in loc.lower():
         origins = ["Umhlanga", "Pinetown", "Chatsworth"]
     elif "johannesburg" in loc.lower():
@@ -229,7 +229,7 @@ def safe_commute_routes(inst: Institution) -> list[dict]:
     elif "cape town" in loc.lower():
         origins = ["Bellville", "Khayelitsha"]
     else:
-        origins = ["Durban Station", "Pinetown"]
+        origins = ["Pretoria Station", "Hatfield"]
 
     suggestions = []
     for origin in origins[:3]:

@@ -48,11 +48,11 @@ def test_geocode_requires_query(client, public_token):
 
 
 def test_geocode_durban(client, public_token):
-    res = client.get("/api/routes/geocode?q=Durban", headers=auth(public_token))
+    res = client.get("/api/routes/geocode?q=Pretoria", headers=auth(public_token))
     assert res.status_code == 200
     results = res.get_json()["results"]
     assert len(results) >= 1
-    assert any("Durban" in r["name"] for r in results)
+    assert any("Pretoria" in r["name"] for r in results)
 
 
 def test_realtime_events_snapshot(client):

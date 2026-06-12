@@ -46,7 +46,7 @@
 
   function renderMap(data, corridors) {
 
-    const center = data.map_center || { lat: -29.8587, lng: 31.0218, zoom: 11 };
+    const center = data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 11 };
 
     if (!transportMap) {
 

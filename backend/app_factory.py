@@ -59,15 +59,15 @@ def create_app(config_class=Config):
     _register_error_handlers(app)
 
     # Skip heavy DB sync at gunicorn boot in production; preDeploy handles schema/seed.
-    if os.environ.get("FLASK_ENV") != "production":
-        with app.app_context():
-            try:
-                from sqlalchemy import inspect
+    with app.app_context():
+        try:
+            from sqlalchemy import inspect
 
-                from models.event import Event
-                from models.risk import RiskArea
-                from services.geo_service import ensure_geo_columns, sync_area_coords, sync_event_coords
+            from models.event import Event
+            from models.risk import RiskArea
+            from services.geo_service import ensure_geo_columns, sync_area_coords, sync_event_coords
 
+            if os.environ.get("FLASK_ENV") != "production":
                 tables = set(inspect(db.engine).get_table_names())
                 if "risk_areas" in tables or "events" in tables:
                     ensure_geo_columns()
@@ -82,8 +82,18 @@ def create_app(config_class=Config):
                         dirty = True
                 if dirty:
                     db.session.commit()
-            except Exception:
-                db.session.rollback()
+            else:
+                from cli.seed import needs_gauteng_migration, refresh_sa_events, _migrate_legacy_institutions
+
+                tables = set(inspect(db.engine).get_table_names())
+                if "events" in tables and needs_gauteng_migration():
+                    _migrate_legacy_institutions()
+                    count = refresh_sa_events()
+                    get_logger(__name__).info(
+                        "Auto-migrated legacy data to Gauteng catalog (%s incidents).", count
+                    )
+        except Exception:
+            db.session.rollback()
 
     get_logger(__name__).info("SafeRoute AI application initialized.")
     return app
@@ -217,11 +227,19 @@ def _register_cli(app):
 
     @app.cli.command("refresh-events")
     def refresh_events():
-        """Replace demo incidents with real South Africa events on the map."""
+        """Replace incidents with Gauteng (Pretoria) events on the map."""
         from cli.seed import refresh_sa_events
 
         count = refresh_sa_events()
-        click.echo(f"Loaded {count} real SA incidents.")
+        click.echo(f"Loaded {count} Gauteng incidents.")
+
+    @app.cli.command("migrate-gauteng")
+    def migrate_gauteng():
+        """Purge non-Gauteng data and reload Pretoria-focused catalog."""
+        from cli.seed import migrate_gauteng_data
+
+        stats = migrate_gauteng_data()
+        click.echo(f"Gauteng migration complete: {stats}")
 
     # Administrative CLI tools (create-admin, set-role, list-users).
     from cli import admin_tools
