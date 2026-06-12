@@ -2,36 +2,83 @@
 (function () {
   "use strict";
 
+  const MY_CITY_KEY = "sr-my-city";
+
+  const POI_ICONS = {
+    police: "fa-shield-halved",
+    hospital: "fa-hospital",
+    clinic: "fa-kit-medical",
+    station: "fa-train",
+    landmark: "fa-landmark",
+  };
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;",
     }[c]));
   }
 
-  async function fetchLocationSuggestions(q, limit) {
+  function resolveNearCoords(options) {
+    const opts = options || {};
+    if (opts.nearLat != null && opts.nearLng != null) {
+      return { lat: opts.nearLat, lng: opts.nearLng };
+    }
+    try {
+      const raw = sessionStorage.getItem(MY_CITY_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (data && data.lat != null && data.lng != null) {
+        return { lat: data.lat, lng: data.lng };
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+
+  async function fetchLocationSuggestions(q, limit, near) {
     const lim = limit || 10;
-    return SR.get("/api/routes/geocode?q=" + encodeURIComponent(q) + "&limit=" + lim);
+    let url = "/api/routes/geocode?q=" + encodeURIComponent(q) + "&limit=" + lim;
+    if (near && near.lat != null && near.lng != null) {
+      url += "&lat=" + encodeURIComponent(near.lat) + "&lng=" + encodeURIComponent(near.lng);
+    }
+    return SR.get(url);
+  }
+
+  function iconForResult(r) {
+    if (r && r.category && POI_ICONS[r.category]) {
+      return POI_ICONS[r.category];
+    }
+    return "fa-location-dot";
+  }
+
+  function subtitleForResult(r) {
+    let sub = r.display_name || "";
+    if (r.distance_km != null) {
+      sub = sub ? sub + " · " + r.distance_km + " km away" : r.distance_km + " km away";
+    }
+    return sub;
   }
 
   function showSuggestionsLoading(list) {
-    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching addresses…</li>`;
+    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching places…</li>`;
     list.classList.add("visible");
     list._items = [];
   }
 
   function renderSuggestionList(list, items, input, onSelect) {
     if (!items.length) {
-      list.innerHTML = `<li class="suggestion-divider" role="presentation">No addresses found — try a street name or suburb</li>`;
+      list.innerHTML = `<li class="suggestion-divider" role="presentation">No places found — try police, hospital, or a suburb name</li>`;
       list.classList.add("visible");
       list._items = [];
       return;
     }
     list.innerHTML = items.map((r, i) => `
       <li role="option" data-idx="${i}" tabindex="0">
-        <i class="fas fa-location-dot"></i>
+        <i class="fas ${iconForResult(r)}"></i>
         <div>
           <div class="font-medium">${esc(r.name)}</div>
-          <div class="sub">${esc(r.display_name)}</div>
+          <div class="sub">${esc(subtitleForResult(r))}</div>
         </div>
       </li>`).join("");
     list.classList.add("visible");
@@ -94,7 +141,8 @@
         const id = ++requestId;
         showSuggestionsLoading(listEl);
         try {
-          const { results } = await fetchLocationSuggestions(q, limit);
+          const near = resolveNearCoords(opts);
+          const { results } = await fetchLocationSuggestions(q, limit, near);
           if (id !== requestId) return;
           renderSuggestionList(listEl, results || [], inputEl, onSelectWrapper);
         } catch (err) {
@@ -153,4 +201,5 @@
 
   window.fetchLocationSuggestions = fetchLocationSuggestions;
   window.setupLocationAutocomplete = setupLocationAutocomplete;
+  window.resolveNearCoords = resolveNearCoords;
 })();

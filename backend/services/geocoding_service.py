@@ -8,6 +8,7 @@ from typing import Optional
 import requests
 
 from services import gazetteer
+from services import poi_service
 
 logger = logging.getLogger(__name__)
 
@@ -196,26 +197,59 @@ def _nominatim_search(query: str, limit: int = 8) -> list[dict]:
         return []
 
 
-def search(query: str, limit: int = 8) -> list[dict]:
+def _cache_key(query: str, near_lat: float | None, near_lng: float | None) -> str:
+    base = _normalize(query)
+    if near_lat is not None and near_lng is not None:
+        return f"{base}@{round(near_lat, 2)}:{round(near_lng, 2)}"
+    return base
+
+
+def _expanded_nominatim_query(query: str) -> str | None:
+    """Build a richer Nominatim query for POI keyword searches."""
+    q = _normalize(query)
+    implied = poi_service.categories_for_query(q)
+    if "police" in implied:
+        return "police station, Gauteng, South Africa"
+    if "hospital" in implied:
+        return "hospital, Gauteng, South Africa"
+    if "clinic" in implied:
+        return "clinic, Gauteng, South Africa"
+    if "station" in implied:
+        return "train station, Gauteng, South Africa"
+    return None
+
+
+def search(
+    query: str,
+    limit: int = 8,
+    near_lat: float | None = None,
+    near_lng: float | None = None,
+) -> list[dict]:
     """Return location suggestions for a free-text query within South Africa."""
     q = (query or "").strip()
     if len(q) < 2:
         return []
 
-    cache_key = _normalize(q)
+    cache_key = _cache_key(q, near_lat, near_lng)
     cached = _search_cache.get(cache_key)
     if cached and (time.time() - cached[0]) < CACHE_TTL_SEC:
         return cached[1][:limit]
 
+    pois = poi_service.search_pois(q, limit=limit, near_lat=near_lat, near_lng=near_lng)
     local = _gazetteer_suggestions(q, limit=limit)
     remote: list[dict] = []
-    # Skip Nominatim for short queries or when rate-limited; local gazetteer covers cities.
-    if len(q) >= 4 and _nominatim_available() and len(local) < limit:
+    combined_local = len(pois) + len(local)
+    # Skip Nominatim for short queries or when rate-limited; local data covers most cases.
+    if len(q) >= 4 and _nominatim_available() and combined_local < limit:
         remote = _nominatim_search(q, limit=limit)
         if not remote and "south africa" not in cache_key:
             remote = _nominatim_search(f"{q}, South Africa", limit=limit)
+    if combined_local < limit and poi_service.is_poi_keyword(q) and _nominatim_available():
+        expanded = _expanded_nominatim_query(q)
+        if expanded:
+            remote = _merge_results(remote, _nominatim_search(expanded, limit=limit))
 
-    merged = _merge_results(local, remote)[:limit]
+    merged = _merge_results(pois, local, remote)[:limit]
     _search_cache[cache_key] = (time.time(), merged)
     return merged
 

@@ -23,8 +23,12 @@ def geocode_search():
         limit = min(12, max(1, int(request.args.get("limit", 8))))
     except (TypeError, ValueError):
         limit = 8
+    near_lat = request.args.get("lat", type=float)
+    near_lng = request.args.get("lng", type=float)
     try:
-        results = geocoding_service.search(q, limit=limit)
+        results = geocoding_service.search(
+            q, limit=limit, near_lat=near_lat, near_lng=near_lng
+        )
     except Exception:
         results = []
     return jsonify(results=results)
