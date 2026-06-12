@@ -160,6 +160,14 @@
 (function () {
   const WRITE_ROLES = ["PUBLIC_USER","SYSTEM_ADMIN"];
   let canWrite = false;
+  let currentUserId = null;
+  let isAdmin = false;
+
+  function canDeleteEvent(event) {
+    if (!canWrite) return false;
+    if (isAdmin) return true;
+    return event.created_by != null && event.created_by === currentUserId;
+  }
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
   function sevBadge(s){const cls=s>=4?"badge-high":s===3?"badge-medium":"badge-low";return `<span class="badge ${cls}">${s}</span>`;}
   const emptyIcon = `<div class="empty-state-icon"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg></div>`;
@@ -179,16 +187,14 @@
           <td class="text-surface-600">${esc(e.location)}</td>
           <td>${sevBadge(e.severity)}</td>
           <td class="text-surface-500">${esc(e.source)}</td>
-          <td class="text-right">${canWrite ? `<button class="btn-danger" data-del="${e.id}">Delete</button>` : ""}</td>
+          <td class="text-right">${canDeleteEvent(e) ? `<button class="btn-danger" data-del="${e.id}">Delete</button>` : ""}</td>
         </tr>`).join("");
-      if (canWrite) {
-        body.querySelectorAll("[data-del]").forEach((b) =>
+      body.querySelectorAll("[data-del]").forEach((b) =>
           b.addEventListener("click", async () => {
             if (!confirm("Delete this event?")) return;
             try { await SR.del("/api/events/" + b.dataset.del); flash("Event deleted.", "success"); load(document.getElementById("filter").value.trim()); }
             catch (err) { flash(err.message, "error"); }
           }));
-      }
     } catch (err) {
       body.innerHTML = `<tr><td colspan="5" class="text-center py-10"><p class="text-rose-600 text-sm">${esc(err.message)}</p><button type="button" class="btn-secondary mt-3" onclick="location.reload()">Retry</button></td></tr>`;
       flash(err.message, "error");
@@ -197,6 +203,8 @@
 
   document.addEventListener("sr:user-ready", (ev) => {
     canWrite = WRITE_ROLES.includes(ev.detail.role);
+    currentUserId = ev.detail.id;
+    isAdmin = ev.detail.role === "SYSTEM_ADMIN";
     if (canWrite) {
       document.getElementById("create-card").classList.remove("hidden");
       setupLocationAutocomplete(

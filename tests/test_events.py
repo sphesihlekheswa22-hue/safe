@@ -40,3 +40,24 @@ def test_route_generation(client, public_token):
     route = res.get_json()["route"]
     assert "geojson" in route
     assert route["geojson"]["geometry"]["type"] == "LineString"
+
+
+def test_public_can_delete_own_event(client, public_token):
+    res = client.post("/api/events", headers=auth(public_token), json={
+        "title": "My report", "location": "Hatfield", "severity": 2,
+        "description": "Test",
+    })
+    assert res.status_code == 201
+    event_id = res.get_json()["event"]["id"]
+    assert client.delete(f"/api/events/{event_id}", headers=auth(public_token)).status_code == 200
+
+
+def test_public_cannot_delete_others_event(client, public_token, admin_token):
+    res = client.post("/api/events", headers=auth(admin_token), json={
+        "title": "Admin report", "location": "Pretoria CBD", "severity": 3,
+        "description": "Official",
+    })
+    assert res.status_code == 201
+    event_id = res.get_json()["event"]["id"]
+    assert client.delete(f"/api/events/{event_id}", headers=auth(public_token)).status_code == 403
+    client.delete(f"/api/events/{event_id}", headers=auth(admin_token))

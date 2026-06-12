@@ -15,6 +15,15 @@ from utils.rbac import Role
 bp = Blueprint("events", __name__)
 
 
+def _can_modify_event(user, event) -> bool:
+    """Admins may change any event; public users only their own submissions."""
+    if user is None:
+        return False
+    if user.role == Role.SYSTEM_ADMIN:
+        return True
+    return event.created_by is not None and event.created_by == user.id
+
+
 @bp.get("")
 @require_permission("event:read")
 def list_events():
@@ -59,6 +68,11 @@ def update_event(event_id):
     event = event_repo.get(event_id)
     if event is None:
         return jsonify(error="Event not found."), 404
+
+    user = current_user()
+    if not _can_modify_event(user, event):
+        return jsonify(error="You can only edit events you created."), 403
+
     try:
         changes = validate_update(request.get_json(silent=True) or {})
     except ValidationError as e:
@@ -85,6 +99,11 @@ def delete_event(event_id):
     event = event_repo.get(event_id)
     if event is None:
         return jsonify(message="Event already removed."), 200
+
+    user = current_user()
+    if not _can_modify_event(user, event):
+        return jsonify(error="You can only delete events you created."), 403
+
     location = event.location
     event_repo.delete(event)
     try:
