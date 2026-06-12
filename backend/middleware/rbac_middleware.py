@@ -10,8 +10,6 @@ from utils.rbac import Role, require_roles, current_user  # re-exported
 PERMISSION_MATRIX = {
     "event:read": Role.all(),
     "event:write": Role.all(),
-    "alert:read": Role.all(),
-    "alert:write": Role.all(),
     "route:read": Role.all(),
     "route:generate": Role.all(),
     "route:delete": [Role.TRANSPORT_OPERATOR, Role.SYSTEM_ANALYST, Role.SYSTEM_ADMIN],

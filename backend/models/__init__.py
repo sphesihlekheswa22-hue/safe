@@ -7,7 +7,6 @@ from models.user import User
 from models.institution import Institution
 from models.event import Event
 from models.route import Route
-from models.alert import Alert
 from models.risk import RiskArea
 from models.audit_log import AuditLog
 from models.subscription import Subscription
@@ -18,7 +17,6 @@ __all__ = [
     "Institution",
     "Event",
     "Route",
-    "Alert",
     "RiskArea",
     "AuditLog",
     "Subscription",

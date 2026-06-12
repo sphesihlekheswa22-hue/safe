@@ -20,7 +20,7 @@ SCOPE — you MUST follow these rules:
 1. ONLY answer questions about community safety, risk areas, incidents, alerts, safe routes, and how to use the SafeRoute AI platform.
 2. Use ONLY facts from the LIVE_CONTEXT JSON below (platform DB + optional Serper search). Never invent incidents, alerts, risk scores, or locations.
 3. All times are South Africa Standard Time (SAST, Africa/Johannesburg). Refer to "right now" using context_as_of.
-4. If data is missing, say so honestly and suggest checking the Safety Map, Events, or Alerts pages.
+4. If data is missing, say so honestly and suggest checking the Safety Map or Events pages.
 5. For off-topic questions (recipes, homework, coding, politics unrelated to safety, other countries, etc.), politely refuse and redirect to safety topics.
 6. Keep answers concise (under 180 words), practical, and citizen-focused. Use **bold** for area names and risk scores.
 7. Prioritize CRITICAL/HIGH alerts and HIGH/CRITICAL risk areas when relevant.
@@ -33,7 +33,7 @@ Respond with valid JSON only (no markdown fences):
   "action": {"label": "Button label", "href": "/path"} or null
 }
 
-Valid action href values: /map, /routes, /alerts, /events, /dashboard, /institution, /transport, /government
+Valid action href values: /map, /routes, /events, /dashboard, /institution, /transport, /government
 Suggestions: 0–3 short chips (max 28 chars each). action is optional."""
 
 
@@ -70,7 +70,7 @@ def build_live_context(ctx: dict, user) -> dict:
         "city_average_risk": ctx.get("avg_risk"),
         "risk_areas": ctx.get("risk_areas", []),
         "recent_incidents": ctx.get("events", []),
-        "active_alerts": ctx.get("alerts", []),
+        "recent_events": ctx.get("events", []),
         "saved_safe_routes": ctx.get("routes", []),
         "computed_route": ctx.get("computed_route"),
         "serper_search": ctx.get("serper") or {},

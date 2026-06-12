@@ -98,7 +98,7 @@
 
     document.getElementById("kpi-high").textContent = risk.high_risk_zones;
 
-    document.getElementById("kpi-alerts").textContent = (d.critical_alerts || []).length;
+    document.getElementById("kpi-alerts").textContent = (d.critical_incidents || d.critical_alerts || []).length;
 
 
 
@@ -158,19 +158,14 @@
 
 
 
-    document.getElementById("gov-alerts").innerHTML = (d.critical_alerts || []).length
-
-      ? d.critical_alerts.map((a) => `
-
-        <div class="glass-card rounded-xl p-3 text-sm border-l-4 ${a.severity === 'CRITICAL' ? 'border-l-rose-600' : 'border-l-amber-500'}">
-
-          <span class="badge ${a.severity === 'CRITICAL' ? 'badge-critical' : 'badge-high'} text-[10px]">${esc(a.severity)}</span>
-
-          ${esc(a.message)}
-
+    const critical = d.critical_incidents || d.critical_alerts || [];
+    document.getElementById("gov-alerts").innerHTML = critical.length
+      ? critical.map((e) => `
+        <div class="glass-card rounded-xl p-3 text-sm border-l-4 ${Number(e.severity) >= 4 ? 'border-l-rose-600' : 'border-l-amber-500'}">
+          <span class="badge ${Number(e.severity) >= 4 ? 'badge-critical' : 'badge-high'} text-[10px]">${esc(e.severity)}/5</span>
+          <strong>${esc(e.title)}</strong> — ${esc(e.location || '')}
         </div>`).join("")
-
-      : '<p class="text-surface-400 text-sm">No critical alerts.</p>';
+      : '<p class="text-surface-400 text-sm">No critical incidents.</p>';
 
 
 

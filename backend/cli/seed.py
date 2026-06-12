@@ -1,4 +1,4 @@
-"""Seed the database with demo institutions, users, events, alerts and routes.
+"""Seed the database with demo institutions, users, events and routes.
 
 Idempotent for users/institutions. Events are refreshed from the real SA catalog
 via ``refresh_sa_events()`` (also available as ``flask refresh-events``).
@@ -8,7 +8,6 @@ import os
 from extensions import db
 from models.user import User
 from models.institution import Institution
-from models.alert import Alert
 from models.route import Route
 from models.event import Event
 from services import ingestion_service as ingestion, route_optimizer
@@ -67,31 +66,6 @@ def refresh_sa_events() -> int:
 
     created = ingestion.simulate_feed(REAL_SA_EVENTS, source="official-feed")
     return len(created)
-
-
-def refresh_sa_alerts():
-    """Replace demo alerts with South Africa–specific alerts."""
-    Alert.query.delete()
-    db.session.commit()
-    db.session.add_all([
-        Alert(
-            message="CRITICAL: Avoid Umlazi taxi rank area — active unrest reported.",
-            severity="CRITICAL", target_role="ALL",
-        ),
-        Alert(
-            message="Durban transport: reroute away from Warwick Junction protest corridor.",
-            severity="HIGH", target_role=Role.TRANSPORT_OPERATOR,
-        ),
-        Alert(
-            message="Johannesburg CBD alert: avoid Park Station area until SAPS clears scene.",
-            severity="HIGH", target_role="ALL",
-        ),
-        Alert(
-            message="KZN Emergency Management coordination call — 17:00 today.",
-            severity="MEDIUM", target_role=Role.GOVERNMENT_AUTHORITY,
-        ),
-    ])
-    db.session.commit()
 
 
 def _migrate_legacy_institutions():
@@ -183,10 +157,6 @@ def run_seed(refresh_events=True):
     if refresh_events:
         count = refresh_sa_events()
         print(f"  Loaded {count} real SA incidents with map coordinates.")
-
-    # --- Alerts -----------------------------------------------------------
-    if Alert.query.count() == 0:
-        refresh_sa_alerts()
 
     # --- Sample saved routes (optional; external OSRM can be slow on deploy) ---
     if Route.query.count() == 0 and os.environ.get("SEED_SKIP_ROUTES", "").lower() not in ("1", "true"):

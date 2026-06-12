@@ -118,7 +118,7 @@ def test_generate_route_prefers_zero_incident_candidate(app, monkeypatch):
     monkeypatch.setattr(route_optimizer, "_fetch_osrm_path", fake_path)
     monkeypatch.setattr(route_optimizer, "_events_near_path", fake_near)
     monkeypatch.setattr(route_optimizer, "_score_route_path", fake_score)
-    monkeypatch.setattr(route_optimizer, "_load_routing_context", lambda: ([blocking], [], []))
+    monkeypatch.setattr(route_optimizer, "_load_routing_context", lambda: ([blocking], []))
 
     with app.app_context():
         result = route_optimizer.generate_route(

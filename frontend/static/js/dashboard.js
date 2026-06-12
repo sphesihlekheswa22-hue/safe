@@ -157,38 +157,6 @@
     }, 120);
   }
 
-  function renderAlerts(alerts) {
-    const container = document.getElementById("alerts-feed");
-    if (!container) return;
-
-    if (!alerts.length) {
-      container.innerHTML = `
-        <div class="text-center py-8">
-          <div class="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,0.1);color:#059669">
-            <i class="fas fa-circle-check"></i>
-          </div>
-          <p class="text-xs" style="color:#94a3b8">No active alerts</p>
-        </div>`;
-      return;
-    }
-
-    container.innerHTML = alerts.slice(0, 5).map((alert, i) => {
-      const cls = alertClass(alert.severity);
-      return `
-        <div class="alert-item ${cls} a-fade-in" style="animation-delay:${i * 0.05}s"
-             data-id="${alert.id}" onclick="location.href='/alerts'">
-          <div class="alert-icon ${cls}"><i class="fas ${alertIcon(alert.severity)}"></i></div>
-          <div class="alert-content">
-            <p class="alert-title">${esc(alert.message)}</p>
-            <p class="alert-desc">Target: ${esc(alert.target_role)} · ${esc(alert.severity)}</p>
-          </div>
-          <span class="alert-time">${timeAgo(alert.created_at)}</span>
-        </div>`;
-    }).join("");
-
-    document.dispatchEvent(new CustomEvent("sr:alerts-updated", { detail: alerts }));
-  }
-
   function renderEvents(events) {
     const container = document.getElementById("events-feed");
     if (!container) return;
@@ -198,7 +166,7 @@
       return;
     }
 
-    container.innerHTML = events.slice(0, 5).map((event, i) => `
+    container.innerHTML = events.slice(0, 8).map((event, i) => `
       <div class="event-item a-fade-in" style="animation-delay:${i * 0.05}s"
            onclick="location.href='/events'">
         <span class="event-dot" style="${eventDotStyle(event.severity)}"></span>
@@ -248,18 +216,18 @@
     const avg = Math.round(kpis.average_risk || 0);
     animateNumber(document.getElementById("kpi-avg-risk"), avg);
     animateNumber(document.getElementById("kpi-high-risk"), kpis.high_risk_areas || 0);
-    animateNumber(document.getElementById("kpi-alerts"), kpis.active_alerts || 0);
+    animateNumber(document.getElementById("kpi-high-severity"), kpis.high_severity_events || 0);
     animateNumber(document.getElementById("kpi-events"), kpis.total_events || 0);
 
     setBarWidth("kpi-avg-risk-bar", avg, 300);
     const monitored = Math.max(kpis.monitored_areas || 1, 1);
     setBarWidth("kpi-high-risk-bar", ((kpis.high_risk_areas || 0) / monitored) * 100, 450);
-    setBarWidth("kpi-alerts-bar", Math.min(100, (kpis.active_alerts || 0) * 12), 600);
+    setBarWidth("kpi-high-severity-bar", Math.min(100, (kpis.high_severity_events || 0) * 15), 600);
     setBarWidth("kpi-events-bar", Math.min(100, (kpis.total_events || 0) * 4), 750);
 
     updateTrend(0, avg >= 50 ? "up" : "down", avg >= 50 ? "Elevated" : "Improving");
     updateTrend(1, (kpis.high_risk_areas || 0) > 0 ? "up" : "flat", String(kpis.high_risk_areas || 0));
-    updateTrend(2, "flat", kpis.active_alerts ? String(kpis.active_alerts) : "Clear");
+    updateTrend(2, (kpis.high_severity_events || 0) > 0 ? "up" : "flat", String(kpis.high_severity_events || 0));
     updateTrend(3, (kpis.total_events || 0) > 0 ? "up" : "flat", String(kpis.total_events || 0));
 
     const safeRoutes = document.getElementById("safe-routes-count");
@@ -281,18 +249,19 @@
       const data = await SR.get("/api/dashboard/summary");
       updateKPIs(data.kpis);
       renderRiskAreas(data.risk_areas || []);
-      renderAlerts(data.active_alerts || []);
       renderEvents(data.recent_events || []);
       renderRoutes(data.suggested_routes || []);
 
+      document.dispatchEvent(new CustomEvent("sr:events-updated", { detail: data.recent_events || [] }));
+
       const sidebarRisk = document.getElementById("user-risk-score");
-      const sidebarAlerts = document.getElementById("user-alerts");
+      const sidebarEvents = document.getElementById("user-events");
       if (sidebarRisk) sidebarRisk.textContent = Math.round(data.kpis.average_risk || 0);
-      if (sidebarAlerts) sidebarAlerts.textContent = data.kpis.active_alerts || 0;
+      if (sidebarEvents) sidebarEvents.textContent = data.kpis.total_events || 0;
     } catch (e) {
       console.error("Dashboard load error:", e);
       if (window.flash) flash("Failed to load dashboard data", "error");
-      ["risk-areas-container", "alerts-feed", "events-feed", "routes-feed"].forEach((id) => {
+      ["risk-areas-container", "events-feed", "routes-feed"].forEach((id) => {
         const el = document.getElementById(id);
         if (el) {
           el.innerHTML = `<div class="text-center py-8"><p class="text-sm" style="color:#94a3b8">${esc(e.message || "Unable to load")}</p><button type="button" class="btn-secondary mt-3" onclick="location.reload()">Retry</button></div>`;

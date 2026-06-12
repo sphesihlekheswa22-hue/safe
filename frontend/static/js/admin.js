@@ -518,7 +518,7 @@
 
       $("sys-logins").textContent = s.recent_logins_24h;
 
-      const labels = { users: "Users", active_users: "Active", institutions: "Institutions", events: "Events", alerts: "Alerts", routes: "Routes", risk_areas: "Risk Areas" };
+      const labels = { users: "Users", active_users: "Active", institutions: "Institutions", events: "Events", routes: "Routes", risk_areas: "Risk Areas" };
 
       $("system-counts").innerHTML = Object.entries(s.counts).map(([k, v]) =>
 

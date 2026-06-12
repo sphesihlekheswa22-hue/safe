@@ -7,7 +7,6 @@
 """
 from flask import Blueprint, request, jsonify
 
-from models.alert import Alert
 from models.event import Event
 from models.risk import RiskArea
 from services import risk_engine, sentiment_service as sentiment, gazetteer
@@ -29,13 +28,11 @@ def map_data():
     """Bundled geospatial data for the Leaflet safety map."""
     areas = RiskArea.query.order_by(RiskArea.risk_score.desc()).all()
     events = Event.query.order_by(Event.created_at.desc()).limit(50).all()
-    alerts = Alert.query.order_by(Alert.created_at.desc()).limit(20).all()
     return jsonify(
         map_center=gazetteer.DEFAULT_MAP_CENTER,
         cities=gazetteer.CITY_MARKERS,
         risk_areas=[a.to_dict() for a in areas],
         incidents=[e.to_dict() for e in events],
-        alerts=[a.to_dict() for a in alerts],
     )
 
 

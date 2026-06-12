@@ -1,28 +1,25 @@
-/* Realtime client.
- * Connects to the backend SSE endpoint (/api/realtime/stream) for live alert
- * updates and falls back to JSON polling if SSE fails (common on gunicorn/Render).
- */
+/* Realtime client — SSE/polling for recent incidents (events). */
 window.Realtime = (function () {
   let source = null;
   let pollTimer = null;
   let usingPoll = false;
 
-  async function pollAlerts(onAlerts) {
+  async function pollEvents(onEvents) {
     try {
-      const res = await fetch("/api/realtime/alerts");
+      const res = await fetch("/api/realtime/events");
       if (!res.ok) return;
       const data = await res.json();
-      if (data.alerts && typeof onAlerts === "function") onAlerts(data.alerts);
+      if (data.events && typeof onEvents === "function") onEvents(data.events);
     } catch (e) {
       /* ignore transient network errors */
     }
   }
 
-  function startPolling(onAlerts, intervalMs = 15000) {
+  function startPolling(onEvents, intervalMs = 15000) {
     if (pollTimer) return;
     usingPoll = true;
-    pollAlerts(onAlerts);
-    pollTimer = setInterval(() => pollAlerts(onAlerts), intervalMs);
+    pollEvents(onEvents);
+    pollTimer = setInterval(() => pollEvents(onEvents), intervalMs);
     const ind = document.getElementById("realtime-indicator");
     if (ind) ind.classList.remove("hidden");
   }
@@ -35,16 +32,15 @@ window.Realtime = (function () {
     usingPoll = false;
   }
 
-  function connect(onAlerts) {
-    // SSE ties up gunicorn sync workers on Render and causes WORKER TIMEOUT; poll instead.
+  function connect(onEvents) {
     const host = location.hostname || "";
     if (host.includes("onrender.com") || host.includes("render.com")) {
-      startPolling(onAlerts);
+      startPolling(onEvents);
       return;
     }
 
     if (typeof EventSource === "undefined") {
-      startPolling(onAlerts);
+      startPolling(onEvents);
       return;
     }
 
@@ -53,7 +49,7 @@ window.Realtime = (function () {
       source.onmessage = (ev) => {
         try {
           const data = JSON.parse(ev.data);
-          if (data.alerts && typeof onAlerts === "function") onAlerts(data.alerts);
+          if (data.events && typeof onEvents === "function") onEvents(data.events);
         } catch (e) { /* ignore malformed frame */ }
       };
       source.onerror = () => {
@@ -61,10 +57,10 @@ window.Realtime = (function () {
           source.close();
           source = null;
         }
-        if (!usingPoll) startPolling(onAlerts);
+        if (!usingPoll) startPolling(onEvents);
       };
     } catch (e) {
-      startPolling(onAlerts);
+      startPolling(onEvents);
     }
   }
 

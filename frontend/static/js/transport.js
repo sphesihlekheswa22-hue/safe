@@ -132,9 +132,9 @@
 
     document.getElementById("transport-alerts").innerHTML = (d.transport_alerts || []).length
 
-      ? d.transport_alerts.map((a) => `<div class="glass-card rounded-xl p-3 text-sm border-l-4 border-l-amber-500"><span class="badge badge-medium text-[10px]">${esc(a.severity)}</span> ${esc(a.message)}</div>`).join("")
+      ? d.transport_alerts.map((a) => `<div class="glass-card rounded-xl p-3 text-sm border-l-4 border-l-amber-500"><span class="badge badge-medium text-[10px]">${esc(a.severity)}/5</span> <strong>${esc(a.title)}</strong> — ${esc(a.location || "")}</div>`).join("")
 
-      : '<p class="text-surface-400 text-sm">No transport alerts.</p>';
+      : '<p class="text-surface-400 text-sm">No transport incidents nearby.</p>';
 
 
 

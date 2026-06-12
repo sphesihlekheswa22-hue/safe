@@ -165,10 +165,6 @@ def _register_pages(app):
     def routes_page():
         return render_template("routes.html", heading="Safe Routes")
 
-    @app.get("/alerts")
-    def alerts_page():
-        return render_template("alerts.html", heading="Alerts")
-
     @app.get("/map")
     def map_page():
         return render_template("map.html", heading="Safety Map")
@@ -222,11 +218,10 @@ def _register_cli(app):
     @app.cli.command("refresh-events")
     def refresh_events():
         """Replace demo incidents with real South Africa events on the map."""
-        from cli.seed import refresh_sa_events, refresh_sa_alerts
+        from cli.seed import refresh_sa_events
 
         count = refresh_sa_events()
-        refresh_sa_alerts()
-        click.echo(f"Loaded {count} real SA incidents. Alerts updated.")
+        click.echo(f"Loaded {count} real SA incidents.")
 
     # Administrative CLI tools (create-admin, set-role, list-users).
     from cli import admin_tools

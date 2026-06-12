@@ -11,7 +11,7 @@
     try {
       const data = await SR.get("/api/dashboard/summary");
       document.getElementById("profile-routes").textContent = data.kpis.total_routes ?? 0;
-      document.getElementById("profile-alerts").textContent = data.kpis.active_alerts ?? 0;
+      document.getElementById("profile-events").textContent = data.kpis.total_events ?? 0;
     } catch (e) {
       /* optional stats */
     }

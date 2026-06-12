@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from models.alert import Alert
 from models.event import Event
 from models.institution import Institution
 from models.risk import RiskArea
@@ -72,24 +71,9 @@ def nearby_risk_areas(inst: Institution) -> list[RiskArea]:
     return sorted(areas, key=lambda a: a.risk_score, reverse=True)
 
 
-def institution_alerts(user, inst: Institution, limit: int = 10) -> list[Alert]:
-    """Alerts relevant to institution admins near this campus."""
-    q = Alert.query.filter(Alert.target_role.in_(["ALL", Role.INSTITUTION_ADMIN, user.role]))
-    alerts = q.order_by(Alert.created_at.desc()).limit(50).all()
-    loc_terms = [t for t in (inst.location or "", inst.name or "") if t]
-    nearby_names = {a.area_name.lower() for a in nearby_risk_areas(inst)}
-    filtered = []
-    for alert in alerts:
-        msg = (alert.message or "").lower()
-        if any(term.lower() in msg for term in loc_terms):
-            filtered.append(alert)
-        elif any(name in msg for name in nearby_names):
-            filtered.append(alert)
-        elif alert.target_role == Role.INSTITUTION_ADMIN:
-            filtered.append(alert)
-        if len(filtered) >= limit:
-            break
-    return filtered[:limit]
+def institution_alerts(user, inst: Institution, limit: int = 10) -> list[Event]:
+    """High-severity incidents near the institution (legacy key for portal UI)."""
+    return [e for e in nearby_events(inst, limit=limit * 2) if e.severity >= 3][:limit]
 
 
 def institution_routes(inst: Institution, limit: int = 10) -> list[Route]:
@@ -166,7 +150,7 @@ def safety_trend(inst: Institution, days: int = 7) -> list[dict]:
     return trend
 
 
-def operational_decisions(inst: Institution, campus_risk: dict, alerts: list, events: list) -> list[dict]:
+def operational_decisions(inst: Institution, campus_risk: dict, incidents: list, events: list) -> list[dict]:
     """Suggested operational actions — advisory only, admin decides."""
     level = campus_risk["risk_level"]
     decisions = []
@@ -221,11 +205,11 @@ def operational_decisions(inst: Institution, campus_risk: dict, alerts: list, ev
             "urgency": "high",
         })
 
-    if any(a.severity in ("HIGH", "CRITICAL") for a in alerts):
+    if len(incidents) >= 2:
         decisions.append({
-            "type": "alert",
-            "title": "Active alerts affecting your institution",
-            "detail": "Review institution alerts and communicate to staff/students.",
+            "type": "incident",
+            "title": "Multiple incidents affecting your institution area",
+            "detail": "Review nearby events and communicate guidance to staff/students.",
             "urgency": "high",
         })
 
@@ -309,7 +293,7 @@ def dashboard_payload(user) -> dict:
         "campus_risk": campus,
         "safety_trend": safety_trend(inst),
         "nearby_incidents": [e.to_dict() for e in events[:12]],
-        "institution_alerts": [a.to_dict() for a in alerts],
+        "institution_alerts": [e.to_dict() for e in alerts],
         "safe_zones": safe_zones,
         "danger_zones": danger_zones,
         "operational_decisions": decisions,
@@ -340,6 +324,5 @@ def map_payload(user) -> dict:
         },
         "risk_areas": [a.to_dict() for a in areas],
         "incidents": [e.to_dict() for e in events],
-        "alerts": [a.to_dict() for a in alerts],
         "commute_routes": safe_commute_routes(inst),
     }

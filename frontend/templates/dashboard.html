@@ -627,7 +627,7 @@
     <div class="a-fade-up">
       <p class="dash-hero-greet">Welcome back</p>
       <h1 id="dash-title">Your Safety<br>Dashboard</h1>
-      <p id="dash-subtitle">Live area risk, alerts, incidents, and safe routes across your community — all in one place.</p>
+      <p id="dash-subtitle">Live area risk, incidents, and safe routes across your community — all in one place.</p>
     </div>
     <div class="flex items-center gap-3 a-fade-up d2">
       <span class="live-pill"><span class="live-pill-dot"></span>Live Monitoring</span>
@@ -662,15 +662,15 @@
     <div class="kpi-bar-wrap"><div id="kpi-high-risk-bar" class="kpi-bar" style="width:0%"></div></div>
   </div>
 
-  <!-- Active Alerts -->
+  <!-- High Severity Events -->
   <div class="kpi-card kpi-amber a-fade-up d3">
     <div class="kpi-top">
-      <div class="kpi-icon-wrap"><i class="fas fa-bell"></i></div>
+      <div class="kpi-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
       <span class="kpi-trend trend-flat"><i class="fas fa-minus text-[8px]"></i> Same</span>
     </div>
-    <p id="kpi-alerts" class="kpi-value">—</p>
-    <p class="kpi-label">Active Alerts</p>
-    <div class="kpi-bar-wrap"><div id="kpi-alerts-bar" class="kpi-bar" style="width:0%"></div></div>
+    <p id="kpi-high-severity" class="kpi-value">—</p>
+    <p class="kpi-label">High-Severity Events</p>
+    <div class="kpi-bar-wrap"><div id="kpi-high-severity-bar" class="kpi-bar" style="width:0%"></div></div>
   </div>
 
   <!-- Tracked Events -->
@@ -723,29 +723,6 @@
 
   <!-- Right Column -->
   <div class="xl:col-span-2 space-y-6">
-
-    <!-- Alerts Panel -->
-    <div class="d-panel a-fade-up d3">
-      <div class="d-panel-head">
-        <div>
-          <h3><i class="fas fa-bell text-amber-500"></i> Active Alerts</h3>
-          <p>Priority notifications for your role</p>
-        </div>
-        <span class="text-[10px] font-bold uppercase tracking-wider text-surface-400 bg-surface-100/80 px-2 py-1 rounded-md">Priority</span>
-      </div>
-      <div class="d-panel-body">
-        <div id="alerts-feed" class="space-y-1">
-          {% for i in range(3) %}
-          <div class="h-16 skel rounded-xl"></div>
-          {% endfor %}
-        </div>
-      </div>
-      <div class="d-panel-foot">
-        <a href="/alerts">
-          View all alerts <i class="fas fa-chevron-right"></i>
-        </a>
-      </div>
-    </div>
 
     <!-- Mini Stats Row -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">

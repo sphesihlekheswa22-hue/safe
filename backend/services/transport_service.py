@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from models.alert import Alert
 from models.event import Event
 from models.institution import Institution
 from models.route import Route
@@ -59,24 +58,9 @@ def _metro_radius(inst: Institution) -> float:
     return inst.radius_km or 25.0
 
 
-def transport_alerts(user, inst: Institution, limit: int = 15) -> list[Alert]:
-    q = Alert.query.filter(
-        Alert.target_role.in_(["ALL", Role.TRANSPORT_OPERATOR, user.role])
-    )
-    alerts = q.order_by(Alert.created_at.desc()).limit(60).all()
-    loc = (inst.location or "").lower()
-    filtered = []
-    for alert in alerts:
-        msg = (alert.message or "").lower()
-        if alert.target_role == Role.TRANSPORT_OPERATOR:
-            filtered.append(alert)
-        elif any(kw in msg for kw in TRANSPORT_KEYWORDS):
-            filtered.append(alert)
-        elif loc and loc in msg:
-            filtered.append(alert)
-        if len(filtered) >= limit:
-            break
-    return filtered[:limit]
+def transport_alerts(user, inst: Institution, limit: int = 15) -> list[Event]:
+    """Recent transport-relevant incidents near the operator (legacy portal key)."""
+    return transport_incidents(inst, limit=limit)
 
 
 def transport_incidents(inst: Institution, limit: int = 25) -> list[Event]:
@@ -250,7 +234,7 @@ def dashboard_payload(user) -> dict:
             "all": corridors,
         },
         "saved_routes": saved_routes_status(),
-        "transport_alerts": [a.to_dict() for a in alerts],
+        "transport_alerts": [e.to_dict() for e in alerts],
         "live_incidents": [e.to_dict() for e in incidents],
         "fleet": fleet_status(inst, corridors),
         "performance": performance,
@@ -267,5 +251,4 @@ def map_payload(user) -> dict:
         "operator": inst.to_dict(),
         "incidents": [e.to_dict() for e in incidents],
         "corridors": corridors,
-        "alerts": [a.to_dict() for a in transport_alerts(user, inst)],
     }

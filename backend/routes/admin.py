@@ -13,7 +13,6 @@ from models.user import User
 from models.institution import Institution
 from models.audit_log import AuditLog
 from models.event import Event
-from models.alert import Alert
 from models.route import Route
 from models.risk import RiskArea
 from schemas.user_schema import validate_role_assignment
@@ -23,7 +22,6 @@ from utils.security import hash_password, normalize_email, is_strong_password, c
 from repositories import user_repo
 from middleware.rbac_middleware import require_permission, current_user, PERMISSION_MATRIX
 from utils.rbac import Role
-from utils.constants import ALERT_SEVERITIES
 
 bp = Blueprint("admin", __name__)
 
@@ -212,7 +210,6 @@ def system_status():
             "active_users": User.query.filter_by(is_active=True).count(),
             "institutions": Institution.query.count(),
             "events": Event.query.count(),
-            "alerts": Alert.query.count(),
             "routes": Route.query.count(),
             "risk_areas": RiskArea.query.count(),
         },
@@ -248,32 +245,36 @@ def update_settings():
 
 
 # ---------------------------------------------------------------------------
-# Alert override / emergency broadcast
+# Emergency broadcast (creates a high-severity event)
 # ---------------------------------------------------------------------------
 @bp.post("/broadcast")
 @require_permission("user:manage")
 def emergency_broadcast():
+    from services import ingestion_service as ingestion
+
     data = request.get_json(silent=True) or {}
     message = clean_str(data.get("message"), 1000)
-    severity = (data.get("severity") or "CRITICAL").upper()
-    target_role = (data.get("target_role") or "ALL").upper()
+    location = clean_str(data.get("location"), 255) or "City-wide"
 
     if not message:
         return jsonify(error="Broadcast message is required."), 400
-    if severity not in ALERT_SEVERITIES:
-        severity = "CRITICAL"
-    if target_role != "ALL" and not Role.is_valid(target_role):
-        return jsonify(error="target_role must be 'ALL' or a valid role."), 400
+
+    try:
+        severity = max(1, min(5, int(data.get("severity", 5))))
+    except (TypeError, ValueError):
+        severity = 5
 
     me = current_user()
-    alert = Alert(message=message, severity=severity, target_role=target_role,
-                  created_by=me.id if me else None)
-    db.session.add(alert)
-    db.session.commit()
-    recipients = notification_service.dispatch_alert(alert)
-    notification_service.record_audit(
-        me, "system.emergency_broadcast", target=target_role,
-        detail=f"severity={severity}, recipients={len(recipients)}",
+    event = ingestion.ingest_event(
+        title=message[:200],
+        location=location,
+        severity=severity,
+        description=message,
+        source="emergency_broadcast",
+        created_by=me.id if me else None,
     )
-    return jsonify(message="Emergency broadcast sent.", alert=alert.to_dict(),
-                   recipients=len(recipients)), 201
+    notification_service.record_audit(
+        me, "system.emergency_broadcast", target=location,
+        detail=f"severity={severity}, event_id={event.id}",
+    )
+    return jsonify(message="Emergency incident broadcast created.", event=event.to_dict()), 201

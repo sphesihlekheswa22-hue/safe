@@ -39,7 +39,7 @@
 
   function updateStats(data) {
     const areas = data.risk_areas || [];
-    const alerts = data.alerts || [];
+    const incidents = data.incidents || [];
     const counts = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
     areas.forEach((a) => { if (counts[a.risk_level] != null) counts[a.risk_level]++; });
 
@@ -47,7 +47,7 @@
     set("stat-safe", counts.LOW);
     set("stat-med", counts.MEDIUM);
     set("stat-high", counts.HIGH + counts.CRITICAL);
-    set("stat-total", alerts.length);
+    set("stat-total", incidents.filter((e) => Number(e.severity) >= 4).length);
 
     const updated = document.getElementById("last-updated");
     if (updated) {
@@ -159,9 +159,9 @@
     const status = document.getElementById("map-status");
     const nAreas = (data.risk_areas || []).length;
     const nInc = (data.incidents || []).length;
-    const nAlerts = (data.alerts || []).length;
+    const nHigh = (data.incidents || []).filter((e) => Number(e.severity) >= 4).length;
     if (status) {
-      status.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ${nAreas} risk zone(s) · ${nInc} incident(s) · ${nAlerts} alert(s) — refreshes every 30s`;
+      status.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
     }
 
     updateStats(data);

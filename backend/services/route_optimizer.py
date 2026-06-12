@@ -5,7 +5,6 @@ import logging
 
 import requests
 
-from models.alert import Alert
 from models.event import Event
 from models.risk import RiskArea
 from services import gazetteer
@@ -21,9 +20,8 @@ logger = logging.getLogger(__name__)
 OSRM_BASE = "https://router.project-osrm.org/route/v1/driving"
 INCIDENT_RADIUS_KM = 0.6
 BYPASS_OFFSET_KM = 2.2
-W_INCIDENTS = 0.5
-W_AREAS = 0.3
-W_ALERTS = 0.2
+W_INCIDENTS = 0.6
+W_AREAS = 0.4
 
 
 def _risk_for_location(location: str) -> float:
@@ -39,13 +37,12 @@ def _risk_level(score: float) -> str:
     return "SAFE"
 
 
-def _load_routing_context() -> tuple[list, list, list]:
+def _load_routing_context() -> tuple[list, list]:
     events = Event.query.filter(
         Event.latitude.isnot(None), Event.longitude.isnot(None)
     ).all()
     areas = RiskArea.query.all()
-    alerts = Alert.query.order_by(Alert.created_at.desc()).limit(20).all()
-    return events, areas, alerts
+    return events, areas
 
 
 def _events_near_path(
@@ -54,7 +51,7 @@ def _events_near_path(
 ) -> list[Event]:
     """Events within INCIDENT_RADIUS_KM of the sampled path, highest severity first."""
     if events is None:
-        events, _, _ = _load_routing_context()
+        events, _ = _load_routing_context()
     samples = sample_line(coordinates)
     hits: dict[int, Event] = {}
     for lon, lat in samples:
@@ -71,19 +68,16 @@ def _score_route_path(
     *,
     events: list | None = None,
     areas: list | None = None,
-    alerts: list | None = None,
 ) -> dict:
-    """Score a route using incidents, area risk, and alerts along the corridor."""
-    if events is None or areas is None or alerts is None:
-        loaded_events, loaded_areas, loaded_alerts = _load_routing_context()
+    """Score a route using incidents and area risk along the corridor."""
+    if events is None or areas is None:
+        loaded_events, loaded_areas = _load_routing_context()
         events = loaded_events if events is None else events
         areas = loaded_areas if areas is None else areas
-        alerts = loaded_alerts if alerts is None else alerts
 
     samples = sample_line(coordinates)
     incident_ids: set[int] = set()
     area_scores: list[float] = []
-    alert_ids: set[int] = set()
     risk_zones_passed: list[str] = []
 
     for lon, lat in samples:
@@ -100,24 +94,15 @@ def _score_route_path(
                 if area.area_name not in risk_zones_passed:
                     risk_zones_passed.append(area.area_name)
 
-    for alert in alerts:
-        msg = (alert.message or "").lower()
-        for zone in risk_zones_passed:
-            if zone.lower() in msg:
-                alert_ids.add(alert.id)
-                break
-
     incident_hits = len(incident_ids)
-    alert_hits = len(alert_ids)
 
     avg_area = sum(area_scores) / len(area_scores) if area_scores else (
         (_risk_for_location(start_location) + _risk_for_location(end_location)) / 2
     )
     incident_component = min(100.0, incident_hits * 12.0)
-    alert_component = min(100.0, alert_hits * 25.0)
 
     risk_score = round(
-        min(100.0, incident_component * W_INCIDENTS + avg_area * W_AREAS + alert_component * W_ALERTS),
+        min(100.0, incident_component * W_INCIDENTS + avg_area * W_AREAS),
         2,
     )
     level = _risk_level(risk_score)
@@ -129,8 +114,6 @@ def _score_route_path(
         high = [z for z in risk_zones_passed if _risk_for_location(z) >= 40]
         if high:
             reasons.append(f"passes through {', '.join(high[:3])}")
-    if alert_hits:
-        reasons.append(f"{alert_hits} active alert(s) affect this corridor")
 
     if level == "SAFE":
         explanation = (
@@ -139,7 +122,7 @@ def _score_route_path(
         )
     elif level == "WARNING":
         explanation = (
-            f"Moderate risk route: {'; '.join(reasons) if reasons else 'some alerts nearby'}."
+            f"Moderate risk route: {'; '.join(reasons) if reasons else 'some incidents nearby'}."
         )
     else:
         explanation = (
@@ -220,10 +203,10 @@ def _bypass_via_points(
                     corridor_bearing + offset,
                     distance,
                 )
-            key = (round(lon, 3), round(lat, 3))
-            if key not in seen:
-                seen.add(key)
-                points.append((lon, lat))
+                key = (round(lon, 3), round(lat, 3))
+                if key not in seen:
+                    seen.add(key)
+                    points.append((lon, lat))
 
     mid_lon = (lon1 + lon2) / 2
     mid_lat = (lat1 + lat2) / 2
@@ -289,10 +272,10 @@ def _fetch_avoidance_routes(
     incidents: list[Event],
     start_location: str,
     end_location: str,
-    ctx: tuple[list, list, list],
+    ctx: tuple[list, list],
 ) -> list[dict]:
     """Request detour routes via waypoints that skirt blocking incidents."""
-    events, areas, alerts = ctx
+    events, areas = ctx
     candidates: list[dict] = []
     via_points = _bypass_via_points(incidents, start_coord, end_coord)
 
@@ -301,7 +284,7 @@ def _fetch_avoidance_routes(
             coords = osrm_item["geojson"]["geometry"]["coordinates"]
             scoring = _score_route_path(
                 coords, start_location, end_location,
-                events=events, areas=areas, alerts=alerts,
+                events=events, areas=areas,
             )
             if scoring["incidents_on_route"] >= len(incidents):
                 continue
@@ -320,7 +303,7 @@ def _fetch_avoidance_routes(
             coords = osrm_item["geojson"]["geometry"]["coordinates"]
             scoring = _score_route_path(
                 coords, start_location, end_location,
-                events=events, areas=areas, alerts=alerts,
+                events=events, areas=areas,
             )
             if scoring["incidents_on_route"] == 0:
                 candidates.append(_build_candidate(
@@ -388,7 +371,7 @@ def generate_route(
         end_coord = gazetteer.coord_for(end_location)
 
     ctx = _load_routing_context()
-    events, areas, alerts = ctx
+    events, areas = ctx
     candidates: list[dict] = []
     seen_keys: set[str] = set()
 
@@ -407,7 +390,7 @@ def generate_route(
             coords = item["geojson"]["geometry"]["coordinates"]
             scoring = _score_route_path(
                 coords, start_location, end_location,
-                events=events, areas=areas, alerts=alerts,
+                events=events, areas=areas,
             )
             label = "Direct route" if i == 0 else f"OSRM alternative {i}"
             add_candidate(_build_candidate(

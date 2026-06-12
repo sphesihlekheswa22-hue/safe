@@ -5,7 +5,6 @@ import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from models.alert import Alert
 from models.event import Event
 from models.institution import Institution
 from models.risk import RiskArea
@@ -62,10 +61,10 @@ def city_risk_summary() -> dict:
     }
 
 
-def critical_alerts(limit: int = 12) -> list[Alert]:
+def critical_incidents(limit: int = 12) -> list[Event]:
     return (
-        Alert.query.filter(Alert.severity.in_(("HIGH", "CRITICAL")))
-        .order_by(Alert.created_at.desc())
+        Event.query.filter(Event.severity >= 4)
+        .order_by(Event.created_at.desc())
         .limit(limit)
         .all()
     )
@@ -133,7 +132,7 @@ def unrest_patterns() -> dict:
     }
 
 
-def response_decisions(city_risk: dict, patterns: dict, alerts: list) -> list[dict]:
+def response_decisions(city_risk: dict, patterns: dict, critical: list) -> list[dict]:
     """Advisory coordination actions — government decides, system suggests."""
     decisions = []
     level = city_risk["city_level"]
@@ -169,11 +168,11 @@ def response_decisions(city_risk: dict, patterns: dict, alerts: list) -> list[di
             "urgency": "high",
         })
 
-    if len([a for a in alerts if a.severity == "CRITICAL"]) >= 2:
+    if len(critical) >= 2:
         decisions.append({
             "type": "broadcast",
             "title": "Issue city-wide public safety warning",
-            "detail": "Multiple CRITICAL alerts active — broadcast advisory to ALL users.",
+            "detail": "Multiple high-severity incidents active — review and communicate guidance.",
             "urgency": "critical",
         })
 
@@ -222,15 +221,15 @@ def dashboard_payload(user) -> dict:
     inst = _city_institution(user)
     city_risk = city_risk_summary()
     patterns = unrest_patterns()
-    alerts = critical_alerts()
+    critical = critical_incidents()
     incidents = live_incidents(20)
-    decisions = response_decisions(city_risk, patterns, alerts)
+    decisions = response_decisions(city_risk, patterns, critical)
 
     return {
         "city": CITY_NAME,
         "department": inst.to_dict() if inst else None,
         "city_risk": city_risk,
-        "critical_alerts": [a.to_dict() for a in alerts],
+        "critical_incidents": [e.to_dict() for e in critical],
         "unrest_patterns": patterns,
         "response_decisions": decisions,
         "live_incidents": [e.to_dict() for e in incidents],
@@ -243,11 +242,9 @@ def map_payload(user) -> dict:
     require_government(user)
     areas = RiskArea.query.order_by(RiskArea.risk_score.desc()).all()
     events = Event.query.order_by(Event.created_at.desc()).limit(50).all()
-    alerts = Alert.query.order_by(Alert.created_at.desc()).limit(20).all()
     return {
         "map_center": {"lng": 31.0218, "lat": -29.8587, "zoom": 10},
         "cities": gazetteer.CITY_MARKERS,
         "risk_areas": [a.to_dict() for a in areas],
         "incidents": [e.to_dict() for e in events],
-        "alerts": [a.to_dict() for a in alerts],
     }

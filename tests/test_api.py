@@ -19,6 +19,9 @@ def test_dashboard_summary(client, public_token):
     assert res.status_code == 200
     data = res.get_json()
     assert "kpis" in data and "risk_areas" in data
+    assert "high_severity_events" in data["kpis"]
+    assert "recent_events" in data
+    assert "active_alerts" not in data
 
 
 def test_analytics_requires_role(client, public_token, analyst_token):
@@ -52,12 +55,15 @@ def test_geocode_durban(client, public_token):
     assert any("Durban" in r["name"] for r in results)
 
 
-def test_alerts_scoped_by_role(client, public_token):
-    res = client.get("/api/alerts", headers=auth(public_token))
+def test_realtime_events_snapshot(client):
+    res = client.get("/api/realtime/events")
     assert res.status_code == 200
-    # Public user must not see analyst/admin-only alerts; only ALL or PUBLIC_USER.
-    for a in res.get_json()["alerts"]:
-        assert a["target_role"] in ("ALL", "PUBLIC_USER")
+    assert "events" in res.get_json()
+
+
+def test_alerts_api_removed(client, public_token):
+    res = client.get("/api/alerts", headers=auth(public_token))
+    assert res.status_code == 404
 
 
 def test_chat_requires_auth(client):
@@ -68,7 +74,7 @@ def test_chat_requires_auth(client):
 def test_chat_message_without_ai_key(client, public_token):
     res = client.post(
         "/api/chat/message",
-        json={"message": "What alerts are active?"},
+        json={"message": "What incidents are active?"},
         headers=auth(public_token),
     )
     assert res.status_code == 200

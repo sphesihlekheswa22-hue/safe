@@ -2,11 +2,9 @@
 from flask import Blueprint, request, jsonify, Response
 import json
 
-from models.alert import Alert
-from services import government_service, notification_service
-from schemas.alert_schema import validate_create
-from utils.validators import ValidationError
-from repositories import alert_repo
+from services import government_service, ingestion_service, notification_service
+from utils.validators import ValidationError, require
+from utils.security import clean_str
 from middleware.rbac_middleware import require_permission, current_user
 
 bp = Blueprint("government_portal", __name__)
@@ -67,26 +65,36 @@ def reports_download():
 @bp.post("/warnings")
 @require_permission("government:issue_warning")
 def issue_warning():
-    """Issue an official public safety warning to the city."""
+    """Issue an official public safety warning as a tracked event."""
     user, err = _portal_user()
     if err:
         return err
+
+    data = request.get_json(silent=True) or {}
     try:
-        data = validate_create(request.get_json(silent=True) or {})
+        require(data, "message", "location")
     except ValidationError as e:
         return jsonify(e.to_dict()), 400
 
-    # Government warnings default to city-wide unless a specific role is set
-    if not request.get_json(silent=True).get("target_role"):
-        data["target_role"] = "ALL"
+    message = clean_str(data.get("message"), 1000)
+    location = clean_str(data.get("location"), 255)
+    if not message or not location:
+        return jsonify(error="Message and location are required."), 400
 
-    alert = Alert(
-        message=data["message"],
-        severity=data["severity"],
-        target_role=data["target_role"],
+    try:
+        severity = max(1, min(5, int(data.get("severity", 4))))
+    except (TypeError, ValueError):
+        severity = 4
+
+    event = ingestion_service.ingest_event(
+        title=message[:200],
+        location=location,
+        severity=severity,
+        description=message,
+        source="government_warning",
         created_by=user.id,
     )
-    alert_repo.add(alert)
-    notification_service.dispatch_alert(alert)
-    notification_service.record_audit(user, "government.warning_issued", target=f"alert#{alert.id}")
-    return jsonify(message="Public safety warning issued.", alert=alert.to_dict()), 201
+    notification_service.record_audit(
+        user, "government.warning_issued", target=f"event#{event.id}",
+    )
+    return jsonify(message="Public safety warning recorded as incident.", event=event.to_dict()), 201
