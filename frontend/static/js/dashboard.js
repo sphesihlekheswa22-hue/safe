@@ -66,16 +66,16 @@
   }
 
   function eventBadge(sev) {
-    if (sev >= 4) return '<span class="event-badge" style="background:rgba(239,68,68,0.1);color:#dc2626">Critical</span>';
-    if (sev === 3) return '<span class="event-badge" style="background:rgba(245,158,11,0.1);color:#d97706">Moderate</span>';
-    if (sev === 2) return '<span class="event-badge" style="background:rgba(148,163,184,0.12);color:#64748b">Minor</span>';
-    return '<span class="event-badge" style="background:rgba(16,185,129,0.1);color:#059669">Low</span>';
+    if (sev >= 4) return '<span class="event-badge" style="background:rgba(239,68,68,0.15);color:#f87171">Critical</span>';
+    if (sev === 3) return '<span class="event-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24">Moderate</span>';
+    if (sev === 2) return '<span class="event-badge" style="background:rgba(148,163,184,0.12);color:#94a3b8">Minor</span>';
+    return '<span class="event-badge" style="background:rgba(16,185,129,0.15);color:#34d399">Low</span>';
   }
 
   function routeRiskBadge(score) {
-    if (score >= 70) return '<span class="route-risk" style="background:rgba(239,68,68,0.1);color:#dc2626">High</span>';
-    if (score >= 40) return '<span class="route-risk" style="background:rgba(245,158,11,0.1);color:#d97706">Medium</span>';
-    return '<span class="route-risk" style="background:rgba(16,185,129,0.1);color:#059669">Safe</span>';
+    if (score >= 70) return '<span class="route-risk" style="background:rgba(239,68,68,0.15);color:#f87171">High</span>';
+    if (score >= 40) return '<span class="route-risk" style="background:rgba(245,158,11,0.15);color:#fbbf24">Medium</span>';
+    return '<span class="route-risk" style="background:rgba(16,185,129,0.15);color:#34d399">Safe</span>';
   }
 
   function animateNumber(element, target, suffix, duration) {
@@ -130,7 +130,7 @@
     let color = "#10b981";
     if (score < 40) color = "#ef4444";
     else if (score < 60) color = "#f59e0b";
-    else if (score < 80) color = "#3b82f6";
+    else if (score < 80) color = "#818cf8";
 
     ring.style.stroke = color;
     setTimeout(() => { ring.style.strokeDashoffset = offset; }, 300);
@@ -158,13 +158,13 @@
           datasets: [{
             label: "Risk Score",
             data: [],
-            borderColor: "#2563eb",
-            backgroundColor: "rgba(37,99,235,0.08)",
+            borderColor: "#818cf8",
+            backgroundColor: "rgba(99,102,241,0.12)",
             borderWidth: 3,
             fill: true,
             tension: 0.4,
-            pointBackgroundColor: "#2563eb",
-            pointBorderColor: "#fff",
+            pointBackgroundColor: "#818cf8",
+            pointBorderColor: "#1e293b",
             pointBorderWidth: 2,
             pointRadius: 5,
             pointHoverRadius: 7,
@@ -187,7 +187,7 @@
           scales: {
             x: { grid: { display: false }, ticks: { font: { size: 10 }, color: "#94a3b8" } },
             y: {
-              grid: { color: "rgba(226,232,240,0.5)", drawBorder: false },
+              grid: { color: "rgba(148,163,184,0.12)", drawBorder: false },
               ticks: { font: { size: 10 }, color: "#94a3b8" },
               min: 0,
               max: 100,
@@ -222,7 +222,7 @@
                 boxWidth: 10,
                 padding: 15,
                 font: { size: 11, weight: "600" },
-                color: "#475569",
+                color: "#94a3b8",
                 usePointStyle: true,
                 pointStyle: "circle",
               },
@@ -257,7 +257,7 @@
     if (!entries.length) {
       categoryChart.data.labels = ["No incidents"];
       categoryChart.data.datasets[0].data = [1];
-      categoryChart.data.datasets[0].backgroundColor = ["#e2e8f0"];
+      categoryChart.data.datasets[0].backgroundColor = ["#334155"];
     } else {
       categoryChart.data.labels = entries.map(([label]) => label);
       categoryChart.data.datasets[0].data = entries.map(([, count]) => count);
@@ -288,14 +288,14 @@
     const rings = [
       { label: "Covered", value: analytics.coverage_pct || 0, color: "#10b981" },
       { label: "Incidents", value: analytics.incident_load_pct || 0, color: "#f59e0b" },
-      { label: "Safe Routes", value: analytics.route_safety_pct || 0, color: "#2563eb" },
+      { label: "Safe Routes", value: analytics.route_safety_pct || 0, color: "#818cf8" },
     ];
 
     const circumference = 2 * Math.PI * 28;
     container.innerHTML = rings.map((ring, i) => `
       <div class="ring-item a-fade-in" style="animation-delay:${i * 0.08}s">
         <svg width="70" height="70" viewBox="0 0 70 70" style="transform:rotate(-90deg)">
-          <circle cx="35" cy="35" r="28" fill="none" stroke="#e2e8f0" stroke-width="6"/>
+          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="6"/>
           <circle class="progress-ring-fill" cx="35" cy="35" r="28" fill="none" stroke="${ring.color}" stroke-width="6"
             stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
             data-target="${ring.value}" style="transition:stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1) ${i * 0.15}s"/>
@@ -323,10 +323,10 @@
     if (trendEl && trend && trend.length >= 2) {
       const delta = trend[trend.length - 1].score - trend[trend.length - 2].score;
       if (delta > 0) {
-        trendEl.className = "text-rose-600 font-bold flex items-center gap-1";
+        trendEl.className = "text-rose-400 font-bold flex items-center gap-1";
         trendEl.innerHTML = `<i class="fas fa-arrow-trend-up text-[10px]"></i> Risk +${delta}`;
       } else if (delta < 0) {
-        trendEl.className = "text-emerald-600 font-bold flex items-center gap-1";
+        trendEl.className = "text-emerald-400 font-bold flex items-center gap-1";
         trendEl.innerHTML = `<i class="fas fa-arrow-trend-down text-[10px]"></i> Risk ${delta}`;
       } else {
         trendEl.className = "text-surface-400 font-bold flex items-center gap-1";

@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% from 'base.html' import panel %}
 {% block title %}Dashboard · SafeRoute AI{% endblock %}
 
 {% block extra_head %}
@@ -7,47 +6,48 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   /* ════════════════════════════════════════════════════════
-     SAFEROUTE AI — PREMIUM DASHBOARD REDESIGN
+     SAFEROUTE AI — AURORA DASHBOARD 2026
      ════════════════════════════════════════════════════════ */
 
   :root {
-    --d-bg: #f8fafc;
-    --d-card: rgba(255,255,255,0.82);
-    --d-border: rgba(226,232,240,0.6);
-    --d-text: #0f172a;
-    --d-muted: #64748b;
-    --d-primary: #2563eb;
-    --d-primary-light: #eff6ff;
-    --d-success: #10b981;
-    --d-warning: #f59e0b;
-    --d-danger: #ef4444;
-    --d-critical: #dc2626;
-    --d-violet: #8b5cf6;
-    --d-cyan: #06b6d4;
-    --d-rose: #f43f5e;
+    --a-bg: #020617;
+    --a-surface: #0f172a;
+    --a-elevated: #1e293b;
+    --a-card: rgba(30, 41, 59, 0.7);
+    --a-border: rgba(148, 163, 184, 0.12);
+    --a-text: #f8fafc;
+    --a-muted: #94a3b8;
+    --a-primary: #6366f1;
+    --a-primary-light: #818cf8;
+    --a-primary-dark: #4f46e5;
+    --a-success: #10b981;
+    --a-warning: #f59e0b;
+    --a-danger: #ef4444;
+    --a-critical: #dc2626;
+    --a-cyan: #06b6d4;
+    --a-violet: #8b5cf6;
+    --a-rose: #f43f5e;
   }
 
   /* ── Keyframes ── */
-  @keyframes fadeUp      { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeIn       { from{opacity:0} to{opacity:1} }
-  @keyframes slideRight   { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
-  @keyframes countPop     { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
-  @keyframes shimmer      { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  @keyframes livePulse   { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{opacity:0.7;box-shadow:0 0 0 8px rgba(16,185,129,0)} }
-  @keyframes barGrow     { from{width:0} }
-  @keyframes floatCard   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
-  @keyframes ringPulse   { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.5);opacity:0} }
-  @keyframes dotBounce   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
-  @keyframes glowPulse   { 0%,100%{box-shadow:0 0 20px rgba(37,99,235,0.08)} 50%{box-shadow:0 0 30px rgba(37,99,235,0.18)} }
-  @keyframes gaugeFill   { from{stroke-dashoffset:283} }
-  @keyframes chartGrow   { from{transform:scaleY(0)} to{transform:scaleY(1)} }
-  @keyframes slideInUp   { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes pulseGlow   { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)} 50%{box-shadow:0 0 0 12px rgba(239,68,68,0)} }
+  @keyframes a-fadeUp      { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes a-fadeIn       { from{opacity:0} to{opacity:1} }
+  @keyframes a-slideRight   { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes a-countPop     { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  @keyframes a-shimmer      { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes a-livePulse   { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{opacity:0.7;box-shadow:0 0 0 8px rgba(16,185,129,0)} }
+  @keyframes a-ringPulse   { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.5);opacity:0} }
+  @keyframes a-floatCard   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes a-glowPulse   { 0%,100%{box-shadow:0 0 20px rgba(99,102,241,0.1)} 50%{box-shadow:0 0 40px rgba(99,102,241,0.25)} }
+  @keyframes a-gaugeFill   { from{stroke-dashoffset:283} }
+  @keyframes a-chartGrow   { from{transform:scaleY(0)} to{transform:scaleY(1)} }
+  @keyframes a-slideInUp   { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes a-pulseGlow   { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)} 50%{box-shadow:0 0 0 12px rgba(239,68,68,0)} }
 
-  .a-fade-up  { animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
-  .a-fade-in  { animation: fadeIn 0.5s ease both; }
-  .a-slide-r  { animation: slideRight 0.5s ease both; }
-  .a-pop      { animation: countPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+  .a-fade-up  { animation: a-fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+  .a-fade-in  { animation: a-fadeIn 0.5s ease both; }
+  .a-slide-r  { animation: a-slideRight 0.5s ease both; }
+  .a-pop      { animation: a-countPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
   .d1 { animation-delay: 0.05s; }
   .d2 { animation-delay: 0.12s; }
   .d3 { animation-delay: 0.20s; }
@@ -68,18 +68,18 @@
     top: -60px; left: -80px; right: -80px;
     height: 400px;
     background:
-      radial-gradient(ellipse 70% 50% at 15% 20%, rgba(37,99,235,0.055) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 85% 15%, rgba(16,185,129,0.04) 0%, transparent 55%),
-      radial-gradient(ellipse 40% 35% at 50% 10%, rgba(139,92,246,0.03) 0%, transparent 50%);
+      radial-gradient(ellipse 70% 50% at 15% 20%, rgba(99,102,241,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 85% 15%, rgba(16,185,129,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 35% at 50% 10%, rgba(139,92,246,0.04) 0%, transparent 50%);
     pointer-events: none;
     z-index: -1;
   }
   .dash-hero-greet {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-bottom: 0.25rem;
   }
   .dash-hero h1 {
@@ -87,13 +87,13 @@
     font-weight: 800;
     letter-spacing: -0.035em;
     line-height: 1.1;
-    background: linear-gradient(135deg, #0f172a 0%, #334155 60%, #475569 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 60%, #818cf8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .dash-hero p {
-    color: var(--d-muted);
+    color: var(--a-muted);
     max-width: 480px;
     margin-top: 0.5rem;
     font-size: 0.9375rem;
@@ -102,7 +102,8 @@
   .dash-hero-cta {
     display: inline-flex; align-items: center; gap: 0.5rem;
     padding: 0.875rem 1.75rem;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #6366f1, #4f46e5, #7c3aed);
+    background-size: 200% 200%;
     color: #fff;
     border-radius: 0.875rem;
     font-size: 0.875rem;
@@ -112,19 +113,20 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
-    box-shadow: 0 4px 16px -2px rgba(37,99,235,0.35), 0 0 0 1px rgba(37,99,235,0.1);
+    box-shadow: 0 4px 16px -2px rgba(99,102,241,0.4), 0 0 0 1px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
     letter-spacing: -0.01em;
   }
   .dash-hero-cta::before {
     content: '';
     position: absolute; top: 0; left: -100%;
     width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
     transition: left 0.6s ease;
   }
   .dash-hero-cta:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px -4px rgba(37,99,235,0.45), 0 0 0 1px rgba(37,99,235,0.15);
+    box-shadow: 0 8px 28px -4px rgba(99,102,241,0.5), 0 0 0 1px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+    background-position: 100% 100%;
   }
   .dash-hero-cta:hover::before { left: 100%; }
   .dash-hero-cta i { font-size: 0.75rem; }
@@ -133,20 +135,20 @@
   .live-pill {
     display: inline-flex; align-items: center; gap: 0.4rem;
     padding: 0.35rem 0.875rem;
-    background: rgba(16,185,129,0.08);
-    border: 1px solid rgba(16,185,129,0.18);
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.2);
     border-radius: 999px;
     font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #059669;
+    color: #34d399;
   }
   .live-pill-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
     background: #10b981;
-    animation: livePulse 2s ease infinite;
+    animation: a-livePulse 2s ease infinite;
     position: relative;
   }
   .live-pill-dot::after {
@@ -154,7 +156,7 @@
     position: absolute; inset: -2px;
     border-radius: 50%;
     border: 1.5px solid #10b981;
-    animation: ringPulse 2s ease infinite;
+    animation: a-ringPulse 2s ease infinite;
   }
 
   /* ── KPI Cards ── */
@@ -165,12 +167,12 @@
     margin-bottom: 1.75rem;
   }
   .kpi-card {
-    background: var(--d-card);
-    backdrop-filter: blur(24px) saturate(1.3);
-    border: 1px solid rgba(255,255,255,0.55);
+    background: var(--a-card);
+    backdrop-filter: blur(24px) saturate(1.5);
+    border: 1px solid var(--a-border);
     border-radius: 1.25rem;
     padding: 1.5rem;
-    box-shadow: 0 4px 12px -2px rgba(15,23,42,0.04), 0 0 0 1px rgba(15,23,42,0.02);
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.05);
     transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
     position: relative;
     overflow: hidden;
@@ -185,10 +187,11 @@
   }
   .kpi-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 16px 40px -8px rgba(15,23,42,0.1), 0 0 0 1px rgba(15,23,42,0.03);
+    box-shadow: 0 16px 40px -8px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08);
+    border-color: rgba(99,102,241,0.2);
   }
   .kpi-card:hover::before { opacity: 1; }
-  .kpi-card.kpi-blue::before   { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .kpi-card.kpi-blue::before   { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
   .kpi-card.kpi-rose::before   { background: linear-gradient(90deg, #f87171, #ef4444); }
   .kpi-card.kpi-amber::before  { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
   .kpi-card.kpi-violet::before { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
@@ -211,13 +214,13 @@
     opacity: 0.15;
     filter: blur(8px);
   }
-  .kpi-blue   .kpi-icon-wrap { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+  .kpi-blue   .kpi-icon-wrap { background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(37,99,235,0.1)); color: #60a5fa; }
   .kpi-blue   .kpi-icon-wrap::after { background: #3b82f6; }
-  .kpi-rose   .kpi-icon-wrap { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #ef4444; }
+  .kpi-rose   .kpi-icon-wrap { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.1)); color: #f87171; }
   .kpi-rose   .kpi-icon-wrap::after { background: #f87171; }
-  .kpi-amber  .kpi-icon-wrap { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #f59e0b; }
+  .kpi-amber  .kpi-icon-wrap { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.1)); color: #fbbf24; }
   .kpi-amber  .kpi-icon-wrap::after { background: #fbbf24; }
-  .kpi-violet .kpi-icon-wrap { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #8b5cf6; }
+  .kpi-violet .kpi-icon-wrap { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(124,58,237,0.1)); color: #a78bfa; }
   .kpi-violet .kpi-icon-wrap::after { background: #a78bfa; }
 
   .kpi-trend {
@@ -229,28 +232,28 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
-  .trend-up   { background: rgba(16,185,129,0.1); color: #059669; }
-  .trend-down { background: rgba(239,68,68,0.1);   color: #dc2626; }
-  .trend-flat { background: rgba(148,163,184,0.1); color: #64748b; }
+  .trend-up   { background: rgba(16,185,129,0.1); color: #34d399; }
+  .trend-down { background: rgba(239,68,68,0.1);   color: #f87171; }
+  .trend-flat { background: rgba(148,163,184,0.1); color: #94a3b8; }
 
   .kpi-value {
     font-size: 2rem;
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 1;
-    color: var(--d-text);
+    color: var(--a-text);
   }
   .kpi-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-top: 0.375rem;
     letter-spacing: -0.01em;
   }
   .kpi-bar-wrap {
     margin-top: 1rem;
     height: 5px;
-    background: rgba(226,232,240,0.5);
+    background: rgba(148,163,184,0.1);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -265,57 +268,57 @@
     position: absolute; right: 0; top: -2px; bottom: -2px;
     width: 8px;
     border-radius: 999px;
-    background: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.3);
     filter: blur(2px);
   }
-  .kpi-blue   .kpi-bar { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+  .kpi-blue   .kpi-bar { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
   .kpi-rose   .kpi-bar { background: linear-gradient(90deg, #f87171, #ef4444); }
   .kpi-amber  .kpi-bar { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
   .kpi-violet .kpi-bar { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
 
   /* ── Glass Panel ── */
   .d-panel {
-    background: var(--d-card);
-    backdrop-filter: blur(24px) saturate(1.3);
-    border: 1px solid rgba(255,255,255,0.55);
+    background: var(--a-card);
+    backdrop-filter: blur(24px) saturate(1.5);
+    border: 1px solid var(--a-border);
     border-radius: 1.25rem;
-    box-shadow: 0 4px 12px -2px rgba(15,23,42,0.04), 0 0 0 1px rgba(15,23,42,0.02);
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.05);
     overflow: hidden;
-    transition: box-shadow 0.3s ease;
+    transition: all 0.3s ease;
     display: flex; flex-direction: column;
   }
-  .d-panel:hover { box-shadow: 0 12px 32px -6px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.03); }
+  .d-panel:hover { box-shadow: 0 12px 32px -6px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08); border-color: rgba(99,102,241,0.2); }
   .d-panel-head {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--d-border);
-    background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(248,250,252,0.85));
+    border-bottom: 1px solid var(--a-border);
+    background: linear-gradient(to right, rgba(30,41,59,0.9), rgba(15,23,42,0.85));
     display: flex; align-items: center; justify-content: space-between;
   }
   .d-panel-head h3 {
     font-size: 0.9375rem;
     font-weight: 700;
-    color: var(--d-text);
+    color: var(--a-text);
     letter-spacing: -0.01em;
     display: flex; align-items: center; gap: 0.5rem;
   }
-  .d-panel-head h3 i { font-size: 0.75rem; opacity: 0.7; }
+  .d-panel-head h3 i { font-size: 0.75rem; opacity: 0.8; }
   .d-panel-head p {
     font-size: 0.6875rem;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-top: 0.15rem;
   }
   .d-panel-body { padding: 1.25rem 1.5rem; flex: 1; }
   .d-panel-foot {
     padding: 0.875rem 1.5rem;
-    border-top: 1px solid var(--d-border);
-    background: rgba(248,250,252,0.4);
+    border-top: 1px solid var(--a-border);
+    background: rgba(15,23,42,0.4);
   }
   .d-panel-foot a {
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 0.75rem; font-weight: 700; color: var(--d-muted);
+    font-size: 0.75rem; font-weight: 700; color: var(--a-muted);
     transition: all 0.2s ease;
   }
-  .d-panel-foot a:hover { color: var(--d-primary); }
+  .d-panel-foot a:hover { color: var(--a-primary-light); }
   .d-panel-foot a i { font-size: 0.625rem; transition: transform 0.2s; }
   .d-panel-foot a:hover i { transform: translateX(3px); }
 
@@ -333,7 +336,7 @@
   }
   .gauge-bg {
     fill: none;
-    stroke: #e2e8f0;
+    stroke: rgba(148,163,184,0.15);
     stroke-width: 12;
     stroke-linecap: round;
   }
@@ -355,7 +358,7 @@
   .gauge-value {
     font-size: 2rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--a-text);
     line-height: 1;
     letter-spacing: -0.03em;
   }
@@ -364,7 +367,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #94a3b8;
+    color: var(--a-muted);
     margin-top: 0.25rem;
   }
   .gauge-risk-low    .gauge-fill { stroke: #10b981; }
@@ -382,8 +385,8 @@
     border: 1px solid transparent;
   }
   .risk-item:hover {
-    background: rgba(37,99,235,0.03);
-    border-color: rgba(37,99,235,0.08);
+    background: rgba(99,102,241,0.05);
+    border-color: rgba(99,102,241,0.1);
     transform: translateX(3px);
   }
   .risk-item-icon {
@@ -397,20 +400,20 @@
   .risk-item-name {
     font-size: 0.8125rem;
     font-weight: 700;
-    color: var(--d-text);
+    color: var(--a-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .risk-item-meta {
     font-size: 0.6875rem;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-top: 1px;
   }
   .risk-item-bar-wrap {
     width: 100%;
     height: 4px;
-    background: rgba(226,232,240,0.5);
+    background: rgba(148,163,184,0.1);
     border-radius: 999px;
     margin-top: 0.375rem;
     overflow: hidden;
@@ -426,13 +429,14 @@
     width: 2.5rem;
     text-align: right;
     flex-shrink: 0;
+    color: var(--a-text);
   }
   .risk-item-arrow {
-    color: #cbd5e1;
+    color: #475569;
     font-size: 0.625rem;
     transition: all 0.2s;
   }
-  .risk-item:hover .risk-item-arrow { color: var(--d-primary); transform: translateX(2px); }
+  .risk-item:hover .risk-item-arrow { color: var(--a-primary-light); transform: translateX(2px); }
 
   /* ── Alert Items ── */
   .alert-item {
@@ -454,14 +458,14 @@
     transition: opacity 0.2s;
   }
   .alert-item:hover {
-    background: rgba(255,255,255,0.6);
-    border-color: var(--d-border);
+    background: rgba(30,41,59,0.5);
+    border-color: var(--a-border);
     transform: translateX(2px);
   }
   .alert-item:hover::before { opacity: 1; }
-  .alert-item.alert-high::before   { background: var(--d-danger); }
-  .alert-item.alert-medium::before { background: var(--d-warning); }
-  .alert-item.alert-low::before    { background: var(--d-success); }
+  .alert-item.alert-high::before   { background: var(--a-danger); }
+  .alert-item.alert-medium::before { background: var(--a-warning); }
+  .alert-item.alert-low::before    { background: var(--a-success); }
 
   .alert-icon {
     width: 2rem; height: 2rem;
@@ -471,20 +475,20 @@
     flex-shrink: 0;
     margin-top: 1px;
   }
-  .alert-icon.alert-high   { background: rgba(239,68,68,0.08);  color: #ef4444; }
-  .alert-icon.alert-medium { background: rgba(245,158,11,0.08); color: #f59e0b; }
-  .alert-icon.alert-low    { background: rgba(16,185,129,0.08); color: #10b981; }
+  .alert-icon.alert-high   { background: rgba(239,68,68,0.1);  color: #f87171; }
+  .alert-icon.alert-medium { background: rgba(245,158,11,0.1); color: #fbbf24; }
+  .alert-icon.alert-low    { background: rgba(16,185,129,0.1); color: #34d399; }
 
   .alert-content { flex: 1; min-width: 0; }
   .alert-title {
     font-size: 0.8125rem;
     font-weight: 700;
-    color: var(--d-text);
+    color: var(--a-text);
     line-height: 1.3;
   }
   .alert-desc {
     font-size: 0.6875rem;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-top: 2px;
     line-height: 1.4;
   }
@@ -493,7 +497,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #94a3b8;
+    color: #475569;
     white-space: nowrap;
     margin-top: 2px;
   }
@@ -508,8 +512,8 @@
     border: 1px solid transparent;
   }
   .event-item:hover {
-    background: rgba(255,255,255,0.6);
-    border-color: var(--d-border);
+    background: rgba(30,41,59,0.5);
+    border-color: var(--a-border);
     transform: translateX(2px);
   }
   .event-dot {
@@ -529,14 +533,14 @@
   .event-title {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--d-text);
+    color: var(--a-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .event-meta {
     font-size: 0.6875rem;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-top: 1px;
   }
   .event-badge {
@@ -554,16 +558,16 @@
     display: flex; align-items: center; gap: 0.875rem;
     padding: 0.875rem 1rem;
     border-radius: 0.875rem;
-    background: rgba(255,255,255,0.5);
-    border: 1px solid rgba(226,232,240,0.4);
+    background: rgba(15,23,42,0.4);
+    border: 1px solid var(--a-border);
     transition: all 0.25s ease;
     cursor: pointer;
   }
   .route-card:hover {
-    background: rgba(255,255,255,0.9);
-    border-color: rgba(37,99,235,0.15);
+    background: rgba(15,23,42,0.6);
+    border-color: rgba(99,102,241,0.2);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px -2px rgba(15,23,42,0.06);
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.2);
   }
   .route-num {
     width: 1.75rem; height: 1.75rem;
@@ -571,23 +575,24 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 0.6875rem;
     font-weight: 800;
-    background: #f1f5f9;
+    background: rgba(30,41,59,0.6);
     color: #64748b;
     flex-shrink: 0;
+    border: 1px solid var(--a-border);
   }
   .route-info { flex: 1; min-width: 0; }
   .route-path {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--d-text);
+    color: var(--a-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .route-path i { color: #cbd5e1; font-size: 0.5rem; margin: 0 0.25rem; }
+  .route-path i { color: #475569; font-size: 0.5rem; margin: 0 0.25rem; }
   .route-sub {
     font-size: 0.6875rem;
-    color: var(--d-muted);
+    color: var(--a-muted);
     margin-top: 1px;
   }
   .route-risk {
@@ -626,7 +631,7 @@
   }
   .safety-ring-bg {
     fill: none;
-    stroke: #e2e8f0;
+    stroke: rgba(148,163,184,0.1);
     stroke-width: 10;
   }
   .safety-ring-fill {
@@ -647,7 +652,7 @@
   .safety-ring-value {
     font-size: 1.75rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--a-text);
     line-height: 1;
     letter-spacing: -0.03em;
   }
@@ -656,7 +661,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #94a3b8;
+    color: var(--a-muted);
     margin-top: 0.25rem;
   }
 
@@ -676,7 +681,7 @@
   .heatmap-cell:hover {
     transform: scale(1.2);
     z-index: 10;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
   .heatmap-cell::after {
     content: attr(data-day);
@@ -684,8 +689,8 @@
     bottom: calc(100% + 6px);
     left: 50%;
     transform: translateX(-50%);
-    background: #0f172a;
-    color: #fff;
+    background: var(--a-surface);
+    color: var(--a-text);
     font-size: 0.625rem;
     padding: 0.25rem 0.5rem;
     border-radius: 0.375rem;
@@ -694,17 +699,16 @@
     pointer-events: none;
     transition: opacity 0.2s;
     z-index: 20;
+    border: 1px solid var(--a-border);
   }
-  .heatmap-cell:hover::after {
-    opacity: 1;
-  }
+  .heatmap-cell:hover::after { opacity: 1; }
   .heatmap-legend {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-top: 0.75rem;
     font-size: 0.625rem;
-    color: #94a3b8;
+    color: var(--a-muted);
     font-weight: 600;
   }
   .heatmap-legend-gradient {
@@ -730,15 +734,15 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #94a3b8;
+    color: var(--a-muted);
     margin-top: 0.5rem;
   }
 
   /* ── Mini Stats ── */
   .mini-stat {
-    background: var(--d-card);
+    background: var(--a-card);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.5);
+    border: 1px solid var(--a-border);
     border-radius: 1rem;
     padding: 1.25rem;
     text-align: center;
@@ -756,11 +760,14 @@
   }
   .mini-stat:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 28px -6px rgba(15,23,42,0.08);
+    box-shadow: 0 12px 28px -6px rgba(0,0,0,0.3);
+    border-color: rgba(99,102,241,0.2);
   }
   .mini-stat:hover::before { opacity: 1; }
   .mini-stat.ms-green::before  { background: linear-gradient(90deg, #34d399, #10b981); }
   .mini-stat.ms-blue::before   { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+  .mini-stat.ms-amber::before  { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .mini-stat.ms-rose::before   { background: linear-gradient(90deg, #f87171, #ef4444); }
   .mini-stat-icon {
     width: 2.5rem; height: 2.5rem;
     border-radius: 0.75rem;
@@ -776,15 +783,19 @@
     opacity: 0.12;
     filter: blur(6px);
   }
-  .ms-green .mini-stat-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #059669; }
+  .ms-green .mini-stat-icon { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.1)); color: #34d399; }
   .ms-green .mini-stat-icon::after { background: #34d399; }
-  .ms-blue .mini-stat-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+  .ms-blue .mini-stat-icon { background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(37,99,235,0.1)); color: #60a5fa; }
   .ms-blue .mini-stat-icon::after { background: #60a5fa; }
+  .ms-amber .mini-stat-icon { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.1)); color: #fbbf24; }
+  .ms-amber .mini-stat-icon::after { background: #fbbf24; }
+  .ms-rose .mini-stat-icon { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.1)); color: #f87171; }
+  .ms-rose .mini-stat-icon::after { background: #f87171; }
   .mini-stat-value {
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -0.02em;
-    color: var(--d-text);
+    color: var(--a-text);
     line-height: 1;
   }
   .mini-stat-label {
@@ -792,17 +803,18 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #94a3b8;
+    color: var(--a-muted);
     margin-top: 0.375rem;
   }
 
   /* ── Skeleton ── */
-  .skel { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem; }
+  .skel { background: linear-gradient(90deg, rgba(30,41,59,0.6) 25%, rgba(51,65,85,0.6) 50%, rgba(30,41,59,0.6) 75%); background-size: 200% 100%; animation: a-shimmer 1.5s infinite; border-radius: 0.5rem; }
 
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.4); }
 
   /* ── Responsive ── */
   @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -837,7 +849,6 @@
 
 <!-- ═══ KPI ROW ═══ -->
 <div class="kpi-grid">
-  <!-- Average Risk -->
   <div class="kpi-card kpi-blue a-fade-up d1">
     <div class="kpi-top">
       <div class="kpi-icon-wrap"><i class="fas fa-chart-simple"></i></div>
@@ -847,8 +858,6 @@
     <p class="kpi-label">Average Risk Score</p>
     <div class="kpi-bar-wrap"><div id="kpi-avg-risk-bar" class="kpi-bar" style="width:0%"></div></div>
   </div>
-
-  <!-- High Risk Areas -->
   <div class="kpi-card kpi-rose a-fade-up d2">
     <div class="kpi-top">
       <div class="kpi-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
@@ -858,8 +867,6 @@
     <p class="kpi-label">High-Risk Areas</p>
     <div class="kpi-bar-wrap"><div id="kpi-high-risk-bar" class="kpi-bar" style="width:0%"></div></div>
   </div>
-
-  <!-- High Severity Events -->
   <div class="kpi-card kpi-amber a-fade-up d3">
     <div class="kpi-top">
       <div class="kpi-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
@@ -869,8 +876,6 @@
     <p class="kpi-label">High-Severity Events</p>
     <div class="kpi-bar-wrap"><div id="kpi-high-severity-bar" class="kpi-bar" style="width:0%"></div></div>
   </div>
-
-  <!-- Tracked Events -->
   <div class="kpi-card kpi-violet a-fade-up d4">
     <div class="kpi-top">
       <div class="kpi-icon-wrap"><i class="fas fa-calendar-check"></i></div>
@@ -882,19 +887,14 @@
   </div>
 </div>
 
-<!-- ═══ MAIN GRID: VISUALS + RISK AREAS ═══ -->
+<!-- ═══ MAIN GRID ═══ -->
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-
-  <!-- LEFT: VISUAL DASHBOARD (2 cols) -->
   <div class="xl:col-span-2 space-y-6">
-
-    <!-- Safety Score Gauge + Chart -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Safety Score Ring -->
       <div class="d-panel a-fade-up d2">
         <div class="d-panel-head">
           <div>
-            <h3><i class="fas fa-shield-halved text-emerald-500"></i> Community Safety Score</h3>
+            <h3><i class="fas fa-shield-halved text-emerald-400"></i> Community Safety Score</h3>
             <p>Overall safety health rating</p>
           </div>
         </div>
@@ -912,17 +912,15 @@
         </div>
         <div class="d-panel-foot">
           <div class="flex items-center justify-between text-xs">
-            <span class="text-surface-400 font-medium" id="safety-score-updated">Live data</span>
-            <span class="text-emerald-600 font-bold flex items-center gap-1" id="safety-score-trend"></span>
+            <span class="text-surface-500 font-medium" id="safety-score-updated">Live data</span>
+            <span class="text-emerald-400 font-bold flex items-center gap-1" id="safety-score-trend"></span>
           </div>
         </div>
       </div>
-
-      <!-- Risk Trend Chart -->
       <div class="d-panel a-fade-up d3">
         <div class="d-panel-head">
           <div>
-            <h3><i class="fas fa-chart-line text-primary-500"></i> Risk Trend (7 Days)</h3>
+            <h3><i class="fas fa-chart-line text-primary-400"></i> Risk Trend (7 Days)</h3>
             <p>Daily risk score movement</p>
           </div>
         </div>
@@ -934,19 +932,16 @@
       </div>
     </div>
 
-    <!-- Incident Heatmap -->
     <div class="d-panel a-fade-up d4">
       <div class="d-panel-head">
         <div>
-          <h3><i class="fas fa-fire text-rose-500"></i> Incident Activity Heatmap</h3>
+          <h3><i class="fas fa-fire text-rose-400"></i> Incident Activity Heatmap</h3>
           <p>Last 28 days of incident density</p>
         </div>
         <span class="live-pill"><span class="live-pill-dot"></span>Live</span>
       </div>
       <div class="d-panel-body">
-        <div class="heatmap-grid" id="incident-heatmap">
-          <!-- Generated by JS -->
-        </div>
+        <div class="heatmap-grid" id="incident-heatmap"></div>
         <div class="heatmap-legend">
           <span>Low</span>
           <div class="heatmap-legend-gradient"></div>
@@ -955,11 +950,10 @@
       </div>
     </div>
 
-    <!-- Category Breakdown Chart -->
     <div class="d-panel a-fade-up d5">
       <div class="d-panel-head">
         <div>
-          <h3><i class="fas fa-chart-pie text-violet-500"></i> Incident Categories</h3>
+          <h3><i class="fas fa-chart-pie text-violet-400"></i> Incident Categories</h3>
           <p>Breakdown by type</p>
         </div>
       </div>
@@ -971,18 +965,16 @@
     </div>
   </div>
 
-  <!-- RIGHT: Risk Areas Panel -->
   <div class="d-panel a-fade-up d3">
     <div class="d-panel-head">
       <div>
-        <h3><i class="fas fa-map-location-dot text-primary-500"></i> Risk Area Status</h3>
+        <h3><i class="fas fa-map-location-dot text-primary-400"></i> Risk Area Status</h3>
         <p>Live monitoring of community areas</p>
       </div>
       <span class="live-pill"><span class="live-pill-dot"></span>Live</span>
     </div>
     <div class="d-panel-body">
       <div id="risk-areas-container" class="space-y-1">
-        <!-- Skeleton -->
         <div class="a-fade-in">
           {% for i in range(5) %}
           <div class="flex items-center gap-3 py-3 px-1">
@@ -998,24 +990,20 @@
       </div>
     </div>
     <div class="d-panel-foot">
-      <a href="/map">
-        View Safety Map <i class="fas fa-chevron-right"></i>
-      </a>
+      <a href="/map">View Safety Map <i class="fas fa-chevron-right"></i></a>
     </div>
   </div>
 </div>
 
-<!-- ═══ BOTTOM ROW: ALERTS + ROUTES + MINI STATS ═══ -->
+<!-- ═══ BOTTOM ROW ═══ -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-  <!-- Recent Events -->
   <div class="d-panel a-fade-up d5">
     <div class="d-panel-head">
       <div>
-        <h3><i class="fas fa-clock-rotate-left text-rose-500"></i> Recent Events</h3>
+        <h3><i class="fas fa-clock-rotate-left text-rose-400"></i> Recent Events</h3>
         <p>Latest community incidents and reports</p>
       </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider text-surface-400 bg-surface-100/80 px-2 py-1 rounded-md">Today</span>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-surface-500 bg-surface-800/60 border border-surface-700/50 px-2 py-1 rounded-md">Today</span>
     </div>
     <div class="d-panel-body">
       <div id="events-feed" class="space-y-1">
@@ -1025,24 +1013,19 @@
       </div>
     </div>
     <div class="d-panel-foot">
-      <a href="/my-city">
-        View events in my city <i class="fas fa-chevron-right"></i>
-      </a>
-      <span class="text-surface-300 mx-2">·</span>
-      <a href="/events">
-        View all events <i class="fas fa-chevron-right"></i>
-      </a>
+      <a href="/my-city">View events in my city <i class="fas fa-chevron-right"></i></a>
+      <span class="text-surface-600 mx-2">·</span>
+      <a href="/events">View all events <i class="fas fa-chevron-right"></i></a>
     </div>
   </div>
 
-  <!-- Recommended Routes -->
   <div class="d-panel a-fade-up d6">
     <div class="d-panel-head">
       <div>
-        <h3><i class="fas fa-route text-primary-500"></i> Recommended Safe Routes</h3>
+        <h3><i class="fas fa-route text-primary-400"></i> Recommended Safe Routes</h3>
         <p>Low-risk corridor options curated by AI</p>
       </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider text-surface-400 bg-surface-100/80 px-2 py-1 rounded-md">Top 5</span>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-surface-500 bg-surface-800/60 border border-surface-700/50 px-2 py-1 rounded-md">Top 5</span>
     </div>
     <div class="d-panel-body">
       <div id="routes-feed" class="space-y-2">
@@ -1052,30 +1035,22 @@
       </div>
     </div>
     <div class="d-panel-foot">
-      <a href="/routes">
-        View all routes <i class="fas fa-chevron-right"></i>
-      </a>
+      <a href="/routes">View all routes <i class="fas fa-chevron-right"></i></a>
     </div>
   </div>
 
-  <!-- Mini Stats + Progress Rings -->
   <div class="space-y-6">
-    <!-- Progress Rings -->
     <div class="d-panel a-fade-up d5">
       <div class="d-panel-head">
         <div>
-          <h3><i class="fas fa-bullseye text-cyan-500"></i> Area Coverage</h3>
+          <h3><i class="fas fa-bullseye text-cyan-400"></i> Area Coverage</h3>
           <p>Monitoring metrics breakdown</p>
         </div>
       </div>
       <div class="d-panel-body">
-        <div class="ring-row" id="progress-rings">
-          <!-- Generated by JS -->
-        </div>
+        <div class="ring-row" id="progress-rings"></div>
       </div>
     </div>
-
-    <!-- Mini Stats Grid -->
     <div class="grid grid-cols-2 gap-4">
       <div class="mini-stat ms-green a-fade-up d6">
         <div class="mini-stat-icon"><i class="fas fa-shield-halved"></i></div>
@@ -1087,17 +1062,13 @@
         <p id="monitored-areas-count" class="mini-stat-value">—</p>
         <p class="mini-stat-label">Monitored Areas</p>
       </div>
-      <div class="mini-stat ms-green a-fade-up d6">
-        <div class="mini-stat-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;">
-          <i class="fas fa-users"></i>
-        </div>
+      <div class="mini-stat ms-amber a-fade-up d6">
+        <div class="mini-stat-icon"><i class="fas fa-users"></i></div>
         <p id="community-count" class="mini-stat-value">—</p>
         <p class="mini-stat-label">Community</p>
       </div>
-      <div class="mini-stat ms-blue a-fade-up d7">
-        <div class="mini-stat-icon" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#db2777;">
-          <i class="fas fa-heart-pulse"></i>
-        </div>
+      <div class="mini-stat ms-rose a-fade-up d7">
+        <div class="mini-stat-icon"><i class="fas fa-heart-pulse"></i></div>
         <p id="health-count" class="mini-stat-value">—</p>
         <p class="mini-stat-label">Safety Health</p>
       </div>
