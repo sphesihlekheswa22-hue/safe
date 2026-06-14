@@ -137,10 +137,29 @@
   }
   .aurora-card--planner {
     overflow: visible;
-    position: relative;
-    z-index: 30;
   }
-  .aurora-card:hover { box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+  .aurora-card--planner:hover {
+    transform: none;
+  }
+
+  .routes-layout {
+    width: 100%;
+    align-items: start;
+  }
+  .routes-planner-col,
+  .routes-main-col {
+    min-width: 0;
+  }
+  .routes-planner-col {
+    isolation: isolate;
+  }
+
+  .location-autocomplete {
+    position: relative;
+  }
+
+  .aurora-field-group { position: relative; z-index: 1; }
+  .aurora-field-group:focus-within { z-index: 8; }
   .aurora-card-header {
     padding: 1.5rem 1.75rem;
     border-bottom: 1px solid var(--aurora-border);
@@ -152,8 +171,7 @@
   .aurora-card-header p { font-size: 0.75rem; color: var(--aurora-text-muted); margin-top: 0.2rem; margin-left: 1.375rem; }
   .aurora-card-header .tag { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--aurora-text-muted); padding: 0.3rem 0.75rem; background: rgba(148, 163, 184, 0.1); border: 1px solid var(--aurora-border); border-radius: 0.5rem; }
 
-  .aurora-field-group { position: relative; z-index: 10; }
-  .aurora-field-group:focus-within { z-index: 50; }
+  .aurora-card:hover { box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
   .aurora-field-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 0.5rem; }
   .aurora-field-label i { color: var(--aurora-primary-light); font-size: 0.625rem; }
   .aurora-input-wrap { display: flex; gap: 0.5rem; }
@@ -184,7 +202,7 @@
   .aurora-submit i { margin-right: 0.5rem; }
   .aurora-submit .spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: aurora-rotate 0.8s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
 
-  .geo-suggestions { position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 60; max-height: 280px; overflow-y: auto; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px) saturate(1.5); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 1rem; box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.1); padding: 0.5rem; opacity: 0; transform: translateY(-10px) scale(0.98); transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; }
+  .geo-suggestions { position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 12; max-height: 240px; overflow-y: auto; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px) saturate(1.5); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 1rem; box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.1); padding: 0.5rem; opacity: 0; transform: translateY(-10px) scale(0.98); transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; }
   .geo-suggestions.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
   .geo-suggestions li { padding: 0.75rem 1rem; font-size: 0.875rem; cursor: pointer; border-radius: 0.625rem; transition: all 0.15s ease; display: flex; align-items: center; gap: 0.75rem; color: #e2e8f0; }
   .geo-suggestions li i { color: #64748b; font-size: 0.75rem; width: 1.125rem; text-align: center; }
@@ -221,7 +239,7 @@
   .r-stat-value { font-size: 1.5rem; font-weight: 800; color: var(--aurora-text); letter-spacing: -0.02em; line-height: 1; }
   .r-stat-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; margin-top: 0.5rem; }
 
-  #route-leaflet-map { height: min(92vh, 1100px); min-height: 700px; border-radius: 1.5rem; z-index: 0; border: 2px solid rgba(99, 102, 241, 0.2); box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.3), 0 12px 48px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.1); transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); position: relative; overflow: hidden; }
+  #route-leaflet-map { height: min(52vh, 560px); min-height: 360px; border-radius: 1.5rem; z-index: 0; border: 2px solid rgba(99, 102, 241, 0.2); box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.3), 0 12px 48px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.1); transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); position: relative; overflow: hidden; }
   #route-leaflet-map:hover { border-color: rgba(99, 102, 241, 0.4); box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.3), 0 16px 60px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.15), var(--aurora-glow-primary); }
   #route-leaflet-map::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--aurora-primary), var(--aurora-secondary), var(--aurora-accent)); z-index: 1000; opacity: 0.8; pointer-events: none; animation: aurora-shimmer 3s ease infinite; background-size: 200% 100%; }
   .leaflet-popup-content-wrapper { border-radius: 1rem !important; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4) !important; border: 1px solid rgba(99, 102, 241, 0.2); background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(16px) !important; }
@@ -308,7 +326,7 @@
   .tip-title { font-size: 0.8125rem; font-weight: 600; color: var(--aurora-text); }
   .tip-desc { font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; line-height: 1.5; }
 
-  .map-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 2rem; min-height: 700px; border: 2px dashed rgba(99, 102, 241, 0.2); background: rgba(15, 23, 42, 0.3); border-radius: 2rem; }
+  .map-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 2rem; min-height: 360px; border: 2px dashed rgba(99, 102, 241, 0.2); background: rgba(15, 23, 42, 0.3); border-radius: 2rem; }
   .map-placeholder-icon { width: 5rem; height: 5rem; border-radius: 1.5rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05)); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; border: 1px solid rgba(99, 102, 241, 0.2); animation: aurora-float 6s ease infinite; }
   .map-placeholder-icon i { font-size: 2rem; color: var(--aurora-primary-light); opacity: 0.6; }
   .map-placeholder h3 { font-size: 1.125rem; font-weight: 700; color: var(--aurora-text); margin-bottom: 0.5rem; }
@@ -318,17 +336,21 @@
   .pagination-btn:hover { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: var(--aurora-primary-light); }
   .pagination-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  @media (min-width: 1280px) {
+    #route-leaflet-map { height: min(62vh, 680px); min-height: 420px; }
+    .map-placeholder { min-height: 420px; }
+  }
   @media (max-width: 1024px) {
     .r-stats-bar { grid-template-columns: repeat(3, 1fr); }
-    #route-leaflet-map { height: 70vh; min-height: 500px; }
+    #route-leaflet-map { height: min(48vh, 480px); min-height: 320px; }
   }
   @media (max-width: 768px) {
     .route-hero h1 { font-size: 1.875rem; }
     .aurora-card-header { padding: 1.25rem; }
     .r-table thead th, .r-table tbody td { padding: 0.75rem 1rem; }
-    #route-leaflet-map { height: 60vh; min-height: 400px; }
+    #route-leaflet-map { height: min(45vh, 420px); min-height: 280px; }
     .route-map-stage { padding: 0 1rem 1rem; }
-    .map-placeholder { min-height: 400px; }
+    .map-placeholder { min-height: 280px; }
   }
   @media (max-width: 640px) {
     .route-hero h1 { font-size: 1.5rem; }
@@ -351,9 +373,9 @@
   <p class="animate-aurora-up delay-2">AI-assessed paths with real-time risk scoring across South Africa. Find the safest way, every time.</p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="routes-layout grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
 
-  <div class="lg:col-span-3 space-y-6">
+  <div class="routes-planner-col xl:col-span-4 space-y-6">
     <div class="aurora-card aurora-card--planner animate-aurora-up delay-2">
       <div class="aurora-card-header">
         <div>
@@ -368,18 +390,20 @@
             <label class="aurora-field-label" for="start-location">
               <i class="fas fa-location-dot"></i> Origin
             </label>
-            <div class="aurora-input-wrap">
-              <input class="aurora-input" id="start-location" name="start_location" autocomplete="off" placeholder="e.g. 123 Church Street, Pretoria" />
-              <button type="button" id="btn-my-location" class="aurora-loc-btn" title="Use my current location" aria-label="Use my current location">
-                <i class="fas fa-crosshairs"></i>
-              </button>
+            <div class="location-autocomplete">
+              <div class="aurora-input-wrap">
+                <input class="aurora-input" id="start-location" name="start_location" autocomplete="off" placeholder="e.g. 123 Church Street, Pretoria" />
+                <button type="button" id="btn-my-location" class="aurora-loc-btn" title="Use my current location" aria-label="Use my current location">
+                  <i class="fas fa-crosshairs"></i>
+                </button>
+              </div>
+              <ul id="start-suggestions" class="geo-suggestions" role="listbox"></ul>
             </div>
             <input type="hidden" id="start-lat" name="start_lat" />
             <input type="hidden" id="start-lng" name="start_lng" />
-            <ul id="start-suggestions" class="geo-suggestions" role="listbox"></ul>
           </div>
 
-          <div class="flex justify-center">
+          <div class="flex justify-center py-1">
             <button type="button" class="aurora-swap-btn" onclick="swapLocations()" title="Swap origin & destination">
               <i class="fas fa-arrow-right-arrow-left"></i>
             </button>
@@ -389,10 +413,12 @@
             <label class="aurora-field-label" for="end-location">
               <i class="fas fa-flag-checkered"></i> Destination
             </label>
-            <input class="aurora-input" id="end-location" name="end_location" required autocomplete="off" placeholder="e.g. UP Hatfield campus" />
+            <div class="location-autocomplete">
+              <input class="aurora-input" id="end-location" name="end_location" required autocomplete="off" placeholder="e.g. UP Hatfield campus" />
+              <ul id="end-suggestions" class="geo-suggestions" role="listbox"></ul>
+            </div>
             <input type="hidden" id="end-lat" name="end_lat" />
             <input type="hidden" id="end-lng" name="end_lng" />
-            <ul id="end-suggestions" class="geo-suggestions" role="listbox"></ul>
           </div>
 
           <button class="aurora-submit mt-3" type="submit" id="route-submit-btn">
@@ -426,7 +452,7 @@
     </div>
   </div>
 
-  <div class="lg:col-span-9 space-y-8">
+  <div class="routes-main-col xl:col-span-8 space-y-6 xl:space-y-8">
 
     <div id="route-result" class="hidden route-result-card animate-aurora-up">
       <div class="r-result-header">
@@ -468,7 +494,7 @@
       </div>
     </div>
 
-    <div id="route-map-placeholder" class="map-placeholder animate-aurora-up delay-3 hidden lg:flex">
+    <div id="route-map-placeholder" class="map-placeholder animate-aurora-up delay-3 hidden xl:flex">
       <div class="map-placeholder-icon"><i class="fas fa-map-location-dot"></i></div>
       <h3>Your route map appears here</h3>
       <p>Enter origin and destination, then generate a route to see a full-size safety preview with AI risk analysis.</p>
@@ -590,9 +616,10 @@ function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1)
     const input = document.getElementById(field + '-location');
     const list = document.getElementById(field + '-suggestions');
     if (!input || !list) return;
+    const wrap = input.closest('.location-autocomplete');
     input.addEventListener('focus', () => { if (list.children.length > 0) list.classList.add('visible'); });
     document.addEventListener('click', (e) => {
-      if (!input.contains(e.target) && !list.contains(e.target)) { list.classList.remove('visible'); }
+      if (wrap && !wrap.contains(e.target)) list.classList.remove('visible');
     });
   });
 })();

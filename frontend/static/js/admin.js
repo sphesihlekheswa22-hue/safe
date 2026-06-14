@@ -1,4 +1,4 @@
-// System Admin Control Center — drives the 7 admin panels.
+// System Admin Control Center — drives the admin panels.
 
 (function () {
 
@@ -13,6 +13,7 @@
 
 
   let roles = [];
+  let usersById = {};
 
   const loaded = {};
 
@@ -46,7 +47,7 @@
 
     const map = {
 
-      users: loadUsers, ai: loadAI,
+      users: loadUsers,
 
       system: loadSystem, audit: loadAudit, security: loadSecurity,
 
@@ -91,6 +92,7 @@
       ]);
 
       roles = r;
+      usersById = Object.fromEntries(users.map((u) => [String(u.id), u]));
 
       $("users-body").innerHTML = users.length ? users.map((u) => `
 
@@ -110,11 +112,11 @@
 
           <td class="text-right whitespace-nowrap">
 
-            <button class="btn-ghost" data-edit='${JSON.stringify(u).replace(/'/g, "&#39;")}'>Edit</button>
+            <button class="btn-ghost" data-edit-id="${u.id}">Edit</button>
 
             <button class="btn-ghost" data-pw="${u.id}" data-email="${esc(u.email)}">Reset PW</button>
 
-            <button class="btn-ghost" data-toggle="${u.id}" data-active="${u.is_active}">${u.is_active ? "Block" : "Unblock"}</button>
+            <button class="btn-ghost" data-toggle="${u.id}" data-active="${u.is_active ? "true" : "false"}">${u.is_active ? "Block" : "Unblock"}</button>
 
             <button class="btn-danger" data-del="${u.id}">Delete</button>
 
@@ -134,8 +136,10 @@
 
     const body = $("users-body");
 
-    body.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openUserModal(JSON.parse(b.dataset.edit))));
-
+    body.querySelectorAll("[data-edit-id]").forEach((b) => b.addEventListener("click", () => {
+      const user = usersById[b.dataset.editId];
+      if (user) openUserModal(user);
+    }));
     body.querySelectorAll("[data-pw]").forEach((b) => b.addEventListener("click", () => openPwModal(b.dataset.pw, b.dataset.email)));
 
     body.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", async () => {
@@ -178,7 +182,7 @@
 
     $("user-modal-title").textContent = isEdit ? "Edit User" : "New User";
 
-    f.id.value = isEdit ? user.id : "";
+    f.elements.user_id.value = isEdit ? String(user.id) : "";
 
     f.name.value = isEdit ? user.name : "";
 
@@ -210,13 +214,13 @@
 
     const f = e.target;
 
-    const id = f.id.value;
+    const userId = f.elements.user_id.value;
 
     try {
 
-      if (id) {
+      if (userId) {
 
-        await SR.put(`/api/admin/users/${id}/role`, { role: f.role.value });
+        await SR.put(`/api/admin/users/${userId}/role`, { role: f.role.value });
 
         flash("User updated.", "success");
 
@@ -244,7 +248,9 @@
 
   function openPwModal(id, email) {
 
-    const f = $("pw-form"); f.id.value = id; f.password.value = "";
+    const f = $("pw-form");
+    f.elements.user_id.value = String(id);
+    f.password.value = "";
 
     $("pw-modal-user").textContent = email;
 
@@ -258,7 +264,9 @@
 
     const f = e.target;
 
-    try { await SR.put(`/api/admin/users/${f.id.value}/password`, { password: f.password.value }); flash("Password reset.", "success"); closeModal(); }
+    const userId = f.elements.user_id.value;
+
+    try { await SR.put(`/api/admin/users/${userId}/password`, { password: f.password.value }); flash("Password reset.", "success"); closeModal(); }
 
     catch (err) { flash(err.message, "error"); }
 
@@ -266,129 +274,7 @@
 
 
 
-  // ========================================================= AI MODEL
-
-  let aiSettings = {};
-
   function setToggle(el, on) { el.dataset.on = on ? "true" : "false"; }
-
-
-
-  async function loadAI() {
-
-    try {
-
-      const { settings } = await SR.get("/api/admin/settings");
-
-      aiSettings = settings;
-
-      setToggle($("toggle-risk"), settings.risk_engine_enabled);
-
-      $("sentiment-mode").value = settings.sentiment_mode;
-
-      document.querySelectorAll(".model-option").forEach((m) => m.classList.toggle("active", m.dataset.model === settings.ai_model));
-
-      setWeight("w-sev", settings.weight_severity);
-
-      setWeight("w-den", settings.weight_density);
-
-      setWeight("w-sen", settings.weight_sentiment);
-
-      loadModelInfo();
-
-    } catch (e) { flash(e.message, "error"); }
-
-  }
-
-
-
-  async function loadModelInfo() {
-
-    try {
-
-      const info = await SR.get("/api/reports/model-info");
-
-      $("model-info").textContent = JSON.stringify(info, null, 2);
-
-    } catch (e) { $("model-info").textContent = "Model info unavailable: " + e.message; }
-
-  }
-
-
-
-  function setWeight(id, val) { $(id).value = val; $(id + "-val").textContent = Number(val).toFixed(2); }
-
-  ["w-sev", "w-den", "w-sen"].forEach((id) =>
-
-    $(id).addEventListener("input", () => { $(id + "-val").textContent = Number($(id).value).toFixed(2); }));
-
-
-
-  $("toggle-risk").addEventListener("click", () => setToggle($("toggle-risk"), $("toggle-risk").dataset.on !== "true"));
-
-  document.querySelectorAll(".model-option").forEach((m) => m.addEventListener("click", () => {
-
-    document.querySelectorAll(".model-option").forEach((x) => x.classList.remove("active"));
-
-    m.classList.add("active");
-
-  }));
-
-
-
-  $("save-ai").addEventListener("click", async () => {
-
-    const model = document.querySelector(".model-option.active");
-
-    try {
-
-      await SR.put("/api/admin/settings", {
-
-        risk_engine_enabled: $("toggle-risk").dataset.on === "true",
-
-        sentiment_mode: $("sentiment-mode").value,
-
-        ai_model: model ? model.dataset.model : "rule_based",
-
-      });
-
-      flash("AI configuration saved.", "success");
-
-    } catch (e) { flash(e.message, "error"); }
-
-  });
-
-
-
-  $("save-weights").addEventListener("click", async () => {
-
-    try {
-
-      await SR.put("/api/admin/settings", {
-
-        weight_severity: parseFloat($("w-sev").value),
-
-        weight_density: parseFloat($("w-den").value),
-
-        weight_sentiment: parseFloat($("w-sen").value),
-
-      });
-
-      flash("Risk weights applied.", "success");
-
-    } catch (e) { flash(e.message, "error"); }
-
-  });
-
-
-
-  $("recompute-btn").addEventListener("click", async () => {
-
-    try { await SR.post("/api/ai/recompute", {}); flash("Risk areas recomputed.", "success"); loadModelInfo(); }
-
-    catch (e) { flash(e.message, "error"); }
-
-  });
 
 
 
@@ -554,7 +440,7 @@
 
       });
 
-      flash(`Broadcast sent to ${res.recipients} user(s).`, "success");
+      flash("Emergency broadcast created.", "success");
 
       $("broadcast-form").reset();
 

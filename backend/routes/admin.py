@@ -14,6 +14,7 @@ from models.audit_log import AuditLog
 from models.event import Event
 from models.route import Route
 from models.risk import RiskArea
+from models.subscription import Subscription
 from schemas.user_schema import validate_role_assignment
 from services import notification_service, settings_service
 from utils.validators import ValidationError
@@ -95,6 +96,16 @@ def delete_user(user_id):
         return jsonify(error="You cannot delete your own account."), 400
 
     email = user.email
+    Subscription.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    AuditLog.query.filter_by(actor_id=user.id).update(
+        {AuditLog.actor_id: None}, synchronize_session=False
+    )
+    Event.query.filter_by(created_by=user.id).update(
+        {Event.created_by: None}, synchronize_session=False
+    )
+    Route.query.filter_by(created_by=user.id).update(
+        {Route.created_by: None}, synchronize_session=False
+    )
     user_repo.delete(user)
     notification_service.record_audit(me, "user.deleted", target=email)
     return jsonify(message="User deleted.")

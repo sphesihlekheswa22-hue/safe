@@ -53,10 +53,22 @@
     }
   }
 
-  document.getElementById("profile-form").addEventListener("submit", async (e) => {
+  let profileStatsLoaded = false;
+
+  function onUserReady(user) {
+    fillProfile(user);
+    if (!profileStatsLoaded) {
+      profileStatsLoaded = true;
+      loadStats();
+    }
+  }
+
+  const profileForm = document.getElementById("profile-form");
+  if (profileForm) {
+    profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = document.getElementById("profile-save-btn");
-    const idleHtml = '<i class="fas fa-check mr-1.5"></i> Save profile';
+    const idleHtml = '<i class="fas fa-check"></i> Save profile';
     setBtnLoading(btn, true, idleHtml);
     const name = document.getElementById("profile-name").value.trim();
     try {
@@ -70,12 +82,15 @@
     } finally {
       setBtnLoading(btn, false, idleHtml);
     }
-  });
+    });
+  }
 
-  document.getElementById("password-form").addEventListener("submit", async (e) => {
+  const passwordForm = document.getElementById("password-form");
+  if (passwordForm) {
+    passwordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = document.getElementById("password-save-btn");
-    const idleHtml = '<i class="fas fa-shield-halved mr-1.5"></i> Update password';
+    const idleHtml = '<i class="fas fa-shield-halved"></i> Update password';
     setBtnLoading(btn, true, idleHtml);
     const fd = new FormData(e.target);
     try {
@@ -90,10 +105,14 @@
     } finally {
       setBtnLoading(btn, false, idleHtml);
     }
-  });
+    });
+  }
 
   document.addEventListener("sr:user-ready", (ev) => {
-    fillProfile(ev.detail);
-    loadStats();
+    onUserReady(ev.detail);
   });
+
+  if (window.SR_USER) {
+    onUserReady(window.SR_USER);
+  }
 })();
