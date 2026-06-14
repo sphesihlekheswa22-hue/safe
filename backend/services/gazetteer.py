@@ -63,6 +63,22 @@ def lookup(name: str) -> Optional[tuple[float, float, float]]:
     return None
 
 
+def lookup_city_near(lat: float, lng: float) -> Optional[str]:
+    """Return the nearest known city label for proximity-biased geocode queries."""
+    from services.geo_service import haversine_km
+
+    best_name: str | None = None
+    best_dist = float("inf")
+    for marker in CITY_MARKERS:
+        dist = haversine_km(lat, lng, marker["lat"], marker["lng"])
+        if dist < best_dist:
+            best_dist = dist
+            best_name = marker["name"]
+    if best_dist <= 80.0:
+        return best_name
+    return None
+
+
 def coord_for(name: str) -> tuple[float, float]:
     """Return (lon, lat) for a location; unknown names get deterministic coords in Gauteng."""
     entry = lookup(name)

@@ -140,7 +140,8 @@
     const q = input.value.trim();
     if (q.length < 2) return false;
 
-    const { results } = await fetchLocationSuggestions(q);
+    const near = typeof resolveNearCoords === "function" ? resolveNearCoords({}) : null;
+    const { results } = await fetchLocationSuggestions(q, 5, near);
     if (!results.length) return false;
 
     const r = results[0];

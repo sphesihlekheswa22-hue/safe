@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from typing import Optional
 
@@ -66,21 +67,95 @@ def _title_key(key: str) -> str:
     return " ".join(part.capitalize() for part in key.split())
 
 
-def _short_name(item: dict) -> str:
+_STREET_RE = re.compile(
+    r"\b("
+    r"street|st|road|rd|avenue|ave|drive|dr|crescent|cres|close|lane|ln|"
+    r"boulevard|blvd|way|place|pl|circle|court|ct|highway|hwy|freeway"
+    r")\b",
+    re.I,
+)
+_HOUSE_RE = re.compile(r"^(\d+[a-zA-Z]?)\s+")
+_DISPLAY_SKIP = (
+    "ward ",
+    "metropolitan municipality",
+    "local municipality",
+    "south africa",
+)
+
+
+def _looks_like_address(query: str) -> bool:
+    """True when the user is likely typing a street address."""
+    q = (query or "").strip()
+    if not q:
+        return False
+    if re.search(r"\d", q):
+        return True
+    return bool(_STREET_RE.search(q))
+
+
+def _trim_display_name(display: str) -> str:
+    if not display:
+        return "Unknown location"
+    parts: list[str] = []
+    for raw in display.split(","):
+        part = raw.strip()
+        if not part:
+            continue
+        low = part.lower()
+        if any(skip in low for skip in _DISPLAY_SKIP):
+            continue
+        if parts and parts[-1].lower() == low:
+            continue
+        parts.append(part)
+    return ", ".join(parts[:5]) if parts else display
+
+
+def _short_name(item: dict, query: str | None = None) -> str:
+    """Build a concise South African address label from Nominatim data."""
     addr = item.get("address") or {}
-    parts = [
-        addr.get("house_number"),
-        addr.get("road"),
-        addr.get("suburb"),
-        addr.get("neighbourhood"),
-        addr.get("town"),
-        addr.get("city"),
-        addr.get("municipality"),
-        addr.get("county"),
-        addr.get("state"),
-    ]
-    label = ", ".join(p for p in parts if p)
-    return label or item.get("display_name", "Unknown location")
+    house = addr.get("house_number")
+    if not house and query:
+        match = _HOUSE_RE.match(query.strip())
+        if match:
+            house = match.group(1)
+
+    road = (
+        addr.get("road")
+        or addr.get("pedestrian")
+        or addr.get("footway")
+        or addr.get("residential")
+    )
+    suburb = (
+        addr.get("suburb")
+        or addr.get("neighbourhood")
+        or addr.get("quarter")
+        or addr.get("hamlet")
+    )
+    city = (
+        addr.get("city")
+        or addr.get("town")
+        or addr.get("village")
+        or addr.get("municipality")
+    )
+    province = addr.get("state")
+    postcode = addr.get("postcode")
+
+    parts: list[str] = []
+    street_line = " ".join(p for p in (house, road) if p)
+    if street_line:
+        parts.append(street_line)
+    if suburb and suburb != city:
+        parts.append(str(suburb))
+    if city:
+        parts.append(str(city))
+    if province:
+        parts.append(str(province))
+    if postcode:
+        parts.append(str(postcode))
+
+    if parts:
+        return ", ".join(parts)
+    return _trim_display_name(item.get("display_name", "Unknown location"))
 
 
 def _extract_city(item: dict) -> str | None:
@@ -204,20 +279,30 @@ def _gazetteer_suggestions(
     return results
 
 
-def _nominatim_search(query: str, limit: int = 8) -> list[dict]:
+def _nominatim_search(
+    query: str,
+    limit: int = 8,
+    near_lat: float | None = None,
+    near_lng: float | None = None,
+) -> list[dict]:
     _throttle()
     try:
+        params: dict = {
+            "q": query,
+            "format": "json",
+            "limit": limit,
+            "countrycodes": "za",
+            "addressdetails": 1,
+            "viewbox": SA_VIEWBOX,
+            "bounded": 1,
+            "dedupe": 1,
+        }
+        if near_lat is not None and near_lng is not None:
+            params["lat"] = near_lat
+            params["lon"] = near_lng
         resp = requests.get(
             f"{NOMINATIM}/search",
-            params={
-                "q": query,
-                "format": "json",
-                "limit": limit,
-                "countrycodes": "za",
-                "addressdetails": 1,
-                "viewbox": SA_VIEWBOX,
-                "dedupe": 1,
-            },
+            params=params,
             headers=_headers(),
             timeout=12,
         )
@@ -228,9 +313,11 @@ def _nominatim_search(query: str, limit: int = 8) -> list[dict]:
             lon = float(item["lon"])
             if not _in_south_africa(lat, lon):
                 continue
+            short = _short_name(item, query=query)
+            display = _trim_display_name(item.get("display_name", "")) or short
             results.append({
-                "name": _short_name(item),
-                "display_name": item.get("display_name", ""),
+                "name": short,
+                "display_name": display,
                 "lat": lat,
                 "lng": lon,
                 "source": "nominatim",
@@ -255,18 +342,27 @@ def _cache_key(query: str, near_lat: float | None, near_lng: float | None) -> st
     return base
 
 
-def _expanded_nominatim_query(query: str) -> str | None:
+def _expanded_nominatim_query(
+    query: str,
+    near_lat: float | None = None,
+    near_lng: float | None = None,
+) -> str | None:
     """Build a richer Nominatim query for POI keyword searches."""
     q = _normalize(query)
     implied = poi_service.categories_for_query(q)
+    region = "South Africa"
+    if near_lat is not None and near_lng is not None:
+        city = gazetteer.lookup_city_near(near_lat, near_lng)
+        if city:
+            region = f"{city}, South Africa"
     if "police" in implied:
-        return "police station, Gauteng, South Africa"
+        return f"police station, {region}"
     if "hospital" in implied:
-        return "hospital, Gauteng, South Africa"
+        return f"hospital, {region}"
     if "clinic" in implied:
-        return "clinic, Gauteng, South Africa"
+        return f"clinic, {region}"
     if "station" in implied:
-        return "train station, Gauteng, South Africa"
+        return f"train station, {region}"
     return None
 
 
@@ -289,6 +385,9 @@ def search(
     has_near = near_lat is not None and near_lng is not None
     fetch_limit = max(limit * 4, 24) if has_near else limit
 
+    is_address = _looks_like_address(q)
+    is_poi_kw = poi_service.is_poi_keyword(q)
+
     pois = poi_service.search_pois(
         q, limit=fetch_limit, near_lat=near_lat, near_lng=near_lng
     )
@@ -297,18 +396,43 @@ def search(
     )
     remote: list[dict] = []
     combined_local = len(pois) + len(local)
-    # Skip Nominatim for short queries or when rate-limited; local data covers most cases.
-    if len(q) >= 4 and _nominatim_available() and combined_local < fetch_limit:
-        remote = _nominatim_search(q, limit=fetch_limit)
-        if not remote and "south africa" not in cache_key:
-            remote = _nominatim_search(f"{q}, South Africa", limit=fetch_limit)
-    if combined_local < fetch_limit and poi_service.is_poi_keyword(q) and _nominatim_available():
-        expanded = _expanded_nominatim_query(q)
+
+    should_nominatim = _nominatim_available() and (
+        is_address
+        or (len(q) >= 3 and not is_poi_kw)
+        or (len(q) >= 4 and combined_local < fetch_limit)
+    )
+    if should_nominatim:
+        remote = _nominatim_search(
+            q, limit=fetch_limit, near_lat=near_lat, near_lng=near_lng
+        )
+        if not remote and "south africa" not in _normalize(q):
+            remote = _nominatim_search(
+                f"{q}, South Africa",
+                limit=fetch_limit,
+                near_lat=near_lat,
+                near_lng=near_lng,
+            )
+    if is_poi_kw and _nominatim_available():
+        expanded = _expanded_nominatim_query(q, near_lat=near_lat, near_lng=near_lng)
         if expanded:
-            remote = _merge_results(remote, _nominatim_search(expanded, limit=fetch_limit))
+            remote = _merge_results(
+                remote,
+                _nominatim_search(
+                    expanded,
+                    limit=fetch_limit,
+                    near_lat=near_lat,
+                    near_lng=near_lng,
+                ),
+            )
+
+    if is_address:
+        merge_groups = (remote, pois, local)
+    else:
+        merge_groups = (pois, local, remote)
 
     merged = _proximity_ranked_merge(
-        pois, local, remote,
+        *merge_groups,
         near_lat=near_lat,
         near_lng=near_lng,
         limit=limit,

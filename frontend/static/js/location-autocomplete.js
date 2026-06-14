@@ -101,23 +101,28 @@
     return "fa-location-dot";
   }
 
+  function labelForResult(r) {
+    if (!r) return "";
+    return r.name || r.display_name || "";
+  }
+
   function subtitleForResult(r) {
-    let sub = r.display_name || "";
-    if (r.distance_km != null) {
-      sub = sub ? sub + " · " + r.distance_km + " km away" : r.distance_km + " km away";
-    }
-    return sub;
+    const full = r.display_name || "";
+    const short = labelForResult(r);
+    if (full && full !== short) return full;
+    if (r.distance_km != null) return r.distance_km + " km away";
+    return "";
   }
 
   function showSuggestionsLoading(list) {
-    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching nearby places…</li>`;
+    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching South African addresses…</li>`;
     list.classList.add("visible");
     list._items = [];
   }
 
   function renderSuggestionList(list, items, input, onSelect) {
     if (!items.length) {
-      list.innerHTML = `<li class="suggestion-divider" role="presentation">No places found — try police, hospital, or a suburb name</li>`;
+      list.innerHTML = `<li class="suggestion-divider" role="presentation">No addresses found — try a street name, suburb, or landmark</li>`;
       list.classList.add("visible");
       list._items = [];
       return;
@@ -126,8 +131,8 @@
       <li role="option" data-idx="${i}" tabindex="0">
         <i class="fas ${iconForResult(r)}"></i>
         <div>
-          <div class="font-medium">${esc(r.name)}</div>
-          <div class="sub">${esc(subtitleForResult(r))}</div>
+          <div class="font-medium">${esc(labelForResult(r))}</div>
+          ${subtitleForResult(r) ? `<div class="sub">${esc(subtitleForResult(r))}</div>` : ""}
         </div>
       </li>`).join("");
     list.classList.add("visible");
@@ -144,8 +149,8 @@
   function selectSuggestion(list, input, idx) {
     const r = list._items[idx];
     if (!r) return;
-    input.value = r.name;
-    input.dataset.selectedLabel = r.name;
+    input.value = labelForResult(r);
+    input.dataset.selectedLabel = labelForResult(r);
     if (typeof list._onSelect === "function") {
       list._onSelect(r);
     }
@@ -158,7 +163,7 @@
     if (!inputEl || !listEl) return;
 
     const opts = options || {};
-    const minChars = opts.minChars != null ? opts.minChars : 3;
+    const minChars = opts.minChars != null ? opts.minChars : 2;
     const debounceMs = opts.debounceMs != null ? opts.debounceMs : 450;
     const limit = opts.limit || 10;
 

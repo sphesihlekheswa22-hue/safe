@@ -102,3 +102,42 @@ def test_geocode_hatfield_suburb_near_user_first():
     assert len(results) >= 1
     assert "Hatfield" in results[0]["name"]
     assert results[0]["distance_km"] is not None
+
+
+def test_geocode_street_address_returns_nominatim():
+    results = geocoding_service.search(
+        "Visagie Street Pretoria",
+        limit=5,
+        near_lat=-25.7461,
+        near_lng=28.1881,
+    )
+    assert len(results) >= 1
+    assert results[0]["source"] == "nominatim"
+    assert "Visagie" in results[0]["name"]
+    assert "Gauteng" in results[0]["name"]
+
+
+def test_geocode_numbered_address_keeps_house_number():
+    results = geocoding_service.search(
+        "123 Visagie Street Pretoria",
+        limit=3,
+        near_lat=-25.7461,
+        near_lng=28.1881,
+    )
+    assert len(results) >= 1
+    assert results[0]["name"].startswith("123")
+    assert "Visagie" in results[0]["name"]
+
+
+def test_geocode_suburb_without_poi_keyword():
+    results = geocoding_service.search(
+        "menlyn",
+        limit=5,
+        near_lat=-25.7842,
+        near_lng=28.2756,
+    )
+    assert len(results) >= 1
+    assert any(
+        "Menlyn" in r["name"] or "menlyn" in r["name"].lower()
+        for r in results
+    )
