@@ -115,7 +115,8 @@
   }
   .route-hero p { color: var(--r-text-muted); max-width: 420px; }
 
-  /* ΓöÇΓöÇ Glass Cards ΓöÇΓöÇ */
+  /* ── Glass Cards ── */
+  .routes-page { display: flex; flex-direction: column; gap: 1.5rem; }
   .r-card {
     background: rgba(255,255,255,0.82);
     backdrop-filter: blur(24px) saturate(1.3);
@@ -124,6 +125,15 @@
     box-shadow: var(--r-shadow-lg), 0 0 0 1px rgba(15,23,42,0.03);
     overflow: hidden;
     transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .r-card--planner {
+    overflow: visible;
+    position: relative;
+    z-index: 30;
+  }
+  .routes-map-section {
+    position: relative;
+    z-index: 1;
   }
   .r-card:hover { box-shadow: var(--r-shadow-xl), 0 0 0 1px rgba(15,23,42,0.04); }
   .r-card-header {
@@ -150,8 +160,31 @@
     border-radius: 0.375rem;
   }
 
-  /* ΓöÇΓöÇ Form Fields ΓöÇΓöÇ */
-  .r-field-group { position: relative; }
+  /* ── Form Fields ── */
+  .r-field-group { position: relative; z-index: 10; }
+  .r-field-group:focus-within { z-index: 50; }
+  .route-planner-form { display: flex; flex-direction: column; gap: 1rem; }
+  .route-planner-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    align-items: end;
+  }
+  @media (min-width: 768px) {
+    .route-planner-grid {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 1rem;
+    }
+  }
+  .route-planner-swap {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 0.25rem;
+  }
+  @media (max-width: 767px) {
+    .route-planner-swap { order: 3; padding: 0; }
+    .route-planner-grid .r-field-group:last-of-type { order: 2; }
+  }
   .r-field-label {
     display: flex; align-items: center; gap: 0.35rem;
     font-size: 0.6875rem;
@@ -189,7 +222,42 @@
     padding-right: 2.5rem;
   }
 
-  /* Location Button */
+  /* GPS / location button — full width, never clipped */
+  .r-gps-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1.5px solid #93c5fd;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  }
+  .r-gps-btn:hover {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border-color: #60a5fa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
+  }
+  .r-gps-btn:active { transform: translateY(0); }
+  .r-gps-btn i { font-size: 0.875rem; }
+  .r-gps-btn.pulse-ring::after {
+    content: '';
+    position: absolute; inset: -2px;
+    border-radius: 0.875rem;
+    border: 2px solid var(--r-primary);
+    animation: pulse-ring 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  /* Legacy icon-only btn (unused) */
   .r-loc-btn {
     flex-shrink: 0;
     min-width: 2.875rem;
@@ -439,8 +507,8 @@
 
   /* ΓöÇΓöÇ Map ΓöÇΓöÇ */
   #route-leaflet-map {
-    height: min(88vh, 960px);
-    min-height: 520px;
+    height: min(72vh, 720px);
+    min-height: 420px;
     border-radius: 1.25rem;
     z-index: 0;
     border: 2px solid rgba(37,99,235,0.15);
@@ -695,7 +763,33 @@
     color: var(--r-primary) !important;
   }
 
-  /* ΓöÇΓöÇ Responsive ΓöÇΓöÇ */
+  .r-tips-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 768px) {
+    .r-tips-row { grid-template-columns: repeat(3, 1fr); }
+  }
+  .r-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid #e2e8f0;
+    border-radius: 0.875rem;
+  }
+  .r-tip-icon {
+    width: 2rem; height: 2rem;
+    border-radius: 0.625rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .r-tip-title { font-size: 0.8125rem; font-weight: 600; color: #0f172a; }
+  .r-tip-desc { font-size: 0.75rem; color: #64748b; margin-top: 0.2rem; line-height: 1.45; }
+
+  /* ── Responsive ── */
   @media (max-width: 1024px) {
     .r-stats-bar { grid-template-columns: repeat(3, 1fr); }
   }
@@ -711,129 +805,95 @@
 
 {% block content %}
 
-<!-- ΓòÉΓòÉΓòÉ HERO HEADER ΓòÉΓòÉΓòÉ -->
-<div class="route-hero mb-6">
-  <div class="route-hero-badge animate-fade-up">
-    <i class="fas fa-circle text-[6px]"></i> AI-Powered Navigation
+<div class="routes-page">
+
+  <div class="route-hero">
+    <div class="route-hero-badge animate-fade-up">
+      <i class="fas fa-circle text-[6px]"></i> AI-Powered Navigation
+    </div>
+    <h1 class="mt-3 animate-fade-up delay-1">Safe Route Planner</h1>
+    <p class="mt-1.5 text-sm animate-fade-up delay-2">AI-assessed paths with real-time risk scoring across South Africa. Find the safest way, every time.</p>
   </div>
-  <h1 class="mt-3 animate-fade-up delay-1">Safe Route Planner</h1>
-  <p class="mt-1.5 text-sm animate-fade-up delay-2">AI-assessed paths with real-time risk scoring across South Africa. Find the safest way, every time.</p>
-</div>
 
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-  <!-- ΓòÉΓòÉΓòÉ LEFT: ROUTE FORM ΓòÉΓòÉΓòÉ -->
-  <div class="lg:col-span-3 space-y-6">
-    <div class="r-card animate-fade-up delay-2">
-      <div class="r-card-header">
-        <div>
-          <h2><i class="fas fa-route text-primary-500 mr-1.5 text-xs"></i>Generate Route</h2>
-          <p>Geocoded via OpenStreetMap Nominatim</p>
-        </div>
-        <span class="tag">Planner</span>
+  <div class="r-card r-card--planner animate-fade-up delay-2">
+    <div class="r-card-header">
+      <div>
+        <h2><i class="fas fa-route text-primary-500 mr-1.5 text-xs"></i>Generate Route</h2>
+        <p>Enter addresses or use your live GPS location</p>
       </div>
-      <div class="p-6">
-        <form id="route-form" class="space-y-3">
-
-          <!-- Origin -->
+      <span class="tag">Planner</span>
+    </div>
+    <div class="p-5 lg:p-6">
+      <form id="route-form" class="route-planner-form">
+        <div class="route-planner-grid">
           <div class="r-field-group">
             <label class="r-field-label" for="start-location">
               <i class="fas fa-location-dot"></i> Origin
             </label>
-            <div class="r-input-wrap">
-              <input class="r-input" id="start-location" name="start_location" autocomplete="off"
-                placeholder="e.g. 123 Church Street, Pretoria" />
-              <button type="button" id="btn-my-location" class="r-loc-btn" title="Use my current location"
-                aria-label="Use my current location">
-                <i class="fas fa-crosshairs"></i>
-                <span class="r-loc-label">My location</span>
-              </button>
-            </div>
-            <p class="text-[11px] text-surface-500 mt-1.5">
-              <i class="fas fa-info-circle mr-1"></i>Tap the blue button to use your GPS as the origin.
-            </p>
+            <input class="r-input w-full" id="start-location" name="start_location" autocomplete="off"
+              placeholder="e.g. 123 Church Street, Pretoria" />
             <input type="hidden" id="start-lat" name="start_lat" />
             <input type="hidden" id="start-lng" name="start_lng" />
             <ul id="start-suggestions" class="geo-suggestions" role="listbox"></ul>
           </div>
-
-          <!-- Swap -->
-          <div class="flex justify-center">
-            <button type="button" class="r-swap-btn" onclick="swapLocations()" title="Swap origin & destination">
+          <div class="route-planner-swap">
+            <button type="button" class="r-swap-btn" onclick="swapLocations()" title="Swap origin and destination">
               <i class="fas fa-arrow-right-arrow-left"></i>
             </button>
           </div>
-
-          <!-- Destination -->
           <div class="r-field-group">
             <label class="r-field-label" for="end-location">
               <i class="fas fa-flag-checkered"></i> Destination
             </label>
-            <input class="r-input" id="end-location" name="end_location" required autocomplete="off"
+            <input class="r-input w-full" id="end-location" name="end_location" required autocomplete="off"
               placeholder="e.g. UP Hatfield campus" />
             <input type="hidden" id="end-lat" name="end_lat" />
             <input type="hidden" id="end-lng" name="end_lng" />
             <ul id="end-suggestions" class="geo-suggestions" role="listbox"></ul>
           </div>
+        </div>
+        <button type="button" id="btn-my-location" class="r-gps-btn" title="Use my current location"
+          aria-label="Use my current location">
+          <i class="fas fa-crosshairs"></i>
+          <span>Use my current location</span>
+        </button>
+        <button class="r-submit" type="submit" id="route-submit-btn">
+          <i class="fas fa-wand-magic-sparkles"></i> Find Safest Route
+        </button>
+      </form>
+    </div>
+  </div>
 
-          <!-- Submit -->
-          <button class="r-submit mt-2" type="submit" id="route-submit-btn">
-            <i class="fas fa-wand-magic-sparkles"></i> Find Safest Route
-          </button>
-        </form>
+  <div class="r-tips-row animate-fade-up delay-3">
+    <div class="r-tip">
+      <div class="r-tip-icon bg-emerald-50"><i class="fas fa-shield-halved text-emerald-500 text-xs"></i></div>
+      <div>
+        <p class="r-tip-title">Stick to main roads</p>
+        <p class="r-tip-desc">Well-lit arterial routes have lower incident rates.</p>
       </div>
     </div>
-
-    <!-- Quick Tips Card -->
-    <div class="r-card animate-fade-up delay-3">
-      <div class="r-card-header">
-        <div>
-          <h2><i class="fas fa-lightbulb text-amber-500 mr-1.5 text-xs"></i>Quick Tips</h2>
-          <p>Stay safe while navigating</p>
-        </div>
+    <div class="r-tip">
+      <div class="r-tip-icon bg-amber-50"><i class="fas fa-clock text-amber-500 text-xs"></i></div>
+      <div>
+        <p class="r-tip-title">Avoid late-night travel</p>
+        <p class="r-tip-desc">Incidents spike between 22:00 and 04:00 in high-risk zones.</p>
       </div>
-      <div class="p-5 space-y-3">
-        <div class="flex items-start gap-3">
-          <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="fas fa-shield-halved text-emerald-500 text-[10px]"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-surface-700">Stick to main roads</p>
-            <p class="text-[11px] text-surface-400 mt-0.5">Well-lit arterial routes have 60% lower incident rates.</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="fas fa-clock text-amber-500 text-[10px]"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-surface-700">Avoid late-night travel</p>
-            <p class="text-[11px] text-surface-400 mt-0.5">Incidents spike between 22:00 ΓÇô 04:00 in high-risk zones.</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="fas fa-users text-indigo-500 text-[10px]"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-surface-700">Travel in groups</p>
-            <p class="text-[11px] text-surface-400 mt-0.5">Solo travelers are 4├ù more likely to be targeted.</p>
-          </div>
-        </div>
+    </div>
+    <div class="r-tip">
+      <div class="r-tip-icon bg-primary-50"><i class="fas fa-users text-primary-500 text-xs"></i></div>
+      <div>
+        <p class="r-tip-title">Travel in groups</p>
+        <p class="r-tip-desc">Solo travelers are more likely to be targeted.</p>
       </div>
     </div>
   </div>
 
-  <!-- ΓòÉΓòÉΓòÉ CENTER: ROUTE MAP + HISTORY ΓòÉΓòÉΓòÉ -->
-  <div class="lg:col-span-9 space-y-6">
-
-    <!-- Map stage ΓÇö full width of center column -->
+  <div class="routes-map-section space-y-6">
     <div id="route-result" class="hidden route-result-card animate-fade-up">
       <div class="r-result-header">
         <span><i class="fas fa-chart-pie mr-1 text-[10px]"></i>Route Assessment</span>
-        <span id="route-risk" class="risk-badge">ΓÇö</span>
+        <span id="route-risk" class="risk-badge">--</span>
       </div>
-
       <div class="route-map-stage pt-4">
         <div class="map-wrapper">
           <div id="route-leaflet-map" class="w-full bg-surface-50"></div>
@@ -842,41 +902,20 @@
             <span>Safe Route Preview</span>
           </div>
           <div class="map-legend">
-            <div class="map-legend-item">
-              <div class="map-legend-dot origin"></div>
-              <span>Origin</span>
-            </div>
-            <div class="map-legend-item">
-              <div class="map-legend-dot destination"></div>
-              <span>Destination</span>
-            </div>
-            <div class="map-legend-item">
-              <div class="map-legend-dot route"></div>
-              <span>Safe Route</span>
-            </div>
+            <div class="map-legend-item"><div class="map-legend-dot origin"></div><span>Origin</span></div>
+            <div class="map-legend-item"><div class="map-legend-dot destination"></div><span>Destination</span></div>
+            <div class="map-legend-item"><div class="map-legend-dot route"></div><span>Safe Route</span></div>
           </div>
         </div>
       </div>
-
       <div class="p-5 lg:p-6">
         <div class="r-stats-bar">
-          <div class="r-stat">
-            <div class="r-stat-value" id="stat-distance">ΓÇö</div>
-            <div class="r-stat-label">Distance</div>
-          </div>
-          <div class="r-stat">
-            <div class="r-stat-value" id="stat-duration">ΓÇö</div>
-            <div class="r-stat-label">Duration</div>
-          </div>
-          <div class="r-stat">
-            <div class="r-stat-value" id="stat-score">ΓÇö</div>
-            <div class="r-stat-label">Safety Score</div>
-          </div>
+          <div class="r-stat"><div class="r-stat-value" id="stat-distance">--</div><div class="r-stat-label">Distance</div></div>
+          <div class="r-stat"><div class="r-stat-value" id="stat-duration">--</div><div class="r-stat-label">Duration</div></div>
+          <div class="r-stat"><div class="r-stat-value" id="stat-score">--</div><div class="r-stat-label">Safety Score</div></div>
         </div>
-
         <p id="route-explanation" class="r-explanation mb-0"></p>
       </div>
-
       <div class="px-5 lg:px-6 pb-5 lg:pb-6">
         <div id="route-alternatives" class="r-alt-list hidden">
           <div class="flex items-center justify-between mb-2">
@@ -886,67 +925,57 @@
         </div>
       </div>
     </div>
-
-    <!-- Empty state before first route -->
-    <div id="route-map-placeholder" class="r-card animate-fade-up delay-3 hidden lg:flex flex-col items-center justify-center text-center p-12 min-h-[520px] border-2 border-dashed border-surface-200/80 bg-white/40">
+    <div id="route-map-placeholder" class="r-card hidden lg:flex flex-col items-center justify-center text-center p-12 min-h-[360px] border-2 border-dashed border-surface-200/80 bg-white/40">
       <div class="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mb-4">
         <i class="fas fa-map-location-dot text-2xl text-primary-400"></i>
       </div>
       <p class="text-sm font-semibold text-surface-700">Your route map appears here</p>
-      <p class="text-xs text-surface-400 mt-1 max-w-xs">Enter origin and destination, then generate a route to see a full-size safety preview.</p>
+      <p class="text-xs text-surface-400 mt-1 max-w-sm">Enter origin and destination above, then tap Find Safest Route.</p>
     </div>
+  </div>
 
-    <div class="r-card animate-fade-up delay-3 h-full flex flex-col">
-      <div class="r-card-header">
-        <div>
-          <h2><i class="fas fa-clock-rotate-left text-primary-500 mr-1.5 text-xs"></i>Recent Routes</h2>
-          <p>Select a row to preview instantly on the map</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <input type="text" id="route-search" placeholder="Search routesΓÇª"
-            class="text-[11px] px-2.5 py-1.5 rounded-lg border border-surface-200 bg-white/60 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 w-36 transition-all"
-            oninput="filterRoutes(this.value)">
-          <span class="tag">History</span>
-        </div>
+  <div class="r-card animate-fade-up delay-3 flex flex-col">
+    <div class="r-card-header">
+      <div>
+        <h2><i class="fas fa-clock-rotate-left text-primary-500 mr-1.5 text-xs"></i>Recent Routes</h2>
+        <p>Select a row to preview instantly on the map</p>
       </div>
-      <div class="r-table-wrap flex-1">
-        <table class="r-table">
-          <thead>
-            <tr>
-              <th>From</th>
-              <th>To</th>
-              <th class="text-center">Risk</th>
-              <th class="text-center">When</th>
-              <th class="text-right pr-6">Action</th>
-            </tr>
-          </thead>
-          <tbody id="routes-body">
-            <tr>
-              <td colspan="5">
-                <div class="r-empty">
-                  <i class="fas fa-spinner fa-spin text-primary-400"></i>
-                  <span>Loading route historyΓÇª</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="flex items-center gap-2">
+        <input type="text" id="route-search" placeholder="Search routes..."
+          class="text-[11px] px-2.5 py-1.5 rounded-lg border border-surface-200 bg-white/60 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 w-36 transition-all"
+          oninput="filterRoutes(this.value)">
+        <span class="tag">History</span>
       </div>
-      <!-- Pagination -->
-      <div class="px-6 py-3 border-t border-surface-200/60 flex items-center justify-between">
-        <span class="text-[11px] text-surface-400 font-medium" id="route-table-info">LoadingΓÇª</span>
-        <div class="flex items-center gap-1">
-          <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px] transition-all" onclick="prevRoutePage()">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="text-xs text-surface-500 font-semibold px-2" id="route-page-num">1</span>
-          <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px] transition-all" onclick="nextRoutePage()">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
+    </div>
+    <div class="r-table-wrap flex-1">
+      <table class="r-table">
+        <thead>
+          <tr>
+            <th>From</th><th>To</th><th class="text-center">Risk</th><th class="text-center">When</th><th class="text-right pr-6">Action</th>
+          </tr>
+        </thead>
+        <tbody id="routes-body">
+          <tr>
+            <td colspan="5">
+              <div class="r-empty">
+                <i class="fas fa-spinner fa-spin text-primary-400"></i>
+                <span>Loading route history...</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-6 py-3 border-t border-surface-200/60 flex items-center justify-between">
+      <span class="text-[11px] text-surface-400 font-medium" id="route-table-info">Loading...</span>
+      <div class="flex items-center gap-1">
+        <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px] transition-all" onclick="prevRoutePage()"><i class="fas fa-chevron-left"></i></button>
+        <span class="text-xs text-surface-500 font-semibold px-2" id="route-page-num">1</span>
+        <button class="w-7 h-7 rounded-lg border border-surface-200 flex items-center justify-center text-surface-400 hover:bg-surface-50 text-[10px] transition-all" onclick="nextRoutePage()"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
   </div>
+
 </div>
 
 {% endblock %}
@@ -1007,7 +1036,7 @@ function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1)
       }
       btn.classList.add('pulse-ring');
       input.classList.add('is-loading');
-      input.placeholder = 'Detecting your locationΓÇª';
+      input.placeholder = 'Detecting your location...';
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
