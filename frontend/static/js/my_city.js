@@ -18,9 +18,15 @@
   }
 
   function sevClass(s) {
-    if (s >= 4) return "sev-4";
-    if (s === 3) return "sev-3";
+    const n = parseInt(s, 10);
+    if (n >= 1 && n <= 5) return "sev-" + n;
+    if (n >= 4) return "sev-4";
+    if (n === 3) return "sev-3";
     return "sev-2";
+  }
+
+  function sourceClass(source) {
+    return source === "community" || source === "user" ? "community" : "system";
   }
 
   function readCache() {
@@ -42,7 +48,9 @@
 
   function setStatus(msg) {
     const el = $("city-status");
-    if (el) el.textContent = msg;
+    if (el) {
+      el.innerHTML = `<i class="fas fa-crosshairs mr-1.5 text-primary-400"></i>${esc(msg)}`;
+    }
   }
 
   function updateCityUI(data) {
@@ -79,32 +87,49 @@
 
     if (!count) {
       list.innerHTML = `
-        <div class="py-14 text-center px-6">
-          <div class="empty-icon"><i class="fas fa-shield-halved"></i></div>
-          <p class="text-surface-600 font-medium">No incidents in ${esc(data.city || "your city")}</p>
-          <p class="text-sm text-surface-400 mt-1">That's good news — or be the first to report something.</p>
+        <div class="a-empty">
+          <div class="a-empty-icon"><i class="fas fa-shield-halved"></i></div>
+          <h3>No incidents nearby</h3>
+          <p>No incidents reported in ${esc(data.city || "your city")} yet — that's good news.</p>
         </div>`;
       return;
     }
 
-    list.innerHTML = data.events.map((e) => `
-      <div class="event-row">
+    list.innerHTML = data.events.map((e, i) => `
+      <div class="event-row a-in" style="animation-delay:${i * 0.05}s" onclick="location.href='/events'">
         <div class="event-sev ${sevClass(e.severity)}">${e.severity}</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-surface-800 text-sm">${esc(e.title)}</p>
-          <p class="text-xs text-surface-500 mt-0.5"><i class="fas fa-location-dot"></i> ${esc(e.location)} · ${esc(e.source)}</p>
-          ${e.description ? `<p class="text-xs text-surface-400 mt-1 line-clamp-2">${esc(e.description)}</p>` : ""}
+        <div class="event-info">
+          <p class="event-title">${esc(e.title)}</p>
+          <div class="event-meta">
+            <i class="fas fa-location-dot"></i>
+            <span>${esc(e.location)}</span>
+            <span class="event-meta-dot"></span>
+            <span class="event-source ${sourceClass(e.source)}">${esc(e.source)}</span>
+          </div>
+          ${e.description ? `<p class="text-xs mt-1 line-clamp-2" style="color:var(--a-muted)">${esc(e.description)}</p>` : ""}
         </div>
+        <i class="fas fa-chevron-right event-arrow"></i>
       </div>`).join("");
   }
 
   async function loadMyCityEvents(cityData) {
-    $("events-list").innerHTML = '<div class="py-12 text-center text-surface-400 text-sm">Loading events…</div>';
+    $("events-list").innerHTML = `
+      <div class="a-empty">
+        <div class="a-empty-icon"><i class="fas fa-spinner fa-spin"></i></div>
+        <h3>Loading incidents</h3>
+        <p>Fetching events near your area...</p>
+      </div>`;
     try {
       const res = await SR.get("/api/events/my-city?" + buildQuery(cityData));
       renderEvents(res);
     } catch (err) {
-      $("events-list").innerHTML = `<div class="py-12 text-center text-rose-600 text-sm px-6">${esc(err.message)}</div>`;
+      $("events-list").innerHTML = `
+        <div class="a-empty">
+          <div class="a-empty-icon" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.2);">
+            <i class="fas fa-triangle-exclamation" style="color:#f87171;"></i>
+          </div>
+          <h3 style="color:#f87171">${esc(err.message)}</h3>
+        </div>`;
       flash(err.message, "error");
     }
   }
@@ -127,8 +152,11 @@
   }
 
   function detectCity() {
+    const btn = $("btn-use-location");
+    if (btn) btn.classList.add("pulse-ring");
     setStatus("Detecting your location…");
     if (!navigator.geolocation) {
+      if (btn) btn.classList.remove("pulse-ring");
       applyCity(readCache() || DEFAULT_CITY);
       return;
     }
@@ -147,8 +175,10 @@
         } catch {
           applyCity({ city: "Your area", lat, lng, source: "geolocation" });
         }
+        if (btn) btn.classList.remove("pulse-ring");
       },
       () => {
+        if (btn) btn.classList.remove("pulse-ring");
         const cached = readCache();
         if (cached) {
           applyCity(cached);
