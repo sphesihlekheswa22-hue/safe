@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from models.event import Event
 from services import ingestion_service as ingestion, risk_engine
 from services.city_events_service import events_for_city, DEFAULT_RADIUS_KM
+from services.geocoding_service import reverse as reverse_geocode, _looks_like_coords
 from services.geo_service import sync_event_coords
 from schemas.event_schema import validate_create, validate_update
 from utils.validators import ValidationError
@@ -52,6 +53,10 @@ def my_city_events():
 
     if not city and (lat is None or lng is None):
         return jsonify(error="Provide city or both lat and lng."), 400
+
+    if city and _looks_like_coords(city) and lat is not None and lng is not None:
+        resolved = reverse_geocode(lat, lng)
+        city = resolved.get("name") or resolved.get("city") or city
 
     try:
         radius = float(request.args.get("radius_km", DEFAULT_RADIUS_KM))

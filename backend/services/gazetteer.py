@@ -44,12 +44,34 @@ CITY_MARKERS = [
     {"name": "Centurion", "lng": 28.1878, "lat": -25.8603},
 ]
 
+# Major SA centres for nearest-place fallback when street-level reverse geocode fails.
+SA_MAJOR_CITIES = [
+    {"name": "Durban", "lat": -29.8587, "lng": 31.0218},
+    {"name": "Pietermaritzburg", "lat": -29.6006, "lng": 30.3794},
+    {"name": "Newcastle", "lat": -27.7574, "lng": 29.9321},
+    {"name": "Richards Bay", "lat": -28.7807, "lng": 32.0383},
+    {"name": "Cape Town", "lat": -33.9249, "lng": 18.4241},
+    {"name": "Stellenbosch", "lat": -33.9321, "lng": 18.8602},
+    {"name": "Bloemfontein", "lat": -29.0852, "lng": 26.1596},
+    {"name": "Polokwane", "lat": -23.9045, "lng": 29.4689},
+    {"name": "Gqeberha", "lat": -33.9608, "lng": 25.6022},
+    {"name": "East London", "lat": -33.0153, "lng": 27.9116},
+    {"name": "Nelspruit", "lat": -25.4653, "lng": 30.9703},
+    {"name": "Kimberley", "lat": -28.7282, "lng": 24.7499},
+    {"name": "Rustenburg", "lat": -25.6672, "lng": 27.2423},
+    {"name": "Vereeniging", "lat": -26.6731, "lng": 27.9265},
+]
+
 DEFAULT_RADIUS_KM = 2.5
 DEFAULT_MAP_CENTER = {"lng": 28.1881, "lat": -25.7461, "zoom": 11}
 
 
 def _normalize(name: str) -> str:
     return re.sub(r"\s+", " ", (name or "").strip().lower())
+
+
+def _title_key(key: str) -> str:
+    return " ".join(part.capitalize() for part in key.split())
 
 
 def lookup(name: str) -> Optional[tuple[float, float, float]]:
@@ -75,6 +97,30 @@ def lookup_city_near(lat: float, lng: float) -> Optional[str]:
             best_dist = dist
             best_name = marker["name"]
     if best_dist <= 80.0:
+        return best_name
+    return None
+
+
+def nearest_place_name(lat: float, lng: float, max_km: float = 150.0) -> Optional[str]:
+    """Return the closest known town/suburb/city name for a coordinate pair."""
+    from services.geo_service import haversine_km
+
+    best_name: str | None = None
+    best_dist = float("inf")
+
+    for key, coords in GAZETTEER.items():
+        dist = haversine_km(lat, lng, coords[1], coords[0])
+        if dist < best_dist:
+            best_dist = dist
+            best_name = _title_key(key)
+
+    for marker in CITY_MARKERS + SA_MAJOR_CITIES:
+        dist = haversine_km(lat, lng, marker["lat"], marker["lng"])
+        if dist < best_dist:
+            best_dist = dist
+            best_name = marker["name"]
+
+    if best_name and best_dist <= max_km:
         return best_name
     return None
 

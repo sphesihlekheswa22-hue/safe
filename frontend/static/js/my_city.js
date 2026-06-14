@@ -53,8 +53,12 @@
     }
   }
 
+  function displayArea(data) {
+    return data.label || data.city || "your area";
+  }
+
   function updateCityUI(data) {
-    $("city-label").textContent = data.city;
+    $("city-label").textContent = displayArea(data);
     $("city-badge-wrap").classList.remove("hidden");
     const picker = $("city-picker");
     if (picker) {
@@ -67,9 +71,14 @@
     setStatus(sourceLabel);
   }
 
+  function looksLikeCoords(value) {
+    return /^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(String(value || "").trim());
+  }
+
   function buildQuery(data) {
     const params = new URLSearchParams();
-    if (data.city) params.set("city", data.city);
+    const area = data.label || data.city;
+    if (area && !looksLikeCoords(area)) params.set("city", area);
     if (data.lat != null && data.lng != null) {
       params.set("lat", String(data.lat));
       params.set("lng", String(data.lng));
@@ -82,15 +91,15 @@
     const count = data.count || 0;
     $("event-count-badge").textContent = count + " incident" + (count === 1 ? "" : "s");
     $("events-subtitle").textContent = count
-      ? `Within ~${Math.round(data.radius_km || 25)} km of ${data.city || "your area"}`
-      : `No incidents reported in ${data.city || "your area"} yet`;
+      ? `Within ~${Math.round(data.radius_km || 25)} km of ${displayArea(data)}`
+      : `No incidents reported in ${displayArea(data)} yet`;
 
     if (!count) {
       list.innerHTML = `
         <div class="a-empty">
           <div class="a-empty-icon"><i class="fas fa-shield-halved"></i></div>
           <h3>No incidents nearby</h3>
-          <p>No incidents reported in ${esc(data.city || "your city")} yet — that's good news.</p>
+          <p>No incidents reported in ${esc(displayArea(data))} yet — that's good news.</p>
         </div>`;
       return;
     }
@@ -121,6 +130,7 @@
       </div>`;
     try {
       const res = await SR.get("/api/events/my-city?" + buildQuery(cityData));
+      if (!res.city && cityData.label) res.city = cityData.label;
       renderEvents(res);
     } catch (err) {
       $("events-list").innerHTML = `
@@ -166,14 +176,20 @@
         const lng = pos.coords.longitude;
         try {
           const { result } = await SR.post("/api/routes/geocode/reverse", { lat, lng });
+          const label = result.name || result.city || "Your area";
           applyCity({
-            city: result.city || result.name || "Your area",
+            city: result.city || label,
+            label,
             lat,
             lng,
             source: "geolocation",
+            approximate: !!result.approximate,
           });
+          if (result.approximate) {
+            setStatus(`Closest match: ${label}`);
+          }
         } catch {
-          applyCity({ city: "Your area", lat, lng, source: "geolocation" });
+          applyCity({ city: "Your area", label: "Your area", lat, lng, source: "geolocation" });
         }
         if (btn) btn.classList.remove("pulse-ring");
       },

@@ -584,15 +584,23 @@ function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1)
           const lng = pos.coords.longitude;
           try {
             const { result } = await SR.post('/api/routes/geocode/reverse', { lat, lng });
-            input.value = result.name;
+            const label = result.name || result.city || 'Your area';
+            input.value = label;
+            input.dataset.selectedLabel = label;
             document.getElementById('start-lat').value = result.lat;
             document.getElementById('start-lng').value = result.lng;
-            flash('Current location set as origin.', 'success');
+            flash(
+              result.approximate
+                ? `Origin set to closest match: ${label}`
+                : 'Current location set as origin.',
+              result.approximate ? 'warning' : 'success'
+            );
           } catch (err) {
-            input.value = lat.toFixed(5) + ', ' + lng.toFixed(5);
             document.getElementById('start-lat').value = lat;
             document.getElementById('start-lng').value = lng;
-            flash(err.message || 'Location set (address lookup failed).', 'warning');
+            input.value = 'Your area';
+            input.dataset.selectedLabel = 'Your area';
+            flash(err.message || 'Could not resolve your address. Try typing your street or suburb.', 'error');
           }
           btn.classList.remove('pulse-ring');
           input.classList.remove('is-loading');

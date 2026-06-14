@@ -130,12 +130,15 @@ def _short_name(item: dict, query: str | None = None) -> str:
         or addr.get("neighbourhood")
         or addr.get("quarter")
         or addr.get("hamlet")
+        or addr.get("locality")
     )
     city = (
         addr.get("city")
         or addr.get("town")
         or addr.get("village")
         or addr.get("municipality")
+        or addr.get("county")
+        or addr.get("state_district")
     )
     province = addr.get("state")
     postcode = addr.get("postcode")
@@ -158,33 +161,97 @@ def _short_name(item: dict, query: str | None = None) -> str:
     return _trim_display_name(item.get("display_name", "Unknown location"))
 
 
+_COORD_LABEL_RE = re.compile(r"^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$")
+
+
+def _looks_like_coords(label: str) -> bool:
+    return bool(_COORD_LABEL_RE.match((label or "").strip()))
+
+
+def _address_area_label(addr: dict) -> str | None:
+    """Best-effort suburb/town/city label from partial Nominatim address parts."""
+    if not addr:
+        return None
+    parts: list[str] = []
+    for key in (
+        "road", "pedestrian", "residential", "hamlet", "suburb", "neighbourhood",
+        "quarter", "village", "town", "city", "municipality", "county",
+        "state_district", "state",
+    ):
+        val = addr.get(key)
+        if not val:
+            continue
+        text = str(val).strip()
+        if not text or text in parts:
+            continue
+        parts.append(text)
+        if len(parts) >= 3:
+            break
+    return ", ".join(parts) if parts else None
+
+
 def _extract_city(item: dict) -> str | None:
     """Best-effort city label from a Nominatim reverse-geocode payload."""
     addr = item.get("address") or {}
-    for key in ("city", "town", "municipality", "county", "state"):
+    for key in (
+        "city", "town", "village", "municipality", "county",
+        "state_district", "suburb", "state",
+    ):
         val = addr.get(key)
         if val:
             return str(val)
     return None
 
 
-def _reverse_payload(item: dict | None, lat: float, lng: float) -> dict:
-    if item:
-        return {
-            "name": _short_name(item),
-            "display_name": item.get("display_name", ""),
-            "city": _extract_city(item),
-            "lat": lat,
-            "lng": lng,
-        }
-    label = f"{lat:.5f}, {lng:.5f}"
+def _fallback_location_label(lat: float, lng: float, item: dict | None = None) -> dict:
+    """Never return raw coordinates — use display name, address parts, or nearest town."""
+    approximate = True
+    city = None
+    name = None
+
+    if item and not item.get("error"):
+        city = _extract_city(item)
+        trimmed = _trim_display_name(item.get("display_name", ""))
+        if trimmed and not _looks_like_coords(trimmed) and trimmed != "Unknown location":
+            name = trimmed
+            approximate = False
+        if not name:
+            area = _address_area_label(item.get("address") or {})
+            if area:
+                name = area
+                approximate = False
+
+    if not name:
+        near = gazetteer.nearest_place_name(lat, lng)
+        if near:
+            name = f"Near {near}"
+            city = near
+        else:
+            name = "Your area"
+
     return {
-        "name": label,
-        "display_name": label,
-        "city": None,
+        "name": name,
+        "display_name": name,
+        "city": city,
         "lat": lat,
         "lng": lng,
+        "approximate": approximate,
     }
+
+
+def _reverse_payload(item: dict | None, lat: float, lng: float) -> dict:
+    if item and not item.get("error"):
+        name = _short_name(item)
+        if name and name != "Unknown location" and not _looks_like_coords(name):
+            return {
+                "name": name,
+                "display_name": item.get("display_name", name),
+                "city": _extract_city(item),
+                "lat": lat,
+                "lng": lng,
+                "approximate": False,
+            }
+    return _fallback_location_label(lat, lng, item)
 
 
 def _result_key(lat: float, lng: float) -> str:
@@ -480,12 +547,21 @@ def reverse(lat: float, lng: float) -> dict:
     try:
         resp = requests.get(
             f"{NOMINATIM}/reverse",
-            params={"lat": lat, "lon": lng, "format": "json", "addressdetails": 1},
+            params={
+                "lat": lat,
+                "lon": lng,
+                "format": "json",
+                "addressdetails": 1,
+                "zoom": 16,
+            },
             headers=_headers(),
             timeout=12,
         )
         resp.raise_for_status()
         item = resp.json()
+        if item.get("error"):
+            logger.warning("Reverse geocode error from Nominatim: %s", item.get("error"))
+            return _fallback_location_label(lat, lng, item)
         return _reverse_payload(item, lat, lng)
     except GeocodeError:
         raise
@@ -493,10 +569,10 @@ def reverse(lat: float, lng: float) -> dict:
         if exc.response is not None and exc.response.status_code == 429:
             _pause_nominatim(180.0)
         logger.warning("Reverse geocode failed: %s", exc)
-        return _reverse_payload(None, lat, lng)
+        return _fallback_location_label(lat, lng, None)
     except Exception as exc:
         logger.warning("Reverse geocode failed: %s", exc)
-        return _reverse_payload(None, lat, lng)
+        return _fallback_location_label(lat, lng, None)
 
 
 def resolve_location(
