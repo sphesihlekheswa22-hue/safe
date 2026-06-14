@@ -14,12 +14,12 @@
       {% endif %}
     </div>
     <div class="mb-1">
-      <span id="{{ value_id }}" class="text-3xl lg:text-4xl font-display font-bold text-surface-800 group-hover:text-{{ color }}-700 transition-colors duration-300">—</span>
+      <span id="{{ value_id }}" class="text-3xl lg:text-4xl font-display font-bold text-surface-100 group-hover:text-{{ color }}-400 transition-colors duration-300">—</span>
       {% if label == 'Risk Score' %}<span class="text-lg text-surface-400 font-medium">/100</span>{% endif %}
     </div>
-    <p class="text-sm font-medium text-surface-500 group-hover:text-surface-600 transition-colors">{{ label }}</p>
+    <p class="text-sm font-medium text-surface-400 group-hover:text-surface-300 transition-colors">{{ label }}</p>
     {% if label in ['Average Risk', 'Risk Score'] %}
-    <div class="mt-4 h-1.5 bg-surface-200 rounded-full overflow-hidden">
+    <div class="mt-4 h-1.5 bg-surface-700 rounded-full overflow-hidden">
       <div id="{{ value_id }}-bar" class="h-full bg-gradient-to-r from-{{ color }}-400 to-{{ color }}-600 rounded-full transition-all duration-1000" style="width: 0%"></div>
     </div>
     {% endif %}
@@ -37,7 +37,7 @@
         </div>
         <div>
           <p class="text-xs font-semibold text-{{ color }}-600 uppercase tracking-wider">{{ label }}</p>
-          <h3 id="{{ value_id }}" class="text-2xl font-display font-bold text-surface-800">—</h3>
+          <h3 id="{{ value_id }}" class="text-2xl font-display font-bold text-surface-100">—</h3>
         </div>
       </div>
     </div>
@@ -53,10 +53,10 @@
       {{ icon }}
     </div>
     <div class="flex-1">
-      <p class="text-sm font-medium text-surface-500">{{ title }}</p>
+      <p class="text-sm font-medium text-surface-400">{{ title }}</p>
       <div class="flex items-center gap-2">
-        <span id="{{ status_id }}" class="text-lg font-display font-bold text-surface-800">—</span>
-        <span id="{{ status_text_id }}" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Active</span>
+        <span id="{{ status_id }}" class="text-lg font-display font-bold text-surface-100">—</span>
+        <span id="{{ status_text_id }}" class="px-2 py-0.5 bg-emerald-500/15 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">Active</span>
       </div>
     </div>
   </div>
@@ -97,10 +97,10 @@
 
 {% macro panel(title, subtitle='', action=None) -%}
 <div class="glass-card rounded-2xl overflow-hidden group">
-  <div class="px-6 py-4 border-b border-surface-200 flex items-center justify-between bg-gradient-to-r from-white to-surface-50/50">
+  <div class="px-6 py-4 border-b border-surface-700/50 flex items-center justify-between bg-gradient-to-r from-surface-900 to-surface-800/50">
     <div>
-      <h3 class="font-display font-bold text-surface-800 group-hover:text-primary-700 transition-colors">{{ title }}</h3>
-      {% if subtitle %}<p class="text-xs text-surface-500 mt-0.5">{{ subtitle }}</p>{% endif %}
+      <h3 class="font-display font-bold text-surface-100 group-hover:text-primary-400 transition-colors">{{ title }}</h3>
+      {% if subtitle %}<p class="text-xs text-surface-400 mt-0.5">{{ subtitle }}</p>{% endif %}
     </div>
     {% if action %}<div class="flex items-center gap-2">{{ action|safe }}</div>{% endif %}
   </div>
@@ -155,207 +155,186 @@
     * { font-family: 'Inter', sans-serif; }
     .font-display { font-family: 'Space Grotesk', sans-serif; }
 
-    .mesh-gradient {
-      background:
-        radial-gradient(at 40% 20%, hsla(217,91%,60%,0.08) 0px, transparent 50%),
-        radial-gradient(at 80% 0%, hsla(263,70%,60%,0.08) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, hsla(330,80%,60%,0.06) 0px, transparent 50%),
-        radial-gradient(at 80% 50%, hsla(217,91%,60%,0.06) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, hsla(263,70%,60%,0.06) 0px, transparent 50%);
+    /* ════════════════════════════════════════════════════════
+       AURORA BASE THEME 2026 — DARK MODE
+       ════════════════════════════════════════════════════════ */
+    :root {
+      --a-bg: #020617;
+      --a-surface: #0f172a;
+      --a-elevated: #1e293b;
+      --a-border: rgba(148, 163, 184, 0.12);
+      --a-text: #f8fafc;
+      --a-muted: #94a3b8;
+      --a-primary: #6366f1;
+      --a-primary-light: #818cf8;
+      --a-primary-dark: #4f46e5;
     }
 
+    body {
+      background: var(--a-bg);
+      color: var(--a-text);
+    }
+
+    /* Mesh Gradient Background */
+    .mesh-gradient {
+      background:
+        radial-gradient(at 40% 20%, hsla(217,91%,60%,0.06) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(263,70%,60%,0.05) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(330,80%,60%,0.04) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, hsla(217,91%,60%,0.04) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(263,70%,60%,0.04) 0px, transparent 50%);
+    }
+
+    /* Glass Cards — Dark */
     .glass {
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(30, 41, 59, 0.6);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(148, 163, 184, 0.12);
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(30, 41, 59, 0.7);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05), 0 0 0 1px rgba(255,255,255,0.6) inset;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 10px 15px -3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .glass-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 20px 25px -5px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3), 0 20px 25px -5px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+      border-color: rgba(99, 102, 241, 0.2);
     }
 
-    /* ===== CLEAN SIDEBAR STYLES ===== */
+    /* ===== AURORA SIDEBAR ===== */
     .sidebar {
-      background: #0f172a;
-      border-right: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+      border-right: 1px solid rgba(148, 163, 184, 0.08);
     }
     .sidebar-brand {
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
     }
     .sidebar-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.625rem 0.875rem;
-      border-radius: 0.625rem;
-      color: #94a3b8;
-      font-size: 0.8125rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      position: relative;
-      margin-bottom: 0.125rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.625rem 0.875rem; border-radius: 0.75rem;
+      color: #64748b; font-size: 0.8125rem; font-weight: 500;
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative; margin-bottom: 0.125rem;
     }
     .sidebar-nav-item:hover {
-      background: rgba(255,255,255,0.04);
-      color: #e2e8f0;
+      background: rgba(99, 102, 241, 0.08);
+      color: #cbd5e1;
     }
     .sidebar-nav-item.active {
-      background: rgba(37, 99, 235, 0.12);
-      color: #60a5fa;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05));
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.15);
     }
     .sidebar-nav-item.active::before {
       content: '';
-      position: absolute;
-      left: -0.875rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 20px;
-      background: #3b82f6;
+      position: absolute; left: -0.875rem; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 20px;
+      background: linear-gradient(to bottom, #818cf8, #6366f1);
       border-radius: 0 3px 3px 0;
-    }
-    .sidebar-nav-item.active .sidebar-icon {
-      color: #60a5fa;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
     }
     .sidebar-icon {
-      width: 18px;
-      height: 18px;
-      color: #64748b;
-      transition: color 0.2s ease;
-      flex-shrink: 0;
+      width: 18px; height: 18px; color: #475569;
+      transition: all 0.25s ease; flex-shrink: 0;
     }
-    .sidebar-nav-item:hover .sidebar-icon {
-      color: #94a3b8;
-    }
-    .sidebar-nav-item.active .sidebar-icon {
-      color: #60a5fa;
-    }
+    .sidebar-nav-item:hover .sidebar-icon { color: #94a3b8; }
+    .sidebar-nav-item.active .sidebar-icon { color: #818cf8; filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.3)); }
     .sidebar-section-label {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #475569;
-      padding: 0 0.875rem;
-      margin: 1.25rem 0 0.5rem 0;
+      font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #334155;
+      padding: 0 0.875rem; margin: 1.25rem 0 0.5rem 0;
     }
     .sidebar-badge {
-      font-size: 0.625rem;
-      font-weight: 700;
-      padding: 0.125rem 0.375rem;
-      border-radius: 9999px;
-      margin-left: auto;
+      font-size: 0.625rem; font-weight: 700;
+      padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: auto;
     }
-    .sidebar-badge-amber {
-      background: rgba(245, 158, 11, 0.15);
-      color: #f59e0b;
-    }
-    .sidebar-badge-rose {
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
-    }
-    .sidebar-badge-violet {
-      background: rgba(139, 92, 246, 0.15);
-      color: #a78bfa;
-    }
-    .sidebar-badge-amber-admin {
-      background: rgba(245, 158, 11, 0.15);
-      color: #fbbf24;
-    }
+    .sidebar-badge-amber { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+    .sidebar-badge-rose { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .sidebar-badge-violet { background: rgba(139, 92, 246, 0.12); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2); }
+    .sidebar-badge-amber-admin { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
     .sidebar-footer {
-      border-top: 1px solid rgba(255,255,255,0.06);
-      background: rgba(2, 6, 23, 0.5);
+      border-top: 1px solid rgba(148, 163, 184, 0.08);
+      background: rgba(2, 6, 23, 0.6);
     }
     .sidebar-user-card {
-      background: rgba(30, 41, 59, 0.6);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 0.75rem;
-      padding: 0.875rem;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 1rem; padding: 1rem;
     }
     .sidebar-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 0.625rem;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 0.875rem;
-      flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 0.75rem;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 0.875rem; flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
     .sidebar-logout {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #f87171;
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.5rem; border-radius: 0.625rem;
+      font-size: 0.75rem; font-weight: 600; color: #f87171;
       background: rgba(239, 68, 68, 0.08);
       border: 1px solid rgba(239, 68, 68, 0.12);
-      transition: all 0.2s ease;
-      margin-top: 0.75rem;
+      transition: all 0.2s ease; margin-top: 0.75rem;
     }
-    .sidebar-logout:hover {
-      background: rgba(239, 68, 68, 0.15);
-      color: #fca5a5;
-    }
+    .sidebar-logout:hover { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.2); }
 
-    /* Navbar */
+    /* ===== AURORA TOPBAR ===== */
     .topbar {
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(15, 23, 42, 0.8);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
     }
 
-    /* Scrollbar */
+    /* Scrollbar — Dark */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.4); }
+    ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.25); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
 
-    /* Chat */
-    .sr-chat-panel { backdrop-filter: blur(20px); }
+    /* ===== AURORA CHAT ===== */
+    .sr-chat-panel { backdrop-filter: blur(24px); }
     .sr-chat-bubble-user {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
       color: #fff;
       border-bottom-right-radius: 0.25rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
     .sr-chat-bubble-bot {
-      background: #fff;
-      color: #334155;
-      border: 1px solid #e2e8f0;
+      background: rgba(30, 41, 59, 0.9);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.15);
       border-bottom-left-radius: 0.25rem;
+    }
+
+    /* Animations */
+    @keyframes aurora-pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    @keyframes aurora-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }
     }
   </style>
 
   <link rel="stylesheet" href="/static/css/tailwind.css" />
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-surface-50 text-surface-800 antialiased min-h-screen flex mesh-gradient">
+<body class="bg-surface-950 text-surface-100 antialiased min-h-screen flex mesh-gradient">
 
   <!-- ===== CLEAN SIDEBAR ===== -->
   <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 sidebar z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden">
 
     <!-- Brand -->
     <div class="sidebar-brand flex-shrink-0 h-16 flex items-center gap-3 px-5">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/20">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
         </svg>
@@ -441,7 +420,7 @@
             <p id="user-role" class="text-[10px] text-surface-500 uppercase tracking-wide font-medium truncate">...</p>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-surface-700/50">
+        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-surface-700/30">
           <div class="text-center">
             <p class="text-base font-bold text-surface-200" id="user-risk-score">—</p>
             <p class="text-[10px] text-surface-500 uppercase tracking-wide">Risk</p>
@@ -461,59 +440,59 @@
   </aside>
 
   <!-- Overlay -->
-  <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden lg:hidden opacity-0 transition-opacity duration-300"></div>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden lg:hidden opacity-0 transition-opacity duration-300"></div>
 
   <!-- Main Content -->
   <div class="flex-1 flex flex-col min-w-0 ml-0 lg:ml-64 relative z-10">
 
-    <!-- Navbar -->
+    <!-- Aurora Topbar -->
     <header class="sticky top-0 z-30 h-16 topbar">
       <div class="h-full px-6 flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <button id="mobile-menu" class="lg:hidden w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center text-surface-600 hover:bg-surface-200 transition-colors">
+          <button id="mobile-menu" class="lg:hidden w-9 h-9 rounded-lg bg-surface-800/60 border border-surface-700/50 flex items-center justify-center text-surface-400 hover:text-surface-200 hover:bg-surface-700/60 transition-all">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
           </button>
           <div class="hidden sm:block">
-            <h1 id="page-heading" class="text-lg font-display font-bold text-surface-800">{{ heading|default('Dashboard') }}</h1>
-            <p id="breadcrumb" class="text-[11px] text-surface-400">SafeRoute AI / {{ heading|default('Dashboard') }}</p>
+            <h1 id="page-heading" class="text-lg font-display font-bold text-surface-100">{{ heading|default('Dashboard') }}</h1>
+            <p id="breadcrumb" class="text-[11px] text-surface-500">SafeRoute AI / {{ heading|default('Dashboard') }}</p>
           </div>
         </div>
         <div class="hidden md:flex items-center gap-4">
-          <div class="flex items-center gap-2 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-            <span class="text-[11px] font-medium text-emerald-700">Online</span>
+          <div class="flex items-center gap-2 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span class="text-[11px] font-medium text-emerald-400">Online</span>
           </div>
-          <div class="flex items-center gap-1.5 text-surface-400">
+          <div class="flex items-center gap-1.5 text-surface-500">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span class="text-[11px] font-medium" id="last-update">Just now</span>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <div class="relative" id="nav-event-wrap">
-            <button id="nav-event-btn" type="button" class="relative w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 hover:bg-surface-200 hover:text-surface-700 transition-all" aria-label="View recent incidents" aria-expanded="false" aria-controls="nav-event-panel">
+            <button id="nav-event-btn" type="button" class="relative w-9 h-9 rounded-lg bg-surface-800/60 border border-surface-700/50 flex items-center justify-center text-surface-400 hover:text-surface-200 hover:bg-surface-700/60 hover:border-surface-600/50 transition-all" aria-label="View recent incidents" aria-expanded="false" aria-controls="nav-event-panel">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
               <span id="nav-event-badge" class="absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-0.5 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center hidden">0</span>
             </button>
-            <div id="nav-event-panel" class="hidden absolute right-0 top-full mt-2 w-[min(100vw-2rem,22rem)] rounded-2xl border border-surface-200 bg-white shadow-xl shadow-surface-900/10 overflow-hidden z-50">
-              <div class="px-4 py-3 border-b border-surface-100 bg-gradient-to-r from-white to-surface-50 flex items-center justify-between">
+            <div id="nav-event-panel" class="hidden absolute right-0 top-full mt-2 w-[min(100vw-2rem,22rem)] rounded-2xl border border-surface-700/50 bg-surface-900/95 backdrop-blur-xl shadow-2xl shadow-black/40 overflow-hidden z-50">
+              <div class="px-4 py-3 border-b border-surface-700/50 bg-gradient-to-r from-surface-900 to-surface-800/50 flex items-center justify-between">
                 <div>
-                  <p class="text-sm font-display font-bold text-surface-800">Recent Incidents</p>
-                  <p class="text-[10px] text-surface-400">Latest community events</p>
+                  <p class="text-sm font-display font-bold text-surface-100">Recent Incidents</p>
+                  <p class="text-[10px] text-surface-500">Latest community events</p>
                 </div>
-                <span id="nav-event-count" class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full hidden">0</span>
+                <span id="nav-event-count" class="text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full hidden">0</span>
               </div>
               <div id="nav-event-list" class="max-h-72 overflow-y-auto p-3 space-y-2">
-                <p class="text-xs text-surface-400 text-center py-6">Loading incidents…</p>
+                <p class="text-xs text-surface-500 text-center py-6">Loading incidents...</p>
               </div>
-              <div class="px-3 py-2.5 border-t border-surface-100 bg-surface-50/80">
-                <a href="/events" class="flex items-center justify-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors">
+              <div class="px-3 py-2.5 border-t border-surface-700/50 bg-surface-800/50">
+                <a href="/events" class="flex items-center justify-center gap-1 text-xs font-semibold text-primary-400 hover:text-primary-300 transition-colors">
                   View all events
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </a>
               </div>
             </div>
           </div>
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary-500/20 cursor-pointer hover:scale-105 transition-transform">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary-500/30 cursor-pointer hover:scale-105 transition-transform">
             <span id="nav-avatar">?</span>
           </div>
         </div>
@@ -533,24 +512,24 @@
 
   <!-- Safety Assistant Chat -->
   <div id="sr-chat-root" class="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
-    <div id="sr-chat-panel" class="hidden w-[min(100vw-2rem,380px)] h-[min(70vh,520px)] flex flex-col rounded-2xl shadow-2xl border border-white/40 overflow-hidden glass-card sr-chat-panel">
-      <div class="flex items-center gap-3 px-4 py-3 border-b border-surface-200 bg-gradient-to-r from-primary-600 to-primary-700 text-white flex-shrink-0">
+    <div id="sr-chat-panel" class="hidden w-[min(100vw-2rem,380px)] h-[min(70vh,520px)] flex flex-col rounded-2xl shadow-2xl border border-surface-700/50 overflow-hidden glass-card sr-chat-panel">
+      <div class="flex items-center gap-3 px-4 py-3 border-b border-surface-700/50 bg-gradient-to-r from-primary-600 to-primary-700 text-white flex-shrink-0">
         <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
         </div>
         <div class="flex-1 min-w-0">
           <p class="font-display font-bold text-sm">Safety Assistant</p>
-          <p class="text-[10px] text-primary-100">Live risk · incidents · routes</p>
+          <p class="text-[10px] text-primary-200">Live risk &middot; incidents &middot; routes</p>
         </div>
         <button id="sr-chat-close" type="button" class="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors" aria-label="Close chat">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <div id="sr-chat-messages" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-surface-50/80"></div>
-      <div id="sr-chat-suggestions" class="flex flex-wrap gap-2 px-4 pb-2 bg-surface-50/80 flex-shrink-0"></div>
-      <form id="sr-chat-form" class="flex gap-2 p-3 border-t border-surface-200 bg-white flex-shrink-0">
-        <input id="sr-chat-input" type="text" class="flex-1 text-sm rounded-xl border border-surface-200 px-3 py-2 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" placeholder="Ask about safety in your area…" maxlength="2000" autocomplete="off" />
-        <button type="submit" class="px-4 rounded-xl bg-primary-600 text-white hover:bg-primary-700 transition-colors flex-shrink-0" aria-label="Send">
+      <div id="sr-chat-messages" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-surface-900/50"></div>
+      <div id="sr-chat-suggestions" class="flex flex-wrap gap-2 px-4 pb-2 bg-surface-900/50 flex-shrink-0"></div>
+      <form id="sr-chat-form" class="flex gap-2 p-3 border-t border-surface-700/50 bg-surface-900/80 flex-shrink-0">
+        <input id="sr-chat-input" type="text" class="flex-1 text-sm rounded-xl border border-surface-700/50 bg-surface-800/60 px-3 py-2 text-surface-200 placeholder-surface-600 focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 transition-all" placeholder="Ask about safety in your area..." maxlength="2000" autocomplete="off" />
+        <button type="submit" class="px-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-500 hover:to-primary-600 transition-all flex-shrink-0 shadow-lg shadow-primary-500/20" aria-label="Send">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
         </button>
       </form>
@@ -580,12 +559,22 @@
       font-size: 0.85rem;
       line-height: 1.45;
     }
-    .sr-chat-msg-user .sr-chat-bubble { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border-bottom-right-radius: 0.25rem; }
-    .sr-chat-msg-bot .sr-chat-bubble { background: #fff; color: #334155; border: 1px solid #e2e8f0; border-bottom-left-radius: 0.25rem; }
-    .sr-chat-action { display: inline-block; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #2563eb; }
+    .sr-chat-msg-user .sr-chat-bubble {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      border-bottom-right-radius: 0.25rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .sr-chat-msg-bot .sr-chat-bubble {
+      background: rgba(30, 41, 59, 0.9);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-bottom-left-radius: 0.25rem;
+    }
+    .sr-chat-action { display: inline-block; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #818cf8; }
     .sr-chat-action:hover { text-decoration: underline; }
-    .sr-chat-chip { padding: 0.25rem 0.6rem; font-size: 0.7rem; font-weight: 600; border-radius: 9999px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; transition: background 0.15s; }
-    .sr-chat-chip:hover { background: #dbeafe; }
+    .sr-chat-chip { padding: 0.25rem 0.6rem; font-size: 0.7rem; font-weight: 600; border-radius: 9999px; background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); transition: background 0.15s; }
+    .sr-chat-chip:hover { background: rgba(99, 102, 241, 0.2); }
     .sr-chat-typing { display: flex; gap: 4px; align-items: center; padding: 0.75rem 1rem; }
     .sr-chat-typing span { width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; animation: srChatDot 1.2s infinite ease-in-out; }
     .sr-chat-typing span:nth-child(2) { animation-delay: 0.15s; }
