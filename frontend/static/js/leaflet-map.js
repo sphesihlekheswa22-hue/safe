@@ -27,11 +27,18 @@
     return ROUTE_COLORS.SAFE;
   }
 
-  function createBaseMap(containerId, center, zoom) {
+  function createBaseMap(containerId, center, zoom, options) {
+    options = options || {};
     const map = L.map(containerId, { zoomControl: true, scrollWheelZoom: true });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    const tileUrl = options.dark
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    L.tileLayer(tileUrl, {
+      attribution: options.dark
+        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
+      subdomains: options.dark ? "abcd" : "abc",
     }).addTo(map);
     map.setView([center.lat, center.lng], zoom || 11);
     return map;

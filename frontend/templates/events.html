@@ -1001,7 +1001,7 @@
   function esc(s) {
     return String(s == null ? "" : s).replace(
       /[&<>"]/g,
-      (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;"}[c])
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
     );
   }
 
@@ -1108,10 +1108,14 @@
   /**
    * User authentication ready — initialize UI based on role.
    */
-  document.addEventListener("sr:user-ready", (ev) => {
-    canWrite      = WRITE_ROLES.includes(ev.detail.role);
-    currentUserId = ev.detail.id;
-    isAdmin       = ev.detail.role === "SYSTEM_ADMIN";
+  let eventsPageInited = false;
+
+  function initEventsPage(user) {
+    if (eventsPageInited) return;
+    eventsPageInited = true;
+    canWrite      = WRITE_ROLES.includes(user.role);
+    currentUserId = user.id;
+    isAdmin       = user.role === "SYSTEM_ADMIN";
 
     if (canWrite) {
       document.getElementById("create-card").classList.remove("hidden");
@@ -1124,13 +1128,23 @@
     }
 
     load();
-    setInterval(() => load(document.getElementById("filter").value.trim()), 30000);
+    if (!window._eventsPollStarted) {
+      window._eventsPollStarted = true;
+      setInterval(() => load(document.getElementById("filter").value.trim()), 30000);
+    }
+  }
+
+  document.addEventListener("sr:user-ready", (ev) => {
+    initEventsPage(ev.detail);
   });
 
-  /**
-   * Create new event form submission.
-   */
-  document.getElementById("event-form").addEventListener("submit", async (e) => {
+  if (window.SR_USER) {
+    initEventsPage(window.SR_USER);
+  }
+
+  const eventForm = document.getElementById("event-form");
+  if (eventForm) {
+    eventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
 
@@ -1147,16 +1161,17 @@
     } catch (err) {
       flash(err.message, "error");
     }
-  });
+    });
+  }
 
-  /**
-   * Filter input with debounce.
-   */
-  let t;
-  document.getElementById("filter").addEventListener("input", (e) => {
+  const filterInput = document.getElementById("filter");
+  if (filterInput) {
+    let t;
+    filterInput.addEventListener("input", (e) => {
     clearTimeout(t);
     t = setTimeout(() => load(e.target.value.trim()), 300);
-  });
+    });
+  }
 
 })();
 </script>

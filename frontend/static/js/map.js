@@ -86,25 +86,24 @@
 
   function levelBadge(level) {
     const cls = { LOW: "badge-low", MEDIUM: "badge-medium", HIGH: "badge-high", CRITICAL: "badge-critical" };
-    return `<span class="badge ${cls[level] || "badge-gray"}">${level}</span>`;
+    return `<span class="area-badge ${cls[level] || "badge-low"}">${level}</span>`;
   }
 
   function scoreColor(level) {
     return {
-      LOW: "text-emerald-600",
-      MEDIUM: "text-amber-600",
-      HIGH: "text-rose-600",
-      CRITICAL: "text-red-700",
-    }[level] || "text-surface-600";
+      LOW: "text-emerald-400",
+      MEDIUM: "text-amber-400",
+      HIGH: "text-rose-400",
+      CRITICAL: "text-red-400",
+    }[level] || "text-surface-400";
   }
 
   function trendCell(score) {
     const up = score >= 60;
-    const icon = up
-      ? '<i class="fas fa-arrow-trend-up text-rose-500"></i>'
-      : '<i class="fas fa-arrow-trend-down text-emerald-500"></i>';
+    const cls = up ? "trend-up" : "trend-down";
+    const icon = up ? "fa-arrow-trend-up" : "fa-arrow-trend-down";
     const label = up ? "Rising" : "Stable";
-    return `<span class="inline-flex items-center gap-1 text-xs font-semibold text-surface-500">${icon} ${label}</span>`;
+    return `<span class="inline-flex items-center gap-1 text-xs font-semibold ${cls}"><i class="fas ${icon} trend-arrow"></i> ${label}</span>`;
   }
 
   function updateStats(data) {
@@ -140,13 +139,13 @@
     } else {
       body.innerHTML = pageItems.map((a) => `
         <tr>
-          <td class="font-semibold text-surface-800 pl-6">${esc(a.area_name)}</td>
+          <td class="font-semibold text-surface-300 pl-6">${esc(a.area_name)}</td>
           <td class="text-center">
             <span class="score-ring ${scoreColor(a.risk_level)}">${a.risk_score}</span>
           </td>
           <td class="text-center">${levelBadge(a.risk_level)}</td>
           <td class="text-center">${trendCell(a.risk_score)}</td>
-          <td class="text-surface-500 text-right pr-6">${a.updated_at ? new Date(a.updated_at).toLocaleString() : "—"}</td>
+          <td class="text-surface-400 text-right pr-6">${a.updated_at ? new Date(a.updated_at).toLocaleString() : "—"}</td>
         </tr>`).join("");
     }
 
@@ -222,7 +221,7 @@
   function renderMap(data, center) {
     const mapCenter = center || data.map_center || { lat: -25.7461, lng: 28.1881, zoom: 11 };
     if (!map) {
-      map = SRMap.createBaseMap("safety-map", mapCenter, mapCenter.zoom || 11);
+      map = SRMap.createBaseMap("safety-map", mapCenter, mapCenter.zoom || 11, { dark: true });
       window.map = map;
     } else if (centerMode === "user" || centerMode === "query") {
       map.setView([mapCenter.lat, mapCenter.lng], mapCenter.zoom || 14);
@@ -239,10 +238,9 @@
     const nInc = (data.incidents || []).length;
     const nHigh = (data.incidents || []).filter((e) => Number(e.severity) >= 4).length;
     if (status) {
-      const locateNote = centerMode === "user"
-        ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span> Centered on your location · '
-        : '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ';
-      status.innerHTML = `${locateNote}${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
+      const dotColor = centerMode === "user" ? "#3b82f6" : "#10b981";
+      const locateNote = centerMode === "user" ? "Centered on your location · " : "";
+      status.innerHTML = `<span class="status-dot" style="background:${dotColor}"></span> ${locateNote}${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
     }
 
     updateStats(data);
@@ -284,7 +282,7 @@
         const nAreas = (lastData.risk_areas || []).length;
         const nInc = (lastData.incidents || []).length;
         const nHigh = (lastData.incidents || []).filter((e) => Number(e.severity) >= 4).length;
-        status.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span> Centered on your location · ${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
+        status.innerHTML = `<span class="status-dot" style="background:#3b82f6"></span> Centered on your location · ${nAreas} risk zone(s) · ${nInc} incident(s) · ${nHigh} high-severity — refreshes every 30s`;
       }
     }
     return true;
@@ -313,8 +311,15 @@
     URL.revokeObjectURL(url);
   };
 
-  document.addEventListener("sr:user-ready", () => {
+  let mapPageInited = false;
+
+  function initMapPage() {
+    if (mapPageInited) return;
+    mapPageInited = true;
     load();
     setInterval(load, 30000);
-  });
+  }
+
+  document.addEventListener("sr:user-ready", initMapPage);
+  if (window.SR_USER) initMapPage();
 })();
