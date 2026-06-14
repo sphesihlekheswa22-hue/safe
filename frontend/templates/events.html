@@ -184,6 +184,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
   .a-card-header h2 {
@@ -345,6 +347,50 @@
   }
 
 
+  /* ── Page Layout ──────────────────────────────────────────── */
+
+  .events-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .events-form-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .events-form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .events-form-span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .events-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .events-form-actions .a-submit {
+    width: auto;
+    min-width: 12rem;
+  }
+
+  @media (max-width: 640px) {
+    .events-form-actions .a-submit {
+      width: 100%;
+    }
+  }
+
+
   /* ── Search ───────────────────────────────────────────────── */
 
   .a-search-wrap {
@@ -471,12 +517,16 @@
 
   .a-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 280px;
   }
 
   .a-table {
     width: 100%;
+    min-width: 720px;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: auto;
   }
 
   .a-table thead th {
@@ -489,7 +539,11 @@
     background: rgba(15,23,42,0.5);
     border-bottom: 1px solid var(--a-border);
     white-space: nowrap;
+    text-align: left;
   }
+
+  .a-table thead th.text-center { text-align: center; }
+  .a-table thead th.text-right { text-align: right; }
 
   .a-table tbody td {
     padding: 1rem 1.5rem;
@@ -497,6 +551,17 @@
     color: #cbd5e1;
     border-bottom: 1px solid rgba(148,163,184,0.1);
     transition: background 0.2s ease;
+    vertical-align: top;
+    word-break: break-word;
+  }
+
+  .a-table tbody td:first-child {
+    min-width: 10rem;
+    font-weight: 600;
+  }
+
+  .a-table tbody td:nth-child(2) {
+    min-width: 11rem;
   }
 
   .a-table tbody tr {
@@ -506,7 +571,6 @@
 
   .a-table tbody tr:hover {
     background: rgba(99,102,241,0.05);
-    transform: scale(1.002);
   }
 
   .a-table tbody tr:last-child td {
@@ -704,7 +768,9 @@
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
-    margin-top: 1rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--a-border);
   }
 
   .sev-legend-item {
@@ -779,13 +845,13 @@
 
 
 <!-- ════════════════════════════════════════════════════════════
-     MAIN GRID: Create Form + Events List
+     MAIN LAYOUT: Create Form (full width) + Events List (full width)
      ════════════════════════════════════════════════════════════ -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="events-layout">
 
 
   <!-- ── CREATE EVENT CARD ──────────────────────────────────── -->
-  <div id="create-card" class="a-card a-card--form a-up d2 hidden">
+  <div id="create-card" class="a-card a-card--form a-up d2 hidden w-full">
 
     <div class="a-card-header">
       <div>
@@ -798,10 +864,10 @@
       <span class="a-tag">New</span>
     </div>
 
-    <div class="p-6">
+    <div class="p-6 lg:p-8">
 
       <!-- Event Form -->
-      <form id="event-form" class="space-y-4">
+      <form id="event-form" class="events-form-grid">
 
         <!-- Title -->
         <div>
@@ -854,7 +920,7 @@
         </div>
 
         <!-- Description -->
-        <div>
+        <div class="events-form-span-2">
           <label class="a-field-label">
             <i class="fas fa-align-left"></i>
             Description
@@ -862,16 +928,17 @@
           <textarea
             class="a-textarea"
             name="description"
-            rows="3"
-            placeholder="Describe the incident details...">
-          </textarea>
+            rows="4"
+            placeholder="Describe the incident details..."></textarea>
         </div>
 
         <!-- Submit -->
-        <button class="a-submit" type="submit">
-          <i class="fas fa-paper-plane"></i>
-          Create Event
-        </button>
+        <div class="events-form-span-2 events-form-actions">
+          <button class="a-submit" type="submit">
+            <i class="fas fa-paper-plane"></i>
+            Create Event
+          </button>
+        </div>
 
       </form>
 
@@ -904,17 +971,17 @@
 
 
   <!-- ── EVENTS LIST CARD ───────────────────────────────────── -->
-  <div class="a-card a-up d3" id="events-col">
+  <div class="a-card a-up d3 w-full" id="events-col">
 
-    <div class="a-card-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div>
+    <div class="a-card-header">
+      <div class="min-w-0 flex-1">
         <h2>
           <i class="fas fa-list-ul"></i>
           Recent Incidents
         </h2>
         <p>Filtered by location in real time</p>
       </div>
-      <div class="a-search-wrap max-w-xs w-full">
+      <div class="a-search-wrap w-full sm:w-80 lg:w-96 flex-shrink-0">
         <i class="fas fa-magnifying-glass"></i>
         <input
           id="filter"
@@ -1123,8 +1190,6 @@
         document.getElementById("event-location"),
         document.getElementById("event-location-suggestions")
       );
-    } else {
-      document.getElementById("events-col").classList.add("lg:col-span-3");
     }
 
     load();
