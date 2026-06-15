@@ -5,10 +5,10 @@ from extensions import db
 
 
 class AuditLog(db.Model):
-    __tablename__ = "audit_logs"
+    __tablename__ = "audit_log"
 
     id = db.Column(db.Integer, primary_key=True)
-    actor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    actor_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     actor_email = db.Column(db.String(255))
     action = db.Column(db.String(120), nullable=False)
     target = db.Column(db.String(255))

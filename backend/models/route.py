@@ -5,7 +5,7 @@ from extensions import db
 
 
 class Route(db.Model):
-    __tablename__ = "routes"
+    __tablename__ = "route"
 
     id = db.Column(db.Integer, primary_key=True)
     start_location = db.Column(db.String(255), nullable=False)
@@ -19,7 +19,7 @@ class Route(db.Model):
     # GeoJSON LineString describing the route geometry, stored as JSON text.
     geojson = db.Column(db.JSON, nullable=True)
 
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     def to_dict(self, *, include_geojson=True):

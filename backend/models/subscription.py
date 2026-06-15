@@ -8,10 +8,10 @@ from extensions import db
 
 
 class Subscription(db.Model):
-    __tablename__ = "subscriptions"
+    __tablename__ = "subscription"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     area_name = db.Column(db.String(255), nullable=True)  # None => all areas
     channel = db.Column(db.String(40), nullable=False, default="in_app")
     active = db.Column(db.Boolean, nullable=False, default=True)

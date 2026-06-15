@@ -5,7 +5,7 @@ from extensions import db
 
 
 class RiskArea(db.Model):
-    __tablename__ = "risk_areas"
+    __tablename__ = "risk_area"
 
     id = db.Column(db.Integer, primary_key=True)
     area_name = db.Column(db.String(255), nullable=False, unique=True, index=True)

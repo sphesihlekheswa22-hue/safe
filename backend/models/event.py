@@ -5,7 +5,7 @@ from extensions import db
 
 
 class Event(db.Model):
-    __tablename__ = "events"
+    __tablename__ = "event"
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -18,7 +18,7 @@ class Event(db.Model):
     severity = db.Column(db.Integer, nullable=False, default=1)
     source = db.Column(db.String(120), default="manual")
 
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     created_at = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False, index=True
     )

@@ -66,17 +66,24 @@ def create_app(config_class=Config):
             from models.event import Event
             from models.risk import RiskArea
             from services.geo_service import ensure_geo_columns, sync_area_coords, sync_event_coords
+            from services.schema_migration import ensure_singular_table_names, resolve_table_name
+
+            renamed = ensure_singular_table_names()
+            if renamed:
+                get_logger(__name__).info("Renamed plural tables: %s", ", ".join(renamed))
 
             if os.environ.get("FLASK_ENV") != "production":
                 tables = set(inspect(db.engine).get_table_names())
-                if "risk_areas" in tables or "events" in tables:
+                event_table = resolve_table_name(tables, "event", "events")
+                risk_table = resolve_table_name(tables, "risk_area", "risk_areas")
+                if risk_table or event_table:
                     ensure_geo_columns()
                 dirty = False
-                if "risk_areas" in tables:
+                if risk_table:
                     for area in RiskArea.query.filter(RiskArea.latitude.is_(None)).all():
                         sync_area_coords(area)
                         dirty = True
-                if "events" in tables:
+                if event_table:
                     for ev in Event.query.filter(Event.latitude.is_(None)).all():
                         sync_event_coords(ev)
                         dirty = True
@@ -89,7 +96,8 @@ def create_app(config_class=Config):
                 if needs_role_migration():
                     stats = migrate_role_simplification()
                     get_logger(__name__).info("Auto-migrated legacy roles/institutions: %s", stats)
-                if "events" in tables and needs_gauteng_migration():
+                event_table = resolve_table_name(tables, "event", "events")
+                if event_table and needs_gauteng_migration():
                     count = refresh_sa_events()
                     get_logger(__name__).info(
                         "Auto-migrated legacy data to Gauteng catalog (%s incidents).", count
@@ -204,6 +212,11 @@ def _register_cli(app):
     @app.cli.command("init-db")
     def init_db():
         """Create all database tables."""
+        from services.schema_migration import ensure_singular_table_names
+
+        renamed = ensure_singular_table_names()
+        if renamed:
+            click.echo("Renamed tables: " + ", ".join(renamed))
         db.create_all()
         click.echo("Database tables created.")
 

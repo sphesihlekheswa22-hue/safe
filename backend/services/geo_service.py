@@ -85,30 +85,36 @@ def sync_event_coords(event) -> None:
 
 def ensure_geo_columns() -> None:
     """Add geo columns to existing SQLite/Postgres tables if missing."""
+    from services.schema_migration import resolve_table_name
+
     inspector = inspect(db.engine)
+    tables = set(inspector.get_table_names())
     alters: list[str] = []
 
-    if "risk_areas" in inspector.get_table_names():
-        cols = {c["name"] for c in inspector.get_columns("risk_areas")}
+    risk_table = resolve_table_name(tables, "risk_area", "risk_areas")
+    if risk_table:
+        cols = {c["name"] for c in inspector.get_columns(risk_table)}
         if "latitude" not in cols:
-            alters.append("ALTER TABLE risk_areas ADD COLUMN latitude FLOAT")
+            alters.append(f"ALTER TABLE {risk_table} ADD COLUMN latitude FLOAT")
         if "longitude" not in cols:
-            alters.append("ALTER TABLE risk_areas ADD COLUMN longitude FLOAT")
+            alters.append(f"ALTER TABLE {risk_table} ADD COLUMN longitude FLOAT")
         if "radius_km" not in cols:
-            alters.append("ALTER TABLE risk_areas ADD COLUMN radius_km FLOAT DEFAULT 2.5")
+            alters.append(f"ALTER TABLE {risk_table} ADD COLUMN radius_km FLOAT DEFAULT 2.5")
 
-    if "events" in inspector.get_table_names():
-        cols = {c["name"] for c in inspector.get_columns("events")}
+    event_table = resolve_table_name(tables, "event", "events")
+    if event_table:
+        cols = {c["name"] for c in inspector.get_columns(event_table)}
         if "latitude" not in cols:
-            alters.append("ALTER TABLE events ADD COLUMN latitude FLOAT")
+            alters.append(f"ALTER TABLE {event_table} ADD COLUMN latitude FLOAT")
         if "longitude" not in cols:
-            alters.append("ALTER TABLE events ADD COLUMN longitude FLOAT")
+            alters.append(f"ALTER TABLE {event_table} ADD COLUMN longitude FLOAT")
 
-    if "routes" in inspector.get_table_names():
-        cols = {c["name"] for c in inspector.get_columns("routes")}
+    route_table = resolve_table_name(tables, "route", "routes")
+    if route_table:
+        cols = {c["name"] for c in inspector.get_columns(route_table)}
         for col in ("start_lat", "start_lng", "end_lat", "end_lng"):
             if col not in cols:
-                alters.append(f"ALTER TABLE routes ADD COLUMN {col} FLOAT")
+                alters.append(f"ALTER TABLE {route_table} ADD COLUMN {col} FLOAT")
 
     if not alters:
         return

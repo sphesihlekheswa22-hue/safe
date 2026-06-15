@@ -11,7 +11,7 @@ from extensions import db
 
 
 class SystemSetting(db.Model):
-    __tablename__ = "system_settings"
+    __tablename__ = "system_setting"
 
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(80), nullable=False, unique=True, index=True)

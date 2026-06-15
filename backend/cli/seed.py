@@ -105,14 +105,17 @@ def needs_gauteng_migration() -> bool:
 
 def needs_role_migration() -> bool:
     """True when legacy roles or institution schema remain in the database."""
+    from services.schema_migration import resolve_table_name
+
     inspector = inspect(db.engine)
     tables = set(inspector.get_table_names())
     if "institutions" in tables:
         return True
     if User.query.filter(User.role.in_(LEGACY_ROLES)).limit(1).count() > 0:
         return True
-    if "users" in tables:
-        cols = {c["name"] for c in inspector.get_columns("users")}
+    user_table = resolve_table_name(tables, "user", "users")
+    if user_table:
+        cols = {c["name"] for c in inspector.get_columns(user_table)}
         if "institution_id" in cols:
             return True
     return any(User.query.filter_by(email=email).limit(1).count() > 0 for email in DEMO_PORTAL_EMAILS)
@@ -148,11 +151,15 @@ def migrate_role_simplification() -> dict:
             except Exception:
                 pass
 
-        if "users" in tables:
-            cols = {c["name"] for c in inspector.get_columns("users")}
+        from services.schema_migration import quote_table, resolve_table_name
+
+        user_table = resolve_table_name(tables, "user", "users")
+        if user_table:
+            cols = {c["name"] for c in inspector.get_columns(user_table)}
             if "institution_id" in cols:
                 try:
-                    conn.execute(text("ALTER TABLE users DROP COLUMN institution_id"))
+                    user_q = quote_table(db.engine, user_table)
+                    conn.execute(text(f"ALTER TABLE {user_q} DROP COLUMN institution_id"))
                     institution_column_dropped = True
                 except Exception:
                     pass
@@ -218,6 +225,11 @@ def migrate_gauteng_data(*, reseed_routes: bool = True) -> dict:
 
 
 def run_seed(refresh_events=True):
+    from services.schema_migration import ensure_singular_table_names
+
+    renamed = ensure_singular_table_names()
+    if renamed:
+        print(f"  Renamed tables: {', '.join(renamed)}")
     db.create_all()
 
     if needs_role_migration():

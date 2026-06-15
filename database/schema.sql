@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS institutions (
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS "user" (
     id              SERIAL PRIMARY KEY,
     name            VARCHAR(120) NOT NULL,
     email           VARCHAR(255) NOT NULL UNIQUE,
@@ -21,28 +21,28 @@ CREATE TABLE IF NOT EXISTS users (
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS ix_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS ix_user_email ON "user"(email);
 
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE IF NOT EXISTS event (
     id          SERIAL PRIMARY KEY,
     title       VARCHAR(200) NOT NULL,
     description TEXT,
     location    VARCHAR(255) NOT NULL,
     severity    INTEGER      NOT NULL DEFAULT 1,
     source      VARCHAR(120) DEFAULT 'manual',
-    created_by  INTEGER REFERENCES users(id),
+    created_by  INTEGER REFERENCES "user"(id),
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS ix_events_location ON events(location);
-CREATE INDEX IF NOT EXISTS ix_events_created_at ON events(created_at);
+CREATE INDEX IF NOT EXISTS ix_event_location ON event(location);
+CREATE INDEX IF NOT EXISTS ix_event_created_at ON event(created_at);
 
-CREATE TABLE IF NOT EXISTS routes (
+CREATE TABLE IF NOT EXISTS route (
     id              SERIAL PRIMARY KEY,
     start_location  VARCHAR(255) NOT NULL,
     end_location    VARCHAR(255) NOT NULL,
     risk_score      DOUBLE PRECISION NOT NULL DEFAULT 0,
     geojson         JSONB,
-    created_by      INTEGER REFERENCES users(id),
+    created_by      INTEGER REFERENCES "user"(id),
     created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
@@ -51,12 +51,12 @@ CREATE TABLE IF NOT EXISTS alerts (
     message      TEXT         NOT NULL,
     severity     VARCHAR(20)  NOT NULL DEFAULT 'LOW',
     target_role  VARCHAR(40)  NOT NULL DEFAULT 'ALL',
-    created_by   INTEGER REFERENCES users(id),
+    created_by   INTEGER REFERENCES "user"(id),
     created_at   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS ix_alerts_created_at ON alerts(created_at);
 
-CREATE TABLE IF NOT EXISTS risk_areas (
+CREATE TABLE IF NOT EXISTS risk_area (
     id               SERIAL PRIMARY KEY,
     area_name        VARCHAR(255) NOT NULL UNIQUE,
     risk_score       DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -64,9 +64,9 @@ CREATE TABLE IF NOT EXISTS risk_areas (
     updated_at       TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS audit_logs (
+CREATE TABLE IF NOT EXISTS audit_log (
     id           SERIAL PRIMARY KEY,
-    actor_id     INTEGER REFERENCES users(id),
+    actor_id     INTEGER REFERENCES "user"(id),
     actor_email  VARCHAR(255),
     action       VARCHAR(120) NOT NULL,
     target       VARCHAR(255),
@@ -74,16 +74,16 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS subscriptions (
+CREATE TABLE IF NOT EXISTS subscription (
     id          SERIAL PRIMARY KEY,
-    user_id     INTEGER NOT NULL REFERENCES users(id),
+    user_id     INTEGER NOT NULL REFERENCES "user"(id),
     area_name   VARCHAR(255),
     channel     VARCHAR(40) NOT NULL DEFAULT 'in_app',
     active      BOOLEAN     NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS system_settings (
+CREATE TABLE IF NOT EXISTS system_setting (
     id          SERIAL PRIMARY KEY,
     key         VARCHAR(80) NOT NULL UNIQUE,
     value       TEXT        NOT NULL,
