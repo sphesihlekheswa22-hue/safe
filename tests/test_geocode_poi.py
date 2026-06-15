@@ -64,7 +64,53 @@ def test_geocode_api_hospital_keyword(client, public_token):
 def test_is_poi_keyword():
     assert poi_service.is_poi_keyword("poli")
     assert poi_service.is_poi_keyword("hosp")
+    assert poi_service.is_poi_keyword("petrol")
+    assert poi_service.is_poi_keyword("petrol station")
     assert not poi_service.is_poi_keyword("hat")
+
+
+def test_poi_search_petrol_returns_fuel_stations():
+    results = poi_service.search_pois("petrol station", limit=10)
+    assert len(results) >= 1
+    assert all(r["category"] == "fuel" for r in results)
+    assert all(r["source"] == "poi" for r in results)
+
+
+def test_poi_search_petrol_nearest_hatfield_first():
+    results = poi_service.search_pois(
+        "petrol station",
+        limit=5,
+        near_lat=-25.7543,
+        near_lng=28.2314,
+    )
+    assert len(results) >= 2
+    assert results[0]["name"] == "Engen Hatfield"
+    assert results[0]["distance_km"] < results[1]["distance_km"]
+
+
+def test_geocode_petrol_station_nearest_first():
+    results = geocoding_service.search(
+        "petrol station",
+        limit=8,
+        near_lat=-25.7543,
+        near_lng=28.2314,
+    )
+    assert len(results) >= 1
+    assert results[0]["name"] == "Engen Hatfield"
+    assert results[0].get("category") == "fuel"
+    assert results[0]["distance_km"] <= 25
+
+
+def test_geocode_api_petrol_station(client, public_token):
+    res = client.get(
+        "/api/routes/geocode?q=petrol+station&lat=-25.75&lng=28.19",
+        headers=auth(public_token),
+    )
+    assert res.status_code == 200
+    results = res.get_json()["results"]
+    assert len(results) >= 1
+    assert any(r.get("category") == "fuel" for r in results)
+    assert all("distance_km" in r for r in results if r.get("source") == "poi")
 
 
 def test_geocode_nearby_first_then_broad():

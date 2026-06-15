@@ -428,6 +428,8 @@ def _expanded_nominatim_query(
         return f"hospital, {region}"
     if "clinic" in implied:
         return f"clinic, {region}"
+    if "fuel" in implied:
+        return f"petrol station, {region}"
     if "station" in implied:
         return f"train station, {region}"
     return None

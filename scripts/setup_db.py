@@ -2,34 +2,23 @@
 
 Run from the project root:
     python scripts/setup_db.py
+
+Equivalent to:
+    python scripts/create_database.py --seed
 """
 import os
 import sys
 
-from dotenv import load_dotenv
-
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-load_dotenv(os.path.join(_ROOT, ".env"))
+_SCRIPTS = os.path.dirname(__file__)
+if _SCRIPTS not in sys.path:
+    sys.path.insert(0, _SCRIPTS)
 
-_BACKEND = os.path.join(_ROOT, "backend")
-if _BACKEND not in sys.path:
-    sys.path.insert(0, _BACKEND)
-
-from app_factory import create_app  # noqa: E402
-from extensions import db  # noqa: E402
-from cli.seed import run_seed  # noqa: E402
-from services.schema_migration import ensure_singular_table_names  # noqa: E402
+from create_database import create_database  # noqa: E402
 
 
 def main():
-    app = create_app()
-    with app.app_context():
-        renamed = ensure_singular_table_names()
-        if renamed:
-            print("Renamed tables:", ", ".join(renamed))
-        db.create_all()
-        print("Tables created.")
-        run_seed()
+    create_database(drop=False, seed=True)
 
 
 if __name__ == "__main__":

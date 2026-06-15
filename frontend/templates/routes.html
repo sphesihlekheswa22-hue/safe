@@ -583,6 +583,7 @@ function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1)
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           try {
+            sessionStorage.setItem('sr-user-loc', JSON.stringify({ lat, lng }));
             const { result } = await SR.post('/api/routes/geocode/reverse', { lat, lng });
             const label = result.name || result.city || 'Your area';
             input.value = label;

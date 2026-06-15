@@ -12,11 +12,33 @@ CATEGORY_LABELS = {
     "hospital": "Hospital",
     "clinic": "Clinic",
     "station": "Station",
+    "fuel": "Petrol station",
     "landmark": "Landmark",
 }
 
+# Multi-word phrases checked before single-token aliases.
+PHRASE_CATEGORIES: list[tuple[str, str]] = [
+    ("petrol station", "fuel"),
+    ("petro station", "fuel"),
+    ("gas station", "fuel"),
+    ("fuel station", "fuel"),
+    ("filling station", "fuel"),
+    ("service station", "fuel"),
+    ("petrol garage", "fuel"),
+]
+
 # Short query prefixes → POI categories (longest match wins via sorted keys).
 CATEGORY_ALIASES: dict[str, list[str]] = {
+    "petrol": ["fuel"],
+    "petro": ["fuel"],
+    "fuel": ["fuel"],
+    "diesel": ["fuel"],
+    "garage": ["fuel"],
+    "engen": ["fuel"],
+    "shell": ["fuel"],
+    "sasol": ["fuel"],
+    "caltex": ["fuel"],
+    "bp": ["fuel"],
     "police": ["police"],
     "poli": ["police"],
     "pol": ["police"],
@@ -47,9 +69,19 @@ def _normalize(text: str) -> str:
 def _categories_for_query(q: str) -> set[str]:
     """Return POI categories implied by a short keyword query."""
     categories: set[str] = set()
+
+    for phrase, cat in PHRASE_CATEGORIES:
+        if phrase in q or q in phrase or phrase.startswith(q):
+            categories.add(cat)
+
     for prefix, cats in sorted(CATEGORY_ALIASES.items(), key=lambda x: -len(x[0])):
         if q == prefix or q.startswith(prefix) or prefix.startswith(q):
             categories.update(cats)
+
+    # "petrol station" should not also imply train stations.
+    if "fuel" in categories:
+        categories.discard("station")
+
     return categories
 
 

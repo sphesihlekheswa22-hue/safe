@@ -10,6 +10,7 @@
     hospital: "fa-hospital",
     clinic: "fa-kit-medical",
     station: "fa-train",
+    fuel: "fa-gas-pump",
     landmark: "fa-landmark",
   };
 
@@ -107,22 +108,22 @@
   }
 
   function subtitleForResult(r) {
+    if (r.distance_km != null) return r.distance_km + " km away";
     const full = r.display_name || "";
     const short = labelForResult(r);
     if (full && full !== short) return full;
-    if (r.distance_km != null) return r.distance_km + " km away";
     return "";
   }
 
   function showSuggestionsLoading(list) {
-    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching South African addresses…</li>`;
+    list.innerHTML = `<li class="suggestion-divider" role="presentation"><i class="fas fa-spinner fa-spin mr-1"></i> Searching nearby places…</li>`;
     list.classList.add("visible");
     list._items = [];
   }
 
   function renderSuggestionList(list, items, input, onSelect) {
     if (!items.length) {
-      list.innerHTML = `<li class="suggestion-divider" role="presentation">No addresses found — try a street name, suburb, or landmark</li>`;
+      list.innerHTML = `<li class="suggestion-divider" role="presentation">No places found — try a suburb, street, or place type (e.g. petrol station)</li>`;
       list.classList.add("visible");
       list._items = [];
       return;
@@ -164,7 +165,7 @@
 
     const opts = options || {};
     const minChars = opts.minChars != null ? opts.minChars : 2;
-    const debounceMs = opts.debounceMs != null ? opts.debounceMs : 450;
+    const debounceMs = opts.debounceMs != null ? opts.debounceMs : 300;
     const limit = opts.limit || 10;
 
     inputEl.setAttribute("autocomplete", "off");

@@ -18,7 +18,7 @@ class PoiEntry(TypedDict):
     area: str
 
 
-# category: police | hospital | clinic | station | landmark
+# category: police | hospital | clinic | station | fuel | landmark
 SA_POIS: list[PoiEntry] = [
     # --- Pretoria / Tshwane police ---
     {
@@ -263,6 +263,111 @@ SA_POIS: list[PoiEntry] = [
         "lat": -26.1019,
         "lng": 28.0897,
         "area": "Alexandra, Johannesburg",
+    },
+    # --- Petrol / fuel stations ---
+    {
+        "name": "Engen Hatfield",
+        "category": "fuel",
+        "aliases": ["hatfield petrol", "hatfield engen", "engen burnett"],
+        "lat": -25.7518,
+        "lng": 28.2305,
+        "area": "Hatfield, Pretoria",
+    },
+    {
+        "name": "Shell Lynnwood Road",
+        "category": "fuel",
+        "aliases": ["lynnwood shell", "lynnwood petrol", "shell brooklyn"],
+        "lat": -25.7698,
+        "lng": 28.2412,
+        "area": "Brooklyn, Pretoria",
+    },
+    {
+        "name": "BP Pretoria CBD",
+        "category": "fuel",
+        "aliases": ["cbd petrol", "pretoria cbd bp", "church street petrol"],
+        "lat": -25.7478,
+        "lng": 28.1912,
+        "area": "Pretoria CBD",
+    },
+    {
+        "name": "Sasol Sunnyside",
+        "category": "fuel",
+        "aliases": ["sunnyside petrol", "sunnyside sasol", "sunnyside fuel"],
+        "lat": -25.7572,
+        "lng": 28.2089,
+        "area": "Sunnyside, Pretoria",
+    },
+    {
+        "name": "Engen Menlyn",
+        "category": "fuel",
+        "aliases": ["menlyn petrol", "menlyn engen", "menlyn fuel"],
+        "lat": -25.7836,
+        "lng": 28.2789,
+        "area": "Menlyn, Pretoria",
+    },
+    {
+        "name": "Shell Centurion",
+        "category": "fuel",
+        "aliases": ["centurion petrol", "centurion shell", "centurion fuel"],
+        "lat": -25.8598,
+        "lng": 28.1889,
+        "area": "Centurion",
+    },
+    {
+        "name": "Engen Silverton",
+        "category": "fuel",
+        "aliases": ["silverton petrol", "silverton engen", "silverton fuel"],
+        "lat": -25.7245,
+        "lng": 28.3142,
+        "area": "Silverton, Pretoria",
+    },
+    {
+        "name": "Sasol Soshanguve",
+        "category": "fuel",
+        "aliases": ["soshanguve petrol", "soshanguve sasol", "soshanguve fuel"],
+        "lat": -25.5142,
+        "lng": 28.1123,
+        "area": "Soshanguve, Pretoria",
+    },
+    {
+        "name": "Engen Midrand",
+        "category": "fuel",
+        "aliases": ["midrand petrol", "midrand engen", "midrand fuel"],
+        "lat": -25.9958,
+        "lng": 28.1298,
+        "area": "Midrand",
+    },
+    {
+        "name": "Shell Sandton",
+        "category": "fuel",
+        "aliases": ["sandton petrol", "sandton shell", "sandton fuel"],
+        "lat": -26.1068,
+        "lng": 28.0578,
+        "area": "Sandton, Johannesburg",
+    },
+    {
+        "name": "Engen Rosebank",
+        "category": "fuel",
+        "aliases": ["rosebank petrol", "rosebank engen", "rosebank fuel"],
+        "lat": -26.1456,
+        "lng": 28.0412,
+        "area": "Rosebank, Johannesburg",
+    },
+    {
+        "name": "BP Soweto",
+        "category": "fuel",
+        "aliases": ["soweto petrol", "soweto bp", "soweto fuel"],
+        "lat": -26.2489,
+        "lng": 28.0345,
+        "area": "Soweto, Johannesburg",
+    },
+    {
+        "name": "Engen OR Tambo Airport",
+        "category": "fuel",
+        "aliases": ["airport petrol", "tambo petrol", "or tambo fuel"],
+        "lat": -26.1312,
+        "lng": 28.2389,
+        "area": "Kempton Park",
     },
     # --- Stations / transport hubs ---
     {
