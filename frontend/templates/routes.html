@@ -557,6 +557,8 @@ function swapLocations() {
   [startInput.value, endInput.value] = [endInput.value, startInput.value];
   [startLat.value, endLat.value] = [endLat.value, startLat.value];
   [startLng.value, endLng.value] = [endLng.value, startLng.value];
+  [startInput.dataset.selectedLabel, endInput.dataset.selectedLabel] =
+    [endInput.dataset.selectedLabel, startInput.dataset.selectedLabel];
   [startInput, endInput].forEach(el => {
     el.style.transition = 'all 0.4s';
     el.style.background = 'rgba(99, 102, 241, 0.15)';
@@ -568,57 +570,6 @@ function swapLocations() {
 function filterRoutes(query) { if (window.filterRouteTable) window.filterRouteTable(query); }
 function prevRoutePage() { if (window.changeRoutePage) window.changeRoutePage(-1); }
 function nextRoutePage() { if (window.changeRoutePage) window.changeRoutePage(1); }
-
-(function() {
-  const btn = document.getElementById('btn-my-location');
-  const input = document.getElementById('start-location');
-  if (btn && input) {
-    btn.addEventListener('click', async () => {
-      if (!navigator.geolocation) { flash('Geolocation is not supported by your browser.', 'error'); return; }
-      btn.classList.add('pulse-ring');
-      input.classList.add('is-loading');
-      input.placeholder = 'Detecting your location...';
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          try {
-            sessionStorage.setItem('sr-user-loc', JSON.stringify({ lat, lng }));
-            const { result } = await SR.post('/api/routes/geocode/reverse', { lat, lng });
-            const label = result.name || result.city || 'Your area';
-            input.value = label;
-            input.dataset.selectedLabel = label;
-            document.getElementById('start-lat').value = result.lat;
-            document.getElementById('start-lng').value = result.lng;
-            flash(
-              result.approximate
-                ? `Origin set to closest match: ${label}`
-                : 'Current location set as origin.',
-              result.approximate ? 'warning' : 'success'
-            );
-          } catch (err) {
-            document.getElementById('start-lat').value = lat;
-            document.getElementById('start-lng').value = lng;
-            input.value = 'Your area';
-            input.dataset.selectedLabel = 'Your area';
-            flash(err.message || 'Could not resolve your address. Try typing your street or suburb.', 'error');
-          }
-          btn.classList.remove('pulse-ring');
-          input.classList.remove('is-loading');
-          input.placeholder = 'e.g. 123 Church Street, Pretoria';
-        },
-        () => {
-          btn.classList.remove('pulse-ring');
-          input.classList.remove('is-loading');
-          input.placeholder = 'Location access denied';
-          flash('Could not get your location.', 'error');
-          setTimeout(() => { input.placeholder = 'e.g. 123 Church Street, Pretoria'; }, 2000);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-      );
-    });
-  }
-})();
 
 (function() {
   ['start', 'end'].forEach(field => {

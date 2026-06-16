@@ -181,11 +181,14 @@
     }
 
     inputEl.addEventListener("input", () => {
-      delete inputEl.dataset.selectedLabel;
-      if (typeof opts.onInputChange === "function") {
-        opts.onInputChange();
-      }
       const q = inputEl.value.trim();
+      const prev = inputEl.dataset.selectedLabel || "";
+      if (q !== prev) {
+        delete inputEl.dataset.selectedLabel;
+        if (typeof opts.onInputChange === "function") {
+          opts.onInputChange();
+        }
+      }
       clearTimeout(timer);
       if (q.length < minChars) {
         listEl.classList.remove("visible");

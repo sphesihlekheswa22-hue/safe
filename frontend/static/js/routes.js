@@ -111,6 +111,82 @@
     document.getElementById(prefix + "-lng").value = lng;
   }
 
+  function readStoredUserLoc() {
+    try {
+      const raw = sessionStorage.getItem("sr-user-loc");
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (data && data.lat != null && data.lng != null) {
+        return { lat: data.lat, lng: data.lng };
+      }
+    } catch (_) {
+      /* ignore */
+    }
+    return null;
+  }
+
+  function applyOriginFromGps(lat, lng, label) {
+    const input = document.getElementById("start-location");
+    setCoords("start", lat, lng);
+    if (input) {
+      input.value = label;
+      input.dataset.selectedLabel = label;
+    }
+    try {
+      sessionStorage.setItem("sr-user-loc", JSON.stringify({ lat, lng }));
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  async function useMyLocationForOrigin() {
+    const btn = document.getElementById("btn-my-location");
+    const input = document.getElementById("start-location");
+    if (!btn || !input) return;
+
+    if (!navigator.geolocation) {
+      flash("Geolocation is not supported by your browser.", "error");
+      return;
+    }
+
+    btn.classList.add("pulse-ring");
+    input.classList.add("is-loading");
+    const prevPlaceholder = input.placeholder;
+    input.placeholder = "Detecting your location...";
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        try {
+          const { result } = await SR.post("/api/routes/geocode/reverse", { lat, lng });
+          const label = result.name || result.city || "Your area";
+          applyOriginFromGps(result.lat ?? lat, result.lng ?? lng, label);
+          flash(
+            result.approximate
+              ? `Origin set to closest match: ${label}`
+              : "Current location set as origin.",
+            result.approximate ? "warning" : "success"
+          );
+        } catch (err) {
+          applyOriginFromGps(lat, lng, "Your area");
+          flash(err.message || "Using GPS coordinates for your origin.", "warning");
+        } finally {
+          btn.classList.remove("pulse-ring");
+          input.classList.remove("is-loading");
+          input.placeholder = prevPlaceholder;
+        }
+      },
+      () => {
+        btn.classList.remove("pulse-ring");
+        input.classList.remove("is-loading");
+        input.placeholder = prevPlaceholder;
+        flash("Could not get your location.", "error");
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  }
+
   function getPayload() {
     const startLat = parseCoord(document.getElementById("start-lat").value);
     const startLng = parseCoord(document.getElementById("start-lng").value);
@@ -133,8 +209,20 @@
 
   async function resolveField(prefix) {
     const input = document.getElementById(prefix + "-location");
-    const lat = parseCoord(document.getElementById(prefix + "-lat").value);
-    const lng = parseCoord(document.getElementById(prefix + "-lng").value);
+    let lat = parseCoord(document.getElementById(prefix + "-lat").value);
+    let lng = parseCoord(document.getElementById(prefix + "-lng").value);
+
+    if (lat == null || lng == null) {
+      if (prefix === "start") {
+        const stored = readStoredUserLoc();
+        if (stored) {
+          lat = stored.lat;
+          lng = stored.lng;
+          setCoords(prefix, lat, lng);
+        }
+      }
+    }
+
     if (lat != null && lng != null) return true;
 
     const q = input.value.trim();
@@ -404,7 +492,10 @@
     document.getElementById("start-suggestions"),
     {
       onInputChange: () => clearCoords("start"),
-      onSelect: (r) => setCoords("start", r.lat, r.lng),
+      onSelect: (r) => {
+        setCoords("start", r.lat, r.lng);
+        document.getElementById("start-location").dataset.selectedLabel = r.name;
+      },
     }
   );
   setupLocationAutocomplete(
@@ -412,9 +503,17 @@
     document.getElementById("end-suggestions"),
     {
       onInputChange: () => clearCoords("end"),
-      onSelect: (r) => setCoords("end", r.lat, r.lng),
+      onSelect: (r) => {
+        setCoords("end", r.lat, r.lng);
+        document.getElementById("end-location").dataset.selectedLabel = r.name;
+      },
     }
   );
+
+  const myLocBtn = document.getElementById("btn-my-location");
+  if (myLocBtn) {
+    myLocBtn.addEventListener("click", useMyLocationForOrigin);
+  }
 
   document.addEventListener("sr:user-ready", (ev) => {
     canDelete = DELETE_ROLES.includes(ev.detail.role);
