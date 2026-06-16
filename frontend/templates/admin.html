@@ -3,34 +3,62 @@
 
 {% block extra_head %}
 <style>
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border-radius: 0.625rem;
+    font-size: 0.8125rem; font-weight: 600; color: #fff;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 14px -2px rgba(99, 102, 241, 0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 6px 20px -2px rgba(99, 102, 241, 0.45);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border-radius: 0.625rem;
+    font-size: 0.8125rem; font-weight: 600; color: #94a3b8;
+    background: transparent; border: 1px solid rgba(148, 163, 184, 0.15);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-ghost:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: #cbd5e1;
+    border-color: rgba(99, 102, 241, 0.2);
+  }
   .admin-tab {
     display: inline-flex; align-items: center; gap: 0.5rem;
     padding: 0.5rem 0.875rem; border-radius: 0.625rem;
     font-size: 0.8125rem; font-weight: 600; color: #64748b;
     transition: all 0.2s ease; white-space: nowrap; cursor: pointer;
   }
-  .admin-tab:hover { background: rgba(37, 99, 235, 0.06); color: #2563eb; }
+  .admin-tab:hover { background: rgba(99, 102, 241, 0.08); color: #818cf8; }
   .admin-tab.active {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #fff; box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.45);
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff; box-shadow: 0 4px 14px -2px rgba(99, 102, 241, 0.45);
   }
   .admin-tab svg { width: 1rem; height: 1rem; flex-shrink: 0; }
   .admin-tab.active svg { color: rgba(255,255,255,0.9); }
   .page-card {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 10px 15px -3px rgba(0,0,0,0.2);
   }
   .page-card-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(to right, #fff, rgba(248, 250, 252, 0.8));
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.5));
   }
   .svc-card {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
     transition: transform 0.2s ease;
   }
   .svc-card:hover { transform: translateY(-1px); }
@@ -38,18 +66,41 @@
     width: 2.5rem; height: 2.5rem; border-radius: 0.625rem;
     display: flex; align-items: center; justify-content: center;
   }
-  .toggle { width: 52px; height: 28px; border-radius: 9999px; background: #cbd5e1; position: relative; transition: all 0.3s ease; flex-shrink: 0; cursor: pointer; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08); }
+  .input, .select, .textarea {
+      background: rgba(30, 41, 59, 0.6);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 0.625rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .input:focus, .select:focus, .textarea:focus {
+      outline: none;
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 0.375rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .toggle { width: 52px; height: 28px; border-radius: 9999px; background: #334155; position: relative; transition: all 0.3s ease; flex-shrink: 0; cursor: pointer; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08); }
   .toggle[data-on="true"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-  .toggle-dot { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+  .toggle-dot { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: rgba(30, 41, 59, 0.8); transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
   .toggle[data-on="true"] .toggle-dot { transform: translateX(24px); }
   .status-chip { padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-  .status-chip.ok { background: #ecfdf5; color: #059669; }
-  .status-chip.bad { background: #fef2f2; color: #dc2626; }
-  .modal-box { background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); width: 100%; max-width: 28rem; padding: 1.5rem; border: 1px solid #e2e8f0; animation: modalEnter 0.25s ease; }
+  .status-chip.ok { background: rgba(16, 185, 129, 0.1); color: #059669; }
+  .status-chip.bad { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+  .modal-box { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 100%; max-width: 28rem; padding: 1.5rem; border: 1px solid rgba(148, 163, 184, 0.12); animation: modalEnter 0.25s ease; }
   @keyframes modalEnter { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-  .stat-tile { text-align: center; padding: 1rem; border-radius: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; }
-  .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 0.75rem; font-size: 0.8125rem; font-weight: 600; color: #059669; }
-  .status-pill-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+  .stat-tile { text-align: center; padding: 1rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(148, 163, 184, 0.12); }
+  .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 0.75rem; font-size: 0.8125rem; font-weight: 600; color: #059669; }
+  .status-pill-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; }
   .broadcast-card { border-top: 3px solid #e11d48; }
   .emergency-btn {
     width: 100%; padding: 0.875rem 1.5rem;
@@ -60,6 +111,21 @@
     transition: all 0.2s;
   }
   .emergency-btn:hover { box-shadow: 0 6px 20px -2px rgba(225, 29, 72, 0.5); transform: translateY(-1px); }
+  .page-card table { width: 100%; border-collapse: collapse; }
+  .page-card th {
+    text-align: left; padding: 0.65rem 0.75rem; color: #64748b;
+    font-weight: 600; font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.04em; border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  }
+  .page-card td {
+    padding: 0.7rem 0.75rem; color: #e2e8f0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  }
+  .page-card tbody tr:hover td { background: rgba(99, 102, 241, 0.06); }
+  .security-toggle-card {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
 </style>
 {% endblock %}
 
@@ -70,8 +136,8 @@
       <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.212 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </div>
     <div>
-      <h1 class="text-2xl font-display font-bold text-surface-800 tracking-tight">System Admin</h1>
-      <p class="text-sm text-surface-500">Users, security & monitoring</p>
+      <h1 class="text-2xl font-display font-bold text-surface-100 tracking-tight">System Admin</h1>
+      <p class="text-sm text-surface-400">Users, security & monitoring</p>
     </div>
   </div>
   <div id="system-pill" class="status-pill">
@@ -108,15 +174,15 @@
   <div class="page-card rounded-2xl overflow-hidden">
     <div class="page-card-header flex items-center justify-between">
       <div>
-        <h3 class="font-display font-bold text-surface-800">User Management</h3>
-        <p class="text-xs text-surface-500 mt-0.5">Create users, assign roles, block & reset passwords</p>
+        <h3 class="font-display font-bold text-surface-100">User Management</h3>
+        <p class="text-xs text-surface-400 mt-0.5">Create users, assign roles, block & reset passwords</p>
       </div>
       <button id="btn-create-user" class="btn-primary">+ New User</button>
     </div>
     <div class="overflow-x-auto">
-      <table class="data w-full text-sm">
+      <table class="w-full text-sm">
         <thead><tr><th>User</th><th>Role</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
-        <tbody id="users-body"><tr><td colspan="4" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+        <tbody id="users-body"><tr><td colspan="4" class="text-surface-500 py-6 text-center">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -127,45 +193,45 @@
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="svc-card rounded-2xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <div class="svc-icon bg-primary-50 text-primary-600">
+        <div class="svc-icon bg-primary-500/10 text-primary-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008H12v-.008z"/></svg>
         </div>
         <span id="svc-api" class="status-chip">—</span>
       </div>
-      <p class="text-sm font-semibold text-surface-800">API Service</p>
+      <p class="text-sm font-semibold text-surface-100">API Service</p>
     </div>
     <div class="svc-card rounded-2xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <div class="svc-icon bg-emerald-50 text-emerald-600">
+        <div class="svc-icon bg-emerald-500/10 text-emerald-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.375c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375"/></svg>
         </div>
         <span id="svc-db" class="status-chip">—</span>
       </div>
-      <p class="text-sm font-semibold text-surface-800">Database</p>
+      <p class="text-sm font-semibold text-surface-100">Database</p>
     </div>
     <div class="svc-card rounded-2xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <div class="svc-icon bg-violet-50 text-violet-600">
+        <div class="svc-icon bg-violet-500/10 text-violet-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
         </div>
         <span id="svc-risk" class="status-chip">—</span>
       </div>
-      <p class="text-sm font-semibold text-surface-800">Risk Engine</p>
+      <p class="text-sm font-semibold text-surface-100">Risk Engine</p>
     </div>
     <div class="svc-card rounded-2xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <div class="svc-icon bg-amber-50 text-amber-600">
+        <div class="svc-icon bg-amber-500/10 text-amber-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
         </div>
-        <span id="sys-logins" class="text-lg font-display font-bold text-surface-800">—</span>
+        <span id="sys-logins" class="text-lg font-display font-bold text-surface-100">—</span>
       </div>
-      <p class="text-sm font-semibold text-surface-800">Logins (24h)</p>
+      <p class="text-sm font-semibold text-surface-100">Logins (24h)</p>
     </div>
   </div>
 
   <div class="page-card rounded-2xl p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-display font-bold text-surface-800">Platform Statistics</h3>
+      <h3 class="font-display font-bold text-surface-100">Platform Statistics</h3>
       <button id="refresh-system" class="btn-ghost text-xs">Refresh</button>
     </div>
     <div id="system-counts" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
@@ -178,15 +244,15 @@
   <div class="page-card rounded-2xl overflow-hidden">
     <div class="page-card-header flex items-center justify-between gap-4">
       <div>
-        <h3 class="font-display font-bold text-surface-800">Audit Trail</h3>
-        <p class="text-xs text-surface-500 mt-0.5">Every privileged action is recorded</p>
+        <h3 class="font-display font-bold text-surface-100">Audit Trail</h3>
+        <p class="text-xs text-surface-400 mt-0.5">Every privileged action is recorded</p>
       </div>
       <input id="audit-filter" class="input max-w-xs" placeholder="Filter by action…" />
     </div>
     <div class="overflow-x-auto max-h-[600px]">
-      <table class="data w-full text-sm">
+      <table class="w-full text-sm">
         <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
-        <tbody id="audit-body"><tr><td colspan="5" class="text-surface-400 py-6 text-center">Loading…</td></tr></tbody>
+        <tbody id="audit-body"><tr><td colspan="5" class="text-surface-500 py-6 text-center">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -197,19 +263,19 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="page-card rounded-2xl p-6 space-y-6">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+        <div class="w-10 h-10 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
         </div>
         <div>
-          <h3 class="font-display font-bold text-surface-800">Security Control</h3>
-          <p class="text-xs text-surface-500">Access rules & API protection</p>
+          <h3 class="font-display font-bold text-surface-100">Security Control</h3>
+          <p class="text-xs text-surface-400">Access rules & API protection</p>
         </div>
       </div>
 
-      <div class="flex items-center justify-between p-4 rounded-xl bg-surface-50 border border-surface-200">
+      <div class="flex items-center justify-between p-4 rounded-xl security-toggle-card">
         <div>
-          <p class="font-semibold text-surface-800 text-sm">Public Registration</p>
-          <p class="text-xs text-surface-500">Allow self sign-up (as Public User)</p>
+          <p class="font-semibold text-surface-100 text-sm">Public Registration</p>
+          <p class="text-xs text-surface-400">Allow self sign-up (as Public User)</p>
         </div>
         <button id="toggle-registration" class="toggle" data-on="false"><span class="toggle-dot"></span></button>
       </div>
@@ -233,8 +299,8 @@
     </div>
 
     <div class="page-card rounded-2xl p-6">
-      <h3 class="font-display font-bold text-surface-800 mb-1">Role Permission Matrix</h3>
-      <p class="text-xs text-surface-500 mb-4">Server-enforced capabilities by role</p>
+      <h3 class="font-display font-bold text-surface-100 mb-1">Role Permission Matrix</h3>
+      <p class="text-xs text-surface-400 mb-4">Server-enforced capabilities by role</p>
       <div id="perm-matrix" class="space-y-2 max-h-[460px] overflow-y-auto pr-1"></div>
     </div>
   </div>
@@ -249,8 +315,8 @@
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
         </div>
         <div>
-          <h3 class="font-display font-bold text-xl text-surface-800">Emergency Broadcast</h3>
-          <p class="text-sm text-surface-500">Override AI and alert users directly</p>
+          <h3 class="font-display font-bold text-xl text-surface-100">Emergency Broadcast</h3>
+          <p class="text-sm text-surface-400">Override AI and alert users directly</p>
         </div>
       </div>
 
@@ -286,7 +352,7 @@
 <!-- Modals -->
 <div id="modal-backdrop" class="hidden fixed inset-0 bg-surface-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
   <div id="user-modal" class="modal-box hidden">
-    <h3 id="user-modal-title" class="font-display font-bold text-lg text-surface-800 mb-4">New User</h3>
+    <h3 id="user-modal-title" class="font-display font-bold text-lg text-surface-100 mb-4">New User</h3>
     <form id="user-form" class="space-y-3">
       <input type="hidden" id="user-form-user-id" name="user_id" />
       <div><label class="label">Full Name</label><input class="input" name="name" required /></div>
@@ -304,8 +370,8 @@
   </div>
 
   <div id="pw-modal" class="modal-box hidden">
-    <h3 class="font-display font-bold text-lg text-surface-800 mb-1">Reset Password</h3>
-    <p id="pw-modal-user" class="text-sm text-surface-500 mb-4"></p>
+    <h3 class="font-display font-bold text-lg text-surface-100 mb-1">Reset Password</h3>
+    <p id="pw-modal-user" class="text-sm text-surface-400 mb-4"></p>
     <form id="pw-form" class="space-y-3">
       <input type="hidden" id="pw-form-user-id" name="user_id" />
       <div><label class="label">New Password</label><input class="input" type="password" name="password" required /></div>
